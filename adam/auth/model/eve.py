@@ -13,14 +13,14 @@ from adam.auth.model.signals import update_modified_timestamp, trigger_api_valid
 @update_modified_timestamp.signal
 class EVECredential(Document):
     meta = dict(
-        collection = "Credentials",
-        allow_inheritance = False,
-        indexes = [
-                'owner',
-                # Don't keep expired credentials.
-                dict(fields=['expires'], expireAfterSeconds=0)
-            ],
-    )
+            collection = "Credentials",
+            allow_inheritance = False,
+            indexes = [
+                    'owner',
+                    # Don't keep expired credentials.
+                    dict(fields=['expires'], expireAfterSeconds=0)
+                ],
+        )
     
     key = IntField(db_field='k')
     code = StringField(db_field='c')
@@ -33,6 +33,10 @@ class EVECredential(Document):
 
 @update_modified_timestamp.signal
 class EVEEntity(Document):
+    meta = dict(
+            allow_inheritance = True,
+        )
+    
     identifier = IntField(db_field='i', unique=True)
     name = StringField(db_field='n')
     
@@ -40,16 +44,32 @@ class EVEEntity(Document):
 
 
 class EVEAlliance(EVEEntity):
-    pass
+    meta = dict(
+            allow_inheritance = False
+        )
 
 
 class EVECorporation(EVEEntity):
+    meta = dict(
+            allow_inheritance = False,
+        )
+
     alliance = ReferenceField(EVEAlliance)
 
 
 class EVECharacter(EVEEntity):
+    meta = dict(
+        collection = "Credentials",
+        allow_inheritance = False,
+        indexes = [
+                'owner',
+            ],
+    )
+    
     owner = ReferenceField('User', db_field='o', reverse_delete_rule='NULLIFY')
     credential = ReferenceField(EVECredential, db_field='r', reverse_delete_rule='NULLIFY')
 
-    corporation = ReferenceField(EVEEntity)
-    alliance = ReferenceField(EVEEntity)
+    corporation = ReferenceField(EVEEntity, db_field='c')
+    alliance = ReferenceField(EVEEntity, db_field='a')
+    
+    modified = DateTimeField(db_field='m', default=datetime.utcnow)
