@@ -1,0 +1,98 @@
+#layout {
+    .columns(@columns) {
+        -webkit-column-count: @columns;
+           -moz-column-count: @columns;
+                column-count: @columns;
+    }
+
+    .columns(@columns, @gap) {
+        #layout > .columns(@columns);
+
+        -webkit-column-gap: @gap;
+           -moz-column-gap: @gap;
+                column-gap: @gap;
+    }
+
+    .columns(@columns, @gap, @rule) {
+        #layout > .columns(@columns, @gap);
+
+        -webkit-column-rule: @rule;
+           -moz-column-rule: @rule;
+                column-rule: @rule;
+    }
+
+    .col-span(@span) {
+        -webkit-column-span: @span;
+           -moz-column-span: @span;
+                column-span: @span;
+    }
+
+    .col-break-inside(@rule) {
+        -webkit-column-break-inside: @rule;
+           -moz-column-break-inside: @rule;
+                column-break-inside: @rule;
+    }
+
+    .box() {
+        display: -webkit-box;
+        display: -moz-box;
+        display: box;
+    }
+
+    .orient(@orientation) {
+        -webkit-box-orient: @orientation;
+        -moz-box-orient: @orientation;
+        box-orient: @orientation;
+    }
+
+    .align(@align) {
+        -webkit-box-align: @align;
+        -moz-box-align: @align;
+        box-align: @align;
+    }
+
+    .pack(@pack) {
+        -webkit-box-pack: @pack;
+        -moz-box-pack: @pack;
+        box-pack: @pack;
+    }
+
+    .init(@orientation: horizontal, @align: stretch, @pack: center) {
+        #layout > .box;
+        #layout > .orient(@orientation);
+        #layout > .align(@align);
+        #layout > .pack(@pack);
+    }
+
+    .ordinal-group(@ordinal) {
+        -webkit-box-ordinal-group: @ordinal;
+        -moz-box-ordinal-group: @ordinal;
+        box-ordinal-group: @ordinal;
+    }
+
+    .flex(@flex: 0) {
+        display: block;
+
+        -webkit-box-flex: @flex;
+        -moz-box-flex: @flex;
+        box-flex: @flex;
+    }
+
+    .flex(@flex, @ordinal) {
+        #layout > .flex(@ordinal);
+        #layout > .ordinal-group(@ordinal);
+    }
+
+
+    .content() {
+        #layout > .flex(1, 2);
+    }
+
+    .aside(left) {
+        #layout > .ordinal-group(1);
+    }
+
+    .aside(right) {
+        #layout > .ordinal-group(3);
+    }
+}

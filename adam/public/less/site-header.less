@@ -1,0 +1,109 @@
+// Site Header
+
+@header-top: rgba(255,255,255,0.2);
+@header-bottom: rgba(0,0,0,0.5);
+
+#top {
+    #grad > .vertical(@header-top, @header-bottom);
+    .box-shadow(0 2px 3px rgba(0,0,0,0.5));
+    
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10000;
+    border-bottom: 1px solid darken(@header-bottom, 10%);
+    color: white;
+    line-height: 35px;
+    
+    // Color all top-level links in the header.
+    h1 > a, header > nav > menu > li > a, header > aside > menu > li > a {
+        font-weight: bold;
+        color: #ccc;
+        .transition(color 0.125s);
+        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    
+        &:hover {
+            color: white;
+            text-decoration: none;
+        }
+    }
+
+}
+
+#top header {
+    .page-width;
+    .clearfix;
+    position: relative;
+    padding: 0 10px;
+    
+    & > * {
+        display: inline-block;
+        vertical-align: bottom;
+        font-size: 15px;
+    }
+    
+    li:before {
+        content: '';
+    }
+    
+    hgroup {
+        padding-top: 0;
+        padding-left: 15px;
+        padding-right: 30px;
+        font-size: 25px;
+        
+        * {
+            display: inline-block;
+            padding: 0;
+            margin: 0;
+        }
+    }
+
+    > nav > menu, > aside > menu {
+        margin: 0;
+        padding: 0;
+        display: inline-block;
+    
+        > li {
+            display: inline-block;
+            padding-left: 20px;
+        }
+    }
+    
+    aside {
+        position: absolute;
+        right: 10px;
+        top: 0;
+        line-height: 35px;
+        
+        > menu {
+            > li {
+                display: inline-block;
+                padding-left: 0;
+                padding-top: 2px;
+                padding-left: 10px;
+                margin-right: 10px;
+                
+                &:not(:first-child):before {
+                    content: ' ';
+                    color: #d8c4bf;
+                }
+            }
+        }
+        
+        > form {
+            display: inline-block;
+            
+            input[type=search] {
+                margin-top: -2px;
+                width: 100px;
+                .transition(width 0.125s);
+                
+                &:focus {
+                    width: 200px;
+                }
+            }
+        }
+    }
+
+}

@@ -1,0 +1,44 @@
+// Tabbed Definition List
+
+
+
+
+// Pill Navigation
+
+menu.pill {
+    > a {
+        .border-radius(5px);
+        padding: 7px @wcui_gutter_width 8px;
+        display: inline-block;
+        margin: 0;
+        line-height: 1;
+        
+        &:hover {
+            text-decoration: none;
+            color: darken(#08c, 20%);
+            background-color: #eee;
+            
+            &.disabled {
+                background-color: transparent;
+                color: #ddd;
+            }
+        }
+        
+        &.active {
+            color: white;
+            background-color: #08c;
+        }
+    }
+}
+
+
+
+.disabled {
+    color: #ddd;
+    
+    &:hover {
+        cursor: default !important;
+        color: #ddd;
+        text-decoration: none;
+    }
+}

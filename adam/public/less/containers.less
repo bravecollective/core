@@ -1,0 +1,39 @@
+// Mixins
+
+.page-width(@vertical: 0) {
+    .box-sizing(border-box);
+    
+    display: block;
+    max-width: @page_width;
+    margin: @vertical auto;
+}
+
+// Styles
+
+.content {
+    .page-width(@wcui_gutter_width);
+    padding: 0 @wcui_gutter_width;
+}
+
+.merge-next {
+    margin-bottom: 0 !important;
+    border-bottom-width: 0 !important;
+    
+    -webkit-border-bottom-left-radius: 0 !important;
+    -moz-border-radius-bottomleft: 0 !important;
+    border-bottom-left-radius: 0 !important;
+    -webkit-border-bottom-right-radius: 0 !important;
+    -moz-border-radius-bottomright: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    
+    + * {
+        margin-top: 0 !important;
+        
+        -webkit-border-top-left-radius: 0 !important;
+        -moz-border-radius-topleft: 0 !important;
+        border-top-left-radius: 0 !important;
+        -webkit-border-top-right-radius: 0 !important;
+        -moz-border-radius-topright: 0 !important;
+        border-top-right-radius: 0 !important;
+    }
+}
