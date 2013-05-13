@@ -13,6 +13,6 @@ setup(
         packages = find_packages(),
         include_package_data = True,
         paster_plugins = ['PasteScript', 'WebCore'],
-        install_requires = ['WebCore', 'MongoEngine', 'Mako', 'beaker', 'pyyaml', 'ecdsa', 'xmltodict', 'ipython', 'scrypt'],
+        install_requires = ['WebCore', 'MongoEngine', 'Mako', 'beaker', 'requests', 'blinker', 'pyyaml', 'ecdsa', 'xmltodict', 'ipython', 'scrypt'],
         namespace_packages = ['adam'],
     )
