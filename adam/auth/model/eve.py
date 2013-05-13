@@ -44,23 +44,15 @@ class EVEEntity(Document):
 
 
 class EVEAlliance(EVEEntity):
-    meta = dict(
-            allow_inheritance = False
-        )
+    pass
 
 
 class EVECorporation(EVEEntity):
-    meta = dict(
-            allow_inheritance = False,
-        )
-
     alliance = ReferenceField(EVEAlliance)
 
 
 class EVECharacter(EVEEntity):
     meta = dict(
-        collection = "Credentials",
-        allow_inheritance = False,
         indexes = [
                 'owner',
             ],

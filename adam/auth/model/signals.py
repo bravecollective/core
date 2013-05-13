@@ -19,6 +19,8 @@ def signal(event):
         fn.connect = connect
         fn.signal = signal
         return fn
+    
+    return decorator
 
 
 @signal(pre_save)
