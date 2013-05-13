@@ -1,0 +1,42 @@
+## encoding: utf-8
+
+<%inherit file="adam.auth.template.master"/>
+
+<%block name="title">Page Test</%block>
+
+<%block name="header">
+    ${parent.header()}
+</%block>
+
+<%block name="post">
+    ${parent.post()}
+
+    <script type="text/javascript" charset="utf-8">
+        $(function(){
+        });
+    </script>
+</%block>
+
+<div class="container-fluid">
+    <div id="tabs-wrapper">
+        <div class="row-fluid">
+            <a class="span2 tab active" href="">
+                Authorized
+            </a>
+            <a class="span2 tab" href="">
+                Available
+            </a>
+            <a class="span2 tab" href="">
+                Manage
+            </a>
+        </div>
+    </div>
+
+    <div id="pad-wrapper">
+        <div class="header">
+            <h3>Draleth</h3>
+            <div>Head Diplomat, Council Member, Leadership</div>
+            <div><a href="">Brave Newbies Inc.</a> <span style="margin: 0 5px;">›</span> <a href="">Brave Collective</a></div>
+        </div>
+    </div>
+</div>

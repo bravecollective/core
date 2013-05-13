@@ -1,0 +1,49 @@
+## encoding: utf-8
+
+<%inherit file="adam.auth.template.light"/>
+
+<%block name="title">Sign In</%block>
+
+<%block name="header">
+    ${parent.header()}
+</%block>
+
+<%block name="post">
+    ${parent.post()}
+
+    <script type="text/javascript" charset="utf-8">
+        $(function(){
+        });
+    </script>
+</%block>
+
+
+<div class="span4 box">
+    <div class="content-wrap" style="position: relative;">
+        <h6>Authentication</h6>
+        <form style="opacity: 0.25;">
+            <input class="span12" type="text" placeholder="OTP, User Name, or E-Mail Address">
+            <input class="span12" type="password" placeholder="Your Password">
+            <div class="remember">
+                <input id="remember-me" type="checkbox">
+                <label for="remember-me">Stay authenticated for seven days.</label>
+            </div>
+        </form>
+        <div class="overlay icon-4x" style="position: absolute; top: 15px; left: 0; right: 0; text-align: center;">
+            <i class="icon-spinner icon-spin icon-4x"></i>
+        </div>
+        <div class="overlay icon-4x" style="position: absolute; top: 15px; left: 0; right: 0; text-align: center; color: #b00; text-shadow: 0 1px 4px rgba(0,0,0,0.75);">
+            <i class="icon-remove icon-4x"></i>
+        </div>
+        <div class="overlay icon-4x" style="position: absolute; top: 15px; left: 0; right: 0; text-align: center; color: #0b0; text-shadow: 0 1px 4px rgba(0,0,0,0.75);">
+            <i class="icon-ok icon-4x"></i>
+        </div>
+        <div class="span6" style="margin: 0; text-align: left;">
+            <a href="">Password Recovery</a><br><a href="">Create Account</a>
+        </div>
+        <div class="span6" style="text-align: right;">
+            <button class="btn-glow primary">Sign In</button>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+</div>
