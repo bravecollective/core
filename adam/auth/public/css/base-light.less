@@ -28,7 +28,7 @@ header {
     text-align: left;
     padding-left: 60px;
     text-shadow: 0 1px 4px rgba(0,0,0,0.75);
-    
+
     i { position: absolute; left: 0; top: 15px; }
     h1, h2 { color: inherit; line-height: 1; text-transform: uppercase; }
     h1 { font-weight: 900; }
@@ -42,13 +42,17 @@ header {
     top: 90px;
     text-align: center;
     color: #eee;
-    
+
     .logo {
         margin-bottom: 45px;
         position: relative;
         left: -2px;
     }
-    
+
+    .popover {
+        color: black;
+    }
+
     .box {
         margin: 0 auto;
         padding: 35px 0 30px;
@@ -69,12 +73,54 @@ header {
             font-weight: 600;
         }
         input[type="text"],
+        input[type="email"],
         input[type="password"]{
             font-size: 15px;
             height: 40px;
             margin-bottom: 18px;
             border-color: #b2bfc7;
             padding-left: 12px;
+
+            &.error {
+                border: 1px solid red;
+                color: #ab3539;
+            }
+        }
+
+        input[type="password"] {
+            &.poor, &.ok, &.excellent {
+                &:after {
+                    content: ' ';
+                    position: relative;
+                    vertical-align: top;
+                    top: -14px;
+                    left: 100%;
+                    margin-left: (-4px-3px);
+                    height: 14px;
+                    border-radius: 4px;
+                    box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
+                }
+            }
+
+            &.poor:after {
+                color: #ab3539;
+                background-color: #ab3539;
+            }
+
+            &.ok:after {
+                color: #9d9f29;
+                background-color: #9d9f29;
+            }
+
+            &.excellent:after {
+                color: #32a128;
+                background-color: #32a128;
+            }
+        }
+
+        .add-on {
+            font-size: 15px;
+            color: black;
         }
         input[type="password"] {
             margin-bottom: 10px;
@@ -124,35 +170,6 @@ header {
             text-transform: uppercase;
             font-size: 13px;
             padding: 8px 30px;
-        }
-    }
-    .no-account {
-        margin: 0 auto;
-        float: none;
-        text-align: center;
-        font-size: 14px;
-        margin-top: 25px;
-        text-shadow: 0 1px 3px rgba(0,0,0,0.75);
-        color: white;
-        
-        p {
-            display: inline-block;
-            color: rgb(170, 170, 170);
-        }
-        a {
-            color: rgb(170, 170, 170);
-            margin-left: 7px;
-            border-bottom: 1px solid;
-            transition: all .1s linear;
-            -moz-transition: all .1s linear; /* Firefox 4 */
-            -webkit-transition: all .1s linear; /* Safari and Chrome */
-            -o-transition: all .1s linear;  /* Opera */
-
-            &:hover{
-                text-decoration: none;
-                color: #fff;
-                border-bottom-color: #fff;
-            }
         }
     }
 }

@@ -1,0 +1,95 @@
+# Translations template for ADAM.
+# Copyright (C) 2013 Alice Bevan-McGregor
+# This file is distributed under the same license as the ADAM project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2013.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: ADAM 0.1\n"
+"Report-Msgid-Bugs-To: alice+translation@gothcandy.com\n"
+"POT-Creation-Date: 2013-05-14 21:35-0400\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 0.9.6\n"
+
+#: adam/auth/form.py:25
+msgid "OTP, User Name, or E-Mail Address"
+msgstr ""
+
+#: adam/auth/form.py:26
+msgid "Your Password"
+msgstr ""
+
+#: adam/auth/form.py:29
+msgid "Stay authenticated for seven days."
+msgstr ""
+
+#: adam/auth/form.py:34
+msgid "User Name"
+msgstr ""
+
+#: adam/auth/form.py:35
+msgid "E-Mail Address"
+msgstr ""
+
+#: adam/auth/form.py:36
+msgid "Password"
+msgstr ""
+
+#: adam/auth/form.py:37
+msgid "Verify Password"
+msgstr ""
+
+#: adam/auth/controller/root.py:30
+msgid "Invalid user name or password."
+msgstr ""
+
+#: adam/auth/template/navigation.html:31
+msgid "Profile"
+msgstr ""
+
+#: adam/auth/template/navigation.html:32
+msgid "Settings"
+msgstr ""
+
+#: adam/auth/template/navigation.html:34
+msgid "Help"
+msgstr ""
+
+#: adam/auth/template/navigation.html:36
+msgid "Sign Out"
+msgstr ""
+
+#: adam/auth/template/navigation.html:42 adam/auth/template/signin.html:5 adam/auth/template/signin.html:88
+msgid "Sign In"
+msgstr ""
+
+#: adam/auth/template/signin.html:76
+msgid "Authentication"
+msgstr ""
+
+#: adam/auth/template/signin.html:85
+msgid "Password Recovery"
+msgstr ""
+
+#: adam/auth/template/signin.html:85 adam/auth/template/signup.html:115
+msgid "Create Account"
+msgstr ""
+
+#: adam/auth/template/signup.html:5 adam/auth/template/signup.html:127
+msgid "Sign Up"
+msgstr ""
+
+#: adam/auth/template/signup.html:124
+msgid "I already have an account."
+msgstr ""
+
+#: adam/auth/template/signup.html:124
+msgid "Terms of Service"
+msgstr ""
+

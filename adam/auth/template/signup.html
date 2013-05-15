@@ -1,0 +1,179 @@
+## encoding: utf-8
+
+<%inherit file="adam.auth.template.light"/>
+
+<%block name="title">${_("Sign Up")}</%block>
+
+<%block name="header">
+	${parent.header()}
+
+	<style>
+		input[type=submit] { float: right; border: 0 none; height: 0; width: 0; padding: 0; margin: 0; overflow: hidden; }
+		.content-wrap.authentication { position: relative; }
+		.overlay { position: absolute; top: 15px; left: 0; right: 0; text-align: center; display: none; }
+		.overlay.result { text-shadow: 0 1px 4px rgba(0,0,0,0.75); }
+		.overlay.fail { color: #b00; }
+		.overlay.success { color: #0b0; }
+	</style>
+</%block>
+
+<%block name="post">
+	${parent.post()}
+
+	<script src="/js/changedelay.js" charset="utf-8"></script>
+	<script src="/js/vendor/zxcvbn.js" charset="utf-8"></script>
+
+	<script type="text/javascript" charset="utf-8">
+		$(function(){
+			// Handle checking of available usernames.
+			$('#username-field').changeDelay(function(){
+				var self = $(this);
+
+				if ( self.val() === '' || self.val().length < 4 ) {
+					self.popover('destroy');
+					self.removeClass('error');
+					return;
+				}
+
+				$.getJSON('/account/exists?ts=' + (+ new Date()), {username: self.val()}, function(data){
+					if ( !data.available ) {
+						self.addClass('error');
+						self.popover({
+								placement: 'top',
+								trigger: 'focus',
+								content: "The user name you have entered is already in use.  Please choose another.",
+								container: '#register-form'
+							}).popover('show');
+					} else {
+						self.removeClass('error');
+						self.popover('destroy');
+					}
+				});
+			});
+
+			$('#email-field').changeDelay(function(){
+				var self = $(this);
+
+				if ( self.val() === '' || self.val().length < 4 ) {
+					self.popover('destroy');
+					self.removeClass('error');
+					return;
+				}
+
+				$.getJSON('/account/exists?ts=' + (+ new Date()), {email: self.val()}, function(data){
+					if ( !data.available ) {
+						self.addClass('error');
+						self.popover({
+								placement: 'top',
+								trigger: 'focus',
+								content: "An account already exists with this e-mail address.  Please choose another.",
+								container: '#register-form'
+							}).popover('show');
+					} else {
+						self.popover('destroy');
+						self.removeClass('error');
+					}
+				});
+			});
+
+			$('#password-field').changeDelay(function(){
+				var self = $(this),
+					result = zxcvbn(self.val(), [$('#username-field').val()]),
+					other = $('#pass2-field');
+
+				console.log(result);
+
+				self.removeClass('poor ok excellent');
+				other.val('').change();
+
+				if ( result.score < 2 ) {
+					self.addClass('poor');
+				} else if ( result.score < 3 ) {
+					self.addClass('ok');
+				} else {
+					self.addClass('excellent');
+				}
+			});
+
+			$('#pass2-field').changeDelay(function(){
+				var self = $(this),
+					other = $('#password-field');
+
+				if ( self.val() != other.val() ) {
+					self.removeClass('excellent').addClass('poor');
+				} else {
+					self.removeClass('poor').addClass('excellent');
+				}
+			});
+			
+			function process_signup() {
+				if ( $('#pass2-field').hasClass('poor') ) {
+					$('#pass2-field').focus();
+					return false;
+				}
+				
+				if ( $('field').hasClass('error') ) {
+					$('field.error:first').focus();
+					return false;
+				}
+			
+				var form = $('#register-form');
+			
+				// Ensure the input fields are not focused.
+				$('input', form).blur();
+			
+				// Fade to the progress spinner.
+				$('#register-form, .authentication .span6').animate({opacity: 0.25}, 250);
+				$('#submit').addClass('disabled').attr('disabled', true);
+				$('.overlay.wait').fadeIn(250);
+			
+				// Submit XHR request.
+				var receipt = $.post(form.attr('action') + '?ts=' + (+ new Date()), form.serialize());
+				receipt.fail(function(jqXHR, textStatus, errorThrown){
+					// Something went wrong.
+					console.log(jqXHR, textStatus, errorThrown);
+				}).done(function(data, textStatus, jqXHR){
+					// Determine if we were successful or not and fade the appropriate icon.
+					$('.overlay.wait').fadeOut(125, function(){
+						if ( data.success ) {
+							$('.overlay.success').fadeIn(250, function(){ window.location = data.location; });
+						} else {
+							console.log(data);
+			
+							$('.overlay.fail').fadeIn(250, function(){
+								$('.overlay.fail').fadeOut(250);
+								$('#register-form, .authentication .span6').animate({opacity: 1}, 250);
+								$('#submit').removeClass('disabled').attr('disabled', false);
+							});
+						}
+					});
+				});
+			
+				return false;
+			}
+			
+			$('#submit').click(process_signup);
+			$('#register-form').submit(process_signup);
+		});
+	</script>
+</%block>
+
+<div class="span4 box">
+	<div class="content-wrap authentication">
+		<h6>${_("Create Account")}</h6>
+
+		${form}
+
+		<div class="overlay icon-4x wait"><i class="icon-spinner icon-spin icon-4x"></i></div>
+		<div class="overlay icon-4x result fail"><i class="icon-remove icon-4x"></i></div>
+		<div class="overlay icon-4x result success"><i class="icon-ok icon-4x"></i></div>
+
+		<div class="span6" style="margin: 0; text-align: left;">
+			<a href="/account/authenticate">${_("I already have an account.")}</a><br><a href="#">${_("Terms of Service")}</a>
+		</div>
+		<div class="span6" style="text-align: right;">
+			<button class="btn-glow primary" id="submit">${_("Sign Up")}</button>
+		</div>
+		<div class="clearfix"></div>
+	</div>
+</div>

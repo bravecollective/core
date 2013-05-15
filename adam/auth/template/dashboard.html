@@ -1,0 +1,28 @@
+## encoding: utf-8
+
+<%inherit file="adam.auth.template.master"/>
+
+<%block name="title">Dashboard</%block>
+
+<%block name="header">
+    ${parent.header()}
+</%block>
+
+<%block name="post">
+    ${parent.post()}
+
+    <script type="text/javascript" charset="utf-8">
+        $(function(){
+        });
+    </script>
+</%block>
+
+<div class="container-fluid">
+    <div id="pad-wrapper">
+        <div class="header">
+            <h3>Welcome</h3>
+        </div>
+        
+        <p>Actual content coming soon.</p>
+    </div>
+</div>

@@ -7,7 +7,7 @@
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        <title><%block name="title"/> — Brave Collective</title>
+        <title><%block name="title"/> — Brave Collective: Core Services</title>
 
         <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/ico/apple-touch-icon-144-precomposed.png">
         <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/ico/apple-touch-icon-114-precomposed.png">
@@ -29,23 +29,22 @@
         </%block>
     </head>
     <body>
-        <%block name="pre">
-        </%block>
+        <%block name="pre"/>
 
         <section class="row-fluid login-wrapper">
             <header>
                 <i class="icon-key icon-4x"></i>
-                <h1>Brave<span>Collective</span></h1>
+                <h1>Brave<span> Collective</span></h1>
                 <h2>Core Services</h2>
             </header>
-            
+
             ${self.body()}
         </section>
 
         <%block name="post">
         <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
         <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.1/js/bootstrap.min.js"></script>
-        <script src="/js/jquery-ui-1.10.2.custom.min.js"></script>
+        <script src="/js/vendor/jquery-ui-1.10.2.custom.min.js"></script>
         </%block>
     </body>
 </html>

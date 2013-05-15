@@ -10,9 +10,31 @@ setup(
         author = "Alice Bevan-McGregor",
         author_email = "alice@gothcandy.com",
         license = "MIT",
+        
         packages = find_packages(),
         include_package_data = True,
         paster_plugins = ['PasteScript', 'WebCore'],
-        install_requires = ['WebCore', 'MongoEngine', 'Mako', 'beaker', 'requests', 'blinker', 'pyyaml', 'ecdsa', 'xmltodict', 'ipython', 'scrypt'],
         namespace_packages = ['adam'],
+        
+        tests_require = ['nose', 'webtest', 'coverage'],
+        test_suite = 'nose.collector',
+        
+        install_requires = [
+                'WebCore>=1.1.2',
+                'MongoEngine>=0.7.999',
+                'Mako>=0.4.1',
+                'beaker>=1.5',
+                'requests',
+                'blinker',
+                'pyyaml',
+                'ecdsa',
+                'xmltodict',
+                'ipython',
+                'scrypt',
+                'pudb',
+                'webassets',
+                'babel',
+                'marrow.mailer',
+                'yubico'],
+        
     )
