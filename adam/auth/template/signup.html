@@ -81,8 +81,6 @@
 					result = zxcvbn(self.val(), [$('#username-field').val()]),
 					other = $('#pass2-field');
 
-				console.log(result);
-
 				self.removeClass('poor ok excellent');
 				other.val('').change();
 
@@ -138,8 +136,6 @@
 						if ( data.success ) {
 							$('.overlay.success').fadeIn(250, function(){ window.location = data.location; });
 						} else {
-							console.log(data);
-			
 							$('.overlay.fail').fadeIn(250, function(){
 								$('.overlay.fail').fadeOut(250);
 								$('#register-form, .authentication .span6').animate({opacity: 1}, 250);

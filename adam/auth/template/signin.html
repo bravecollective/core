@@ -23,8 +23,6 @@
     <script type="text/javascript" charset="utf-8">
         $(function(){
             function process_signin() {
-                console.log("foo");
-
                 if ( ! $('#password-field').val() ) {
                     $('#password-field').focus();
                     return false;
@@ -51,8 +49,6 @@
                         if ( data.success ) {
                             $('.overlay.success').fadeIn(250, function(){ window.location = data.location; });
                         } else {
-                            console.log(data.message);
-
                             $('.overlay.fail').fadeIn(250, function(){
                                 $('.overlay.fail').fadeOut(250);
                                 $('#authenticate-form, .authentication .span6').animate({opacity: 1}, 250);
