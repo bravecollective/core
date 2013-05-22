@@ -1,7 +1,6 @@
 ## encoding: utf-8
 <%!
 
-area = 'overview'
 areas = [
         # ID         Icon            Label             Destination
         ('overview', 'home',         "Overview",       "/"),
@@ -54,7 +53,7 @@ areas = [
         <div class="nav-collapse collapse visible-phone mobile-menu">
             <ul class="nav">
 % for id, icon, label, url in areas:
-    % if area == id:
+    % if context.get('area', 'overview') == id:
                 <li class="active"><a href="${url}"><i class="icon-${icon}"></i> ${label}</a></li>
     % else:
                 <li><a href="${url}"><i class="icon-${icon}"></i> ${label}</a></li>
