@@ -24,6 +24,8 @@ class EVECredential(Document):
     
     key = IntField(db_field='k')
     code = StringField(db_field='c')
+    kind = StringField(db_field='t')
+    mask = IntField(db_field='a', default=0)
     verified = BooleanField(db_field='v', default=False)
     expires = DateTimeField(db_field='e')
     owner = ReferenceField('User', db_field='o', reverse_delete_rule='CASCADE')

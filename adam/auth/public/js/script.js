@@ -28,16 +28,17 @@ $(function(){
 	});
 
 	// Hook CSRF token support into jQuery AJAX.
-	$(document).ajaxSend(function(event, xhr, settings) {
-		// Exit early if this is a foreign XHR request.
-		if ( /^http(s)?:.*/.test(settings.url) )
-			return;
-
-		var token = $.cookie('csrf');
-		if ( ! token ) return;
-
-		xhr.setRequestHeader('X-CSRF', token);
-	});
+	
+	// $(document).ajaxSend(function(event, xhr, settings) {
+	// 	// Exit early if this is a foreign XHR request.
+	// 	if ( /^http(s)?:.*/.test(settings.url) )
+	// 		return;
+	//
+	// 	var token = $.cookie('csrf');
+	// 	if ( ! token ) return;
+	//
+	// 	xhr.setRequestHeader('X-CSRF', token);
+	// });
 
 	// Disable moving-to-top for pure hash links.
 	$(document).on('click', 'a[href="#"][data-top!=true]', function(e){
