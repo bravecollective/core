@@ -35,6 +35,8 @@ setup(
                 'webassets',
                 'babel',
                 'marrow.mailer',
-                'yubico'],
+                'yubico',
+                'futures',
+            ],
         
     )

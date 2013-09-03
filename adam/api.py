@@ -161,7 +161,7 @@ class APICall(Document):
         data = XMLBunch(parse_xml(data.strip())).eveapi
         result = data.result
         
-        if 'rowset' in result:
+        if 'rowset' in result and 'row' in result.rowset:
             restruct = XMLBunch()
             
             for rowset in (XMLBunch(i) for i in (result.rowset if isinstance(result.rowset, list) else [result.rowset])):
@@ -226,8 +226,8 @@ def populate_calls():
     type_mapping = dict(Character='c', Corporation='o')
     
     # Just in case we are first bootstrapping the database.
-    get_calls, created = APICall.objects.get_or_create(name="calllist", defaults=dict(
-            name = 'calllist',
+    get_calls, created = APICall.objects.get_or_create(name="api.calllist", defaults=dict(
+            name = 'api.calllist',
             kind = 'm',
             description = "Returns the mask and groupings for calls under the new Customizable API Keys authentication method."
         ))
