@@ -1,4 +1,4 @@
-<p>Total: ${"%0.2f" % drive.total}</p>
+<p>Total: ${"{0:,.2%}".format(drive.total)}</p>
 
 <%
 count = drive.latest.count()
@@ -20,7 +20,7 @@ count = drive.latest.count()
 			<td>${donation.date.isoformat()}</td>
 			<td><img src="http://image.eveonline.com/Character/${donation.whoId}_32.jpg"></td>
 			<td>${donation.who}</td>
-			<td>${donation.amount}</td>
+			<td>${"{0:,.2%}".format(donation.amount)}</td>
 			<td>${donation.comment}</td>
 		</tr>
 		% endfor
