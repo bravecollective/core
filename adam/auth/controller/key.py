@@ -52,7 +52,7 @@ class KeyList(HTTPMethod):
         record.save()
         
         if request.is_xhr:
-            return 'json:', {'success': True, 'identifier': str(record.id)}
+            return 'json:', {'success': True, 'identifier': str(record.id), 'key': int(record.key), 'code': str(record.code)}
         
         raise HTTPFound(location='/key/')
 
