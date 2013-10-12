@@ -53,10 +53,19 @@ If you would like to make changes and contribute them back to the project, fork 
 [github-help]http://help.github.com/
 
 
+h2(#running). %3.% Running the Service
+
+Make a copy of @development.ini@ called @local.ini@, update all relevant directives (related to storage of sessions, cache data, and database URI) and run the following to serve content locally:
+
+<pre><code>paster serve local.ini</code></pre>
+
+This will start a development server and present the URL you need to access.  (Generally "http://127.0.0.1:8080":http://127.0.0.1:8080.)
+
+
 
 h2(#license). %8.% License
 
-Marrow Tags has been released under the MIT Open Source license.  All contributors agree to transfer ownership of their code to Alice Bevan-McGregor for release under this license.  (This is to mitigate issues in the future.)
+Brave Collective Core Services has been released under the MIT Open Source license.  All contributors agree to transfer ownership of their code to Alice Bevan-McGregor for release under this license.  (This is to mitigate issues in the future.)
 
 
 h3(#license-mit). %8.1.% The MIT License
