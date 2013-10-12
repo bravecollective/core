@@ -24,7 +24,7 @@ setup(
                 'MongoEngine>=0.7.999',
                 'Mako>=0.4.1',
                 'beaker>=1.5',
-                'requests',
+                'requests==1.1.0',
                 'blinker',
                 'pyyaml',
                 'ecdsa',
