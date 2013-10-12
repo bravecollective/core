@@ -59,7 +59,7 @@ Make a copy of @development.ini@ called @local.ini@, update all relevant directi
 
 <pre><code>paster serve local.ini</code></pre>
 
-This will start a development server and present the URL you need to access.  (Generally "http://127.0.0.1:8080":http://127.0.0.1:8080.)
+This will start a development server and present the URL you need to access.  (Generally "http://127.0.0.1:8080":http://127.0.0.1:8080.)  If you wish the server to automatically restart in the event of a change to one of the source files (templates and statically served content are exempt) add the @--reload@ switch.
 
 
 
