@@ -1,1 +1,76 @@
+h1(#title). Brave Collective Core Services
 
+bq(subtitle). An EVE online authentication and mediated API access application.
+
+bq(byline). (C) 2013, Alice Bevan-McGregor and contributors.
+
+bq(byline). "https://github.com/bravecollective/core":github-project
+
+[github-project]https://github.com/bravecollective/core
+
+
+
+h2(#what-is). %1.% What is Brave Collective Core?
+
+* User management.
+* EVE Online API key management.
+* Third-party application registration.
+* Authentication of users for third-party applications.
+* Authorization of EVE API access by users for third-party applications.
+* Access control list group/role definition for use by third-party applications.
+
+
+
+h2(#installation). %2.% Installation
+
+Development takes place on "GitHub":github in the "core":github-project project.  Issue tracking, documentation, and downloads are provided there.
+
+You will require a current "WebCore":http://www.web-core.org/ installation.  The following line will create a new Python virtual environment folder called "brave" in your current working directory, then activate the virtual environment.
+
+<pre><code>curl get.web-core.org | python - brave
+cd brave
+. bin/activate</code></pre>
+
+Additionally, there are two requirements you will need to manually install as Core Services require features present in as-yet unreleased packages.  You will need to perform the following steps:
+
+<pre><code>(git clone git@github.com:marrow/marrow.templating.git; cd marrow.templating; python setup.py develop)
+(git clone git@github.com:marrow/marrow.tags.git; cd marrow.tags; python setup.py develop)</code></pre>
+
+Installing the current development version of the Core Service requires "Git":git, a distributed source code management system.  If you have Git, you can run the following to download and _link_ the development version into your Python runtime:
+
+<pre><code>git clone https://github.com/bravecollective/core.git
+(cd core; python setup.py develop)</code></pre>
+
+You can upgrade to the latest version at any time:
+
+<pre><code>(cd core; git pull; python setup.py develop)</code></pre>
+
+If you would like to make changes and contribute them back to the project, fork the GitHub project, make your changes, and submit a pull request.  This process is beyond the scope of this documentation; for more information, see "GitHub's documentation":github-help.
+
+
+[github]https://github.com/
+[git]http://git-scm.com/
+[github-help]http://help.github.com/
+
+
+
+h2(#license). %8.% License
+
+Marrow Tags has been released under the MIT Open Source license.  All contributors agree to transfer ownership of their code to Alice Bevan-McGregor for release under this license.  (This is to mitigate issues in the future.)
+
+
+h3(#license-mit). %8.1.% The MIT License
+
+Copyright (C) 2006-2011 Alice Bevan-McGregor and contributors.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+
+fn1. In order to run the full test suite you need to install "pymta":http://www.schwarz.eu/opensource/projects/pymta/ and its dependencies.
+
+fn2. If "Pip":http://www.pip-installer.org/ is not available for you, you can use @easy_install@ instead. We have much love for Pip and "Distribute":http://packages.python.org/distribute/, though.
