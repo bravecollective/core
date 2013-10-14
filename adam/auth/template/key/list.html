@@ -95,20 +95,16 @@
 					},
 					function()
 					{
-						// TODO: return these values in the json response
-						var key = $('#modal input[name=key]').val();
-						var code = $('#modal input[name=code]').val();
-
 						$.post('/key/', $('#modal form').serialize(), function(data)
 						{
 							console.log(data);
 							$(
 								'<tr data-id="' + data.identifier + '">' +
 									'<td class="key-id">' +
-										'<i class="icon-fixed-width icon-remove"></i> ' + key +
+										'<i class="icon-fixed-width icon-remove"></i> ' + data.key +
 									'</td>' +
 									'<td class="key-code">' +
-										'<div>' + code + '</div>' +
+										'<div>' + data.code + '</div>' +
 									'</td>' +
 									'<td class="key-date">' +
 										'<time datetime="'+ISODateString(new Date())+'"></time>' +
