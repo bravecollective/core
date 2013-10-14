@@ -33,6 +33,6 @@ authenticate = Form('authenticate', action='/account/authenticate', method='post
 register = Form('register', action='/account/register', method='post', children=[
         TextField('username', autofocus=True, autocapitalize="off", autocorrect="off", spellcheck="false", class_="span12", placeholder=L_("User Name")),
         EmailField('email', autocapitalize="off", autocorrect="off", spellcheck="false", class_="span12", placeholder=L_("E-Mail Address")),
-        PasswordField('password', class_="span12 poor", placeholder=L_("Password")),
-        PasswordField('pass2', class_="span12 poor", placeholder=L_("Verify Password")),
+        PasswordField('password', class_="span12 poor", placeholder=L_("Password"),maxlength="100"),
+        PasswordField('pass2', class_="span12 poor", placeholder=L_("Verify Password"),maxlength="100"),
     ])
