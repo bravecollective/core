@@ -81,11 +81,9 @@
 					result = zxcvbn(self.val(), [$('#username-field').val()]),
 					other = $('#pass2-field');
 
-				
 				self.removeClass('poor ok excellent');
 				other.val('').change();
 
-				
 				if ( result.score < 2 ) {
 					self.addClass('poor');
 				} else if ( result.score < 3 ) {
@@ -94,7 +92,6 @@
 					self.addClass('excellent');
 				}
 			});
-
 
 			//using changeDelay was slow to update the user about the limit.
 			$('#password-field').on('input',function(){
