@@ -93,6 +93,23 @@
 				}
 			});
 
+			//using changeDelay was slow to update the user about the limit.
+			$('#password-field').on('input',function(){
+				var self = $(this);
+
+				if ( $('#password-field').val().length >= 100 ) {
+					self.popover({
+								placement: 'top',
+								trigger: 'focus',
+								content: "The password may not be greater then 100 characters.",
+								container: '#register-form'
+							}).popover('show');
+				}
+				else {
+					self.popover('destroy');
+				}
+			});
+
 			$('#pass2-field').changeDelay(function(){
 				var self = $(this),
 					other = $('#password-field');
