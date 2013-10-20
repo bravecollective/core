@@ -15,6 +15,7 @@ from adam.auth.form import authenticate as authenticate_form, register as regist
 from adam.auth.util.predicate import authorize, authenticated
 
 from adam.auth.controller.key import KeyController
+from adam.auth.controller.character import CharacterController
 
 
 class Authenticate(HTTPMethod):
@@ -89,6 +90,7 @@ class AccountController(Controller):
 class RootController(Controller):
     account = AccountController()
     key = KeyController()
+    character = CharacterController()
     
     def __init__(self):
         """Perform some startup work, like configuring the mail interface."""

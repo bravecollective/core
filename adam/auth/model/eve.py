@@ -7,6 +7,7 @@ from datetime import datetime
 from mongoengine import Document, StringField, DateTimeField, BooleanField, ReferenceField, IntField
 
 from adam.auth.model.signals import update_modified_timestamp, trigger_api_validation
+from adam.api import APICall
 
 
 @trigger_api_validation.signal
@@ -32,6 +33,27 @@ class EVECredential(Document):
     
     modified = DateTimeField(db_field='m', default=datetime.utcnow)
 
+    def importChars(self):
+        result = APICall.objects.get(name='account.APIKeyInfo')(self)
+        key = result.key
+        if isinstance(key.rowset.row, list):
+            rows = key.rowset.row
+        else:
+            rows = [key.rowset.row]
+
+        for row in rows:
+            charID = row['@characterID']
+            info = APICall.objects.get(name='eve.CharacterInfo')(self, characterID=charID)
+            print info
+            alliance = EVEAlliance.get_or_create(info.alliance, info.allianceID)
+            corporation = EVECorporation.get_or_create(info.corporation,
+                    info.corporationID, alliance)
+            character = EVECharacter(owner=self.owner, credential=self,
+                    name=info.characterName, corporation=corporation,
+                    alliance=alliance, identifier=charID)
+            character.save()
+
+
 
 @update_modified_timestamp.signal
 class EVEEntity(Document):
@@ -46,11 +68,21 @@ class EVEEntity(Document):
 
 
 class EVEAlliance(EVEEntity):
+    @staticmethod
+    def get_or_create(name, identifier):
+        alliance, created = EVEAlliance.objects.get_or_create(name=name,
+                identifier=identifier)
+        return alliance
     pass
 
 
 class EVECorporation(EVEEntity):
     alliance = ReferenceField(EVEAlliance)
+
+    @staticmethod
+    def get_or_create(name, identifier, alliance):
+        corp, created = EVECorporation.objects.get_or_create(name=name,
+                identifier=identifier, alliance=alliance)
 
 
 class EVECharacter(EVEEntity):

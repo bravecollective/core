@@ -1,0 +1,196 @@
+## encoding: utf-8
+
+<%inherit file="adam.auth.template.master"/>
+
+<%block name="title">EVE Characters</%block>
+
+<%block name="header">
+	${parent.header()}
+	
+	<style>
+		.modal-body form { margin-bottom: 0; }
+		.modal-body form input.input-block-level:last-child { margin-bottom: 0; }
+		.key-code div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 284px; }
+	</style>
+</%block>
+
+<%block name="post">
+	${parent.post()}
+	
+	<script src="/js/vendor/jquery.timeago.js" charset="utf-8"></script>
+	<script src="/js/vendor/bootbox.js" charset="utf-8"></script>
+	
+	<script type="text/javascript" charset="utf-8">
+		$(function()
+		{
+			function ISODateString(d)
+			{
+				function pad(n){ return n < 10 ? '0' + n : n }
+
+				return d.getUTCFullYear()+'-'
+					+ pad(d.getUTCMonth()+1)+'-'
+					+ pad(d.getUTCDate())+'T'
+					+ pad(d.getUTCHours())+':'
+					+ pad(d.getUTCMinutes())+':'
+					+ pad(d.getUTCSeconds())+'Z';
+			}
+
+			$('time').timeago();
+			$('tr:first-child').addClass('first');
+
+			function confirm(title, content, success, callback)
+			{
+				if ( ! success.hasOwnProperty('label') )
+					success = {label: success, kind: 'btn-primary'};
+
+				var modal = $(
+				'<div id="modal" class="modal hide fade">' +
+					'<div class="modal-header">' +
+						'<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>' +
+						'<h3>' + title + '</h3>' +
+					'</div>' +
+					'<div class="modal-body">' + content + '</div>' +
+					'<div class="modal-footer">' +
+						'<a href="#" class="btn" data-dismiss="modal">Cancel</a>' +
+						'<a href="#" class="success btn ' + success.kind + '">' + success.label + '</a>' +
+					'</div>' +
+				'</div>').appendTo('body');
+
+				$('#modal .btn.success').on('click', function(e)
+				{
+					if ( callback() )
+						return;
+
+					e.preventDefault();
+					$('#modal').modal('hide')
+				});
+
+				$('#modal').on('hidden', function()
+				{
+					$('#modal').remove();
+				}).modal();
+			}
+
+			$('.add').on('click', function()
+			{
+				confirm(
+					"Add New API Key",
+					'<p>' +
+						'Enter your API key details below. ' +
+						'You can <a target="_blank" href="http://community.eveonline.com/support/api-key/CreatePredefined?accessMask=8921088">use a standard key</a> or ' +
+						'<a target="_blank" href="http://community.eveonline.com/support/api-key/CreatePredefined?accessMask=268435455">use a full key</a> ' +
+						'if you are leadership.  Additional permissions can determine access to services or the features those services will be able to offer you.' +
+					'</p>' +
+					'<p>' +
+						'<strong>Note:</strong> At no point are services given direct access to your API key.  Any API access a service ' +
+						'requests must be explicitly granted by you at the time you register for the service.' +
+						'<form>' +
+							'<input name="key" type="text" class="input-block-level" placeholder="Key ID">' +
+							'<input name="code" type="text" class="input-block-level" placeholder="Verification Code">' +
+						'</form>' +
+					'</p>',
+					{
+						label: "Add Key",
+						kind: 'btn-success'
+					},
+					function()
+					{
+						$.post('/key/', $('#modal form').serialize(), function(data)
+						{
+							console.log(data);
+							$(
+								'<tr data-id="' + data.identifier + '">' +
+									'<td class="key-id">' +
+										'<i class="icon-fixed-width icon-remove"></i> ' + data.key +
+									'</td>' +
+									'<td class="key-code">' +
+										'<div>' + data.code + '</div>' +
+									'</td>' +
+									'<td class="key-date">' +
+										'<time datetime="'+ISODateString(new Date())+'"></time>' +
+									'</td>' +
+									'<td class="actions">' +
+										'<button class="btn btn-danger btn-small delete" title="Remove API Key" rel="tooltip" data-placement="bottom">' +
+										'<i class="icon-remove"></i>' +
+										'</button>' +
+									'</td>' +
+								'</tr>'
+							).appendTo('table.table tbody');
+
+							$('time').timeago();
+						});
+					}
+				);
+			});
+
+			$(document).on('click', '.delete', function()
+			{
+				var row = $(this).parents('tr');
+
+				confirm(
+					"Are you really, <em>really</em> sure?",
+					"By removing API keys you may lose access to services you would ordinarily have access to.<br/>" +
+						"It may even make pandas cry. Please, think of the high-altitude melting pandas.",
+					{
+						label: "Remove Key",
+						kind: 'btn-danger'
+					},
+					function()
+					{
+						$.ajax('/key/' + row.attr('data-id'),
+						{
+							type: 'DELETE'
+						}).
+						done(function()
+						{
+							row.remove();
+						});
+					}
+				);
+			});
+		});
+	</script>
+</%block>
+
+<div class="container-fluid">
+	% if web.user.admin:
+	<div id="tabs-wrapper">
+		<div class="row-fluid">
+			<a class="span3 tab${' active' if not admin else ''}" href="/key/">
+				Your API Keys
+			</a>
+			<a class="span3 tab${' active' if admin else ''}" href="/key/?admin=true">
+				All API Keys
+			</a>
+		</div>
+	</div>
+	% endif
+
+	<div id="pad-wrapper">
+		<div class="row-fluid header">
+			<a class="btn btn-success pull-right add"><i class="icon-plus"></i> Add Key</a>
+			<h3>EVE Online Characters</h3>
+		</div>
+		
+		<div class="row-fluid table">
+			<table class="table table-hover">
+				<thead>
+					<tr>
+						<th class="span4 sortable key-code"><span class="line"></span>Name</th>
+						<th class="span2 sortable actions"><span class="line"></span>Actions</th>
+					</tr>
+				</thead>
+				<tbody>
+					% for record in records:
+					<tr data-id="${record.id}">
+						<td class="key-code"><div>${record.name}</div></td>
+						<td class="actions">
+							<button class="btn btn-danger btn-small delete" title="Remove API Key" rel="tooltip" data-placement="bottom"><i class="icon-remove"></i></button>
+						</td>
+					</tr>
+					% endfor
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
