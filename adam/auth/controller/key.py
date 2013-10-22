@@ -8,7 +8,6 @@ from marrow.util.bunch import Bunch
 
 from adam.auth.model.eve import EVECredential
 from adam.auth.util.predicate import authorize, authenticated, is_administrator
-from adam.api import *
 
 
 class KeyInterface(HTTPMethod):
