@@ -7,6 +7,7 @@ from datetime import datetime
 from mongoengine import Document, StringField, DateTimeField, BooleanField, ReferenceField, IntField
 
 from adam.auth.model.signals import update_modified_timestamp, trigger_api_validation
+from adam.api import APICall
 
 
 @trigger_api_validation.signal
@@ -31,6 +32,28 @@ class EVECredential(Document):
     owner = ReferenceField('User', db_field='o', reverse_delete_rule='CASCADE')
     
     modified = DateTimeField(db_field='m', default=datetime.utcnow)
+
+    def importChars(self):
+        result = APICall.objects.get(name='account.APIKeyInfo')(self)
+        key = result.key
+        if isinstance(key.rowset.row, list):
+            rows = key.rowset.row
+        else:
+            rows = [key.rowset.row]
+
+        for row in rows:
+            charID = row['@characterID']
+            info = APICall.objects.get(name='eve.CharacterInfo')(self, characterID=charID)
+            alliance,_ = EVEAlliance.objects.get_or_create(name=info.alliance,
+                    identifier=info.allianceID)
+            corporation,_ = EVECorporation.objects.get_or_create(
+                    name=info.corporation, identifier=info.corporationID,
+                    alliance=alliance)
+            character = EVECharacter(owner=self.owner, credential=self,
+                    name=info.characterName, corporation=corporation,
+                    alliance=alliance, identifier=charID)
+            character.save()
+
 
 
 @update_modified_timestamp.signal

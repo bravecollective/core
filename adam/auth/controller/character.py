@@ -10,7 +10,7 @@ from adam.auth.model.eve import EVECredential
 from adam.auth.util.predicate import authorize, authenticated, is_administrator
 
 
-class KeyInterface(HTTPMethod):
+class CharacterInterface(HTTPMethod):
     def __init__(self, key):
         super(KeyInterface, self).__init__()
 
@@ -31,35 +31,34 @@ class KeyInterface(HTTPMethod):
         raise HTTPFound(location='/key/')
 
 
-class KeyList(HTTPMethod):
+class CharacterList(HTTPMethod):
     @authorize(authenticated)
     def get(self, admin=False):
         if admin and not user.admin:
             raise HTTPUnauthorized("Must be administrative user.")
 
-        return "adam.auth.template.key.list", dict(area='keys', admin=bool(admin), records=user.credentials)
+        return "adam.auth.template.character.list", dict(area='characters', admin=bool(admin), records=user.characters)
 
     @authorize(authenticated)
     def post(self, **kw):
         data = Bunch(kw)
 
         record = EVECredential(data.key, data.code, owner=user.id)
-        try:
-            record.save()
-            record.importChars()
-            if request.is_xhr:
-                return 'json:', {'success': True, 'identifier': str(record.id), 'key': record.key, 'code': record.code}
-        except ValidationError:
-            if request.is_xhr:
-                return 'json:', {'success': False, 'message': 'Validation error for Eve Credential: One or more fields are incorrect or missing'}
+        record.save()
+
+	# If record is a character key:
+	#   Create character owned by user.id
+
+        if request.is_xhr:
+            return 'json:', {'success': True, 'identifier': str(record.id), 'key': record.key, 'code': record.code}
 
         raise HTTPFound(location='/key/')
 
 
-class KeyController(Controller):
+class CharacterController(Controller):
     """Entry point for the KEY management RESTful interface."""
 
-    index = KeyList()
+    index = CharacterList()
 
     def __lookup__(self, key, *args, **kw):
-        return KeyInterface(key), args
+        return CharacterInterface(key), args
