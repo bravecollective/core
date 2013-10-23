@@ -85,8 +85,8 @@
 						'<strong>Note:</strong> At no point are services given direct access to your API key.  Any API access a service ' +
 						'requests must be explicitly granted by you at the time you register for the service.' +
 						'<form>' +
-							'<input name="key" type="text" class="input-block-level" placeholder="Key ID">' +
-							'<input name="code" type="text" class="input-block-level" placeholder="Verification Code">' +
+							'<input name="key" type="text" class="input-block-level" placeholder="Key ID" pattern="^\\d+$" maxlength="8">' +
+							'<input name="code" type="text" class="input-block-level" placeholder="Verification Code" maxlength="64">' +
 						'</form>' +
 					'</p>',
 					{
@@ -95,6 +95,15 @@
 					},
 					function()
 					{
+						$('#modal form .alert').remove();
+						if (!/\d+/.test($('#modal form input[name="key"]').val())) {
+							errors = true;
+							$('#modal form input[name="key"]').after(
+								'<div class="alert alert-error">' +
+									'<strong>Key ID must be a number</strong>'
+							);
+							return true;
+						}
 						$.post('/key/', $('#modal form').serialize(), function(data)
 						{
 							console.log(data);

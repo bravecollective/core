@@ -44,11 +44,14 @@ class KeyList(HTTPMethod):
         data = Bunch(kw)
 
         record = EVECredential(data.key, data.code, owner=user.id)
-        record.save()
-        record.importChars()
-
-        if request.is_xhr:
-            return 'json:', {'success': True, 'identifier': str(record.id), 'key': record.key, 'code': record.code}
+        try:
+            record.save()
+            record.importChars()
+            if request.is_xhr:
+                return 'json:', {'success': True, 'identifier': str(record.id), 'key': record.key, 'code': record.code}
+        except ValidationError:
+            if request.is_xhr:
+                return 'json:', {'success': False, 'message': 'Validation error for Eve Credential: One or more fields are incorrect or missing'}
 
         raise HTTPFound(location='/key/')
 
