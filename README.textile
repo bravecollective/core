@@ -8,6 +8,7 @@ bq(byline). "https://github.com/bravecollective/core":github-project
 
 [github-project]https://github.com/bravecollective/core
 
+!https://travis-ci.org/bravecollective/core.png?branch=master!:https://travis-ci.org/bravecollective/core
 
 
 h2(#what-is). %1.% What is Brave Collective Core?
