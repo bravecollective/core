@@ -263,18 +263,18 @@ def populate_calls():
         # Status
         APICall('server.ServerStatus', 'm', "").save()
     
-    # from pudb import set_trace; set_trace()
-    
     calls = get_calls()  # Yes, EVE API access is *that* easy.
+    #__import__('pudb').set_trace()
     
-    for row in calls.rowset.callGroups:
-        APIGroup(int(row.groupID), row.name, row.description).save()
+    # This comprehension is an ugly hack to work around a data format change.
+    for row in [i for i in calls.rowset if i['@name'] == 'callGroups'][0]['row']:
+        APIGroup(int(row['@groupID']), row['@name'], row['@description']).save()
     
-    for row in calls.rowset.calls:
+    for row in [i for i in calls.rowset if i['@name'] == 'calls'][0]['row']:
         APICall(
-                row.type.lower()[:4] + '.' + row.name,
-                type_mapping[row.type],
-                row.description,
-                int(row.accessMask),
-                int(row.groupID)
+                row['@type'].lower()[:4] + '.' + row['@name'],
+                type_mapping[row['@type']],
+                row['@description'],
+                int(row['@accessMask']),
+                int(row['@groupID'])
             ).save()
