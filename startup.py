@@ -10,7 +10,10 @@ import paste.deploy.config
 from paste.deploy import loadapp, appconfig
 
 
-config_name = 'config:development.ini'
+if os.path.exists('local.ini'):
+    config_name = 'config:local.ini'
+else:
+    config_name = 'config:development.ini'
 here_dir = os.getcwd()
 
 conf = appconfig(config_name, relative_to=here_dir)
