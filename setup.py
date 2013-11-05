@@ -13,6 +13,7 @@ setup(
         
         packages = find_packages(),
         include_package_data = True,
+        zip_safe = False,
         paster_plugins = ['PasteScript', 'WebCore'],
         namespace_packages = ['adam'],
         
