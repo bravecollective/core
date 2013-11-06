@@ -1,0 +1,10 @@
+language: python
+python:
+  - "2.7"
+install:
+  - pip install git+https://github.com/marrow/marrow.templating.git@develop#egg=marrow.templating
+  - pip install git+https://github.com/marrow/marrow.tags.git@develop#egg=marrow.tags
+  - pip install nose coverage webtest
+  - pip install . --use-mirrors
+script: python setup.py test
+
