@@ -1,0 +1,87 @@
+## encoding: utf-8
+<%!
+
+areas = [
+        # ID         Icon            Label             Destination
+        ('overview', 'home',         "Overview",       "/"),
+        ('keys',     'key',          "API Keys",       "/key/"),
+        ('apps',     'puzzle-piece', "Applications",   "/application/"),
+        ('chars',    'user',         "Characters",     "/character/"),
+        ('group',    'group',        "Groups",         "/group/"),
+        ('admin',    'dashboard',    "Maintenance",    "/admin/"),
+    ]
+
+%>
+<div class="navbar navbar-inverse">
+    <div class="navbar-inner">
+        <i class="brand icon-key"></i>
+        <h1 class="brand">
+             <a href="index.html">Brave<span class="hidden-phone"> Collective</span></a> <span class="app">Core Services</span>
+        </h1>
+
+        <ul class="nav pull-right">
+% if web.auth.authenticated:
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                    <i class="icon-user"></i><span class="hidden-phone"> ${web.user.username}</span>
+                    <b class="caret"></b>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a href="/account/"><i class="icon-cog"></i> ${_("Profile")}</a></li>
+                    <li><a href="/account/settings"><i class="icon-cog"></i> ${_("Settings")}</a></li>
+                    <li class="divider"></li>
+                    <li><a href="/help"><i class="icon-question-sign"></i> ${_("Help")}</a></li>
+                    <li class="divider"></li>
+                    <li><a href="/account/deauthenticate"><i class="icon-signout"></i> ${_("Sign Out")}</a></li>
+                </ul>
+            </li>
+% else:
+            <li>
+                <a href="/account/authenticate">
+                    <i class="icon-signin"></i><span class="hidden-phone"> ${_("Sign In")}</span>
+                </a>
+            </li>
+% endif
+        </ul>
+
+        <!-- shows same menu as sidebar but for mobile devices -->
+        <button type="button" class="btn btn-navbar visible-phone" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <div class="nav-collapse collapse visible-phone mobile-menu">
+            <ul class="nav">
+% for id, icon, label, url in areas:
+    % if context.get('area', 'overview') == id:
+                <li class="active"><a href="${url}"><i class="icon-${icon}"></i> ${label}</a></li>
+    % else:
+                <li><a href="${url}"><i class="icon-${icon}"></i> ${label}</a></li>
+    % endif
+% endfor
+            </ul>
+        </div>
+        <!-- end navbar for mobile devices -->
+    </div>
+</div>
+
+<div id="sidebar-nav" class="hidden-phone">
+    <ul id="dashboard-menu">
+% for id, icon, label, url in areas:
+    % if area == id:
+        <li class="active">
+            <div class="pointer">
+                <div class="arrow"></div>
+                <div class="arrow_border"></div>
+            </div>
+    % else:
+        <li>
+    % endif
+            <a href="${url}">
+                <i class="icon-${icon}"></i>
+                <span>${label}</span>
+            </a>
+        </li>
+% endfor
+    </ul>
+</div>
