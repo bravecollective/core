@@ -33,10 +33,16 @@ class EVECredential(Document):
     owner = ReferenceField('User', db_field='o', reverse_delete_rule='CASCADE')
     
     modified = DateTimeField(db_field='m', default=datetime.utcnow)
-
+    
+    @property
+    def characters(self):
+        from brave.core.character.model import EVECharacter
+        return EVECharacter.objects(credential=self)
+    
     def importChars(self):
         # TODO: Move into a background signal handler.
         from brave.core.util.eve import APICall
+        from brave.core.character.model import EVEAlliance, EVECorporation, EVECharacter
         
         result = APICall.objects.get(name='account.APIKeyInfo')(self)
         key = result.key
@@ -46,7 +52,6 @@ class EVECredential(Document):
             charID = row['@characterID']
             info = APICall.objects.get(name='eve.CharacterInfo')(self, characterID=charID)
             
-            """ TODO: Temporarily removed.
             alliance, _ = EVEAlliance.objects.get_or_create(
                     name = info.alliance,
                     identifier = info.allianceID)
@@ -56,14 +61,13 @@ class EVECredential(Document):
                     identifier = info.corporationID,
                     alliance = alliance
                 )
-            """
             
             character = EVECharacter(
                     owner = self.owner,
                     credential = self,
                     name = info.characterName,
-                    # corporation = corporation,
-                    # alliance = alliance,
+                    corporation = corporation,
+                    alliance = alliance,
                     identifier = charID,
                 )
             character.save()
