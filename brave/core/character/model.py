@@ -31,7 +31,7 @@ class EVEAlliance(EVEEntity):
 
 
 class EVECorporation(EVEEntity):
-    alliacne = ReferenceField(EVEAlliance)
+    alliance = ReferenceField(EVEAlliance)
 
 
 class EVECharacter(EVEEntity):
@@ -41,7 +41,7 @@ class EVECharacter(EVEEntity):
                 ],
         )
     
-    alliacne = ReferenceField(EVEAlliance)
+    alliance = ReferenceField(EVEAlliance)
     corporation = ReferenceField(EVECorporation)
     
     owner = ReferenceField('User', db_field='o', reverse_delete_rule='NULLIFY')
