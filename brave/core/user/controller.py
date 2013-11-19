@@ -1,21 +1,16 @@
 # encoding: utf-8
 
+from marrow.util.bunch import Bunch
 from web.auth import authenticate, deauthenticate
 from web.core import Controller, HTTPMethod, request, config
-from web.core.locale import set_lang, LanguageError
 from web.core.http import HTTPFound, HTTPSeeOther, HTTPForbidden
 from web.core.locale import _
 
-from marrow.mailer import Mailer
-from marrow.util.bunch import Bunch
+from brave.core.auth.model import User
+from brave.core.auth.form import authenticate as authenticate_form, register as register_form
 
-import adam.auth.util
-from adam.auth.model.authentication import User
-from adam.auth.form import authenticate as authenticate_form, register as register_form
-from adam.auth.util.predicate import authorize, authenticated
 
-from adam.auth.controller.key import KeyController
-from adam.auth.controller.character import CharacterController
+log = __import__('logging').getLogger(__name__)
 
 
 class Authenticate(HTTPMethod):
@@ -55,10 +50,10 @@ class Register(HTTPMethod):
         except Exception as e:
             if config.get('debug', False):
                 raise
-            return 'json:', dict(success=False, message="Unable to parse data.", data=post, exc=str(e))
+            return 'json:', dict(success=False, message=_("Unable to parse data."), data=post, exc=str(e))
         
         if not data.username or not data.email or not data.password or data.password != data.pass2:
-            return 'json:', dict(success=False, message="Missing data?", data=data)
+            return 'json:', dict(success=False, message=_("Missing data or passwords do not match."), data=data)
         
         user = User(data.username, data.email, active=True)
         user.password = data.password
@@ -85,28 +80,3 @@ class AccountController(Controller):
     def deauthenticate(self):
         deauthenticate()
         raise HTTPSeeOther(location='/')
-
-
-class RootController(Controller):
-    account = AccountController()
-    key = KeyController()
-    character = CharacterController()
-    
-    def __init__(self):
-        """Perform some startup work, like configuring the mail interface."""
-        super(RootController, self).__init__()
-        
-        adam.auth.util.mail = Mailer(Bunch(config).mail)
-        adam.auth.util.mail.start()
-    
-    @authorize(authenticated)
-    def index(self):
-        return "adam.auth.template.dashboard", dict()
-    
-    def lang(self, lang):
-        try:
-            set_lang(lang)
-        except LanguageError:
-            return 'json:', dict(success=False)
-        
-        return 'json:', dict(success=True)

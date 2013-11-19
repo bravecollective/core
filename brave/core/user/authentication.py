@@ -1,137 +1,108 @@
 # encoding: utf-8
 
+"""WebCore authentication and session restoration callbacks.
+
+These implement our particular flavour of authentication: a loose identity based on user name, e-mail address, or
+Yubikey OTP token and (regardless of identifier) a password.  Actual password crypto happens in:
+
+    brave.core.util.field:PasswordField.check
+"""
+
 from __future__ import unicode_literals
 
 from time import time, sleep
-from datetime import datetime, timedelta
-
-import web.core
-from mongoengine import Document, StringField, EmailField, DateTimeField, BooleanField, ReferenceField, ListField
+from datetime import datetime
 from yubico import yubico, yubico_exceptions
+from marrow.util.convert import boolean
+from web.core import config, request
 
-from adam.auth.model.signals import update_modified_timestamp
-from adam.auth.model.fields import PasswordField, IPAddressField
+from brave.core.user.model import User, LoginHistory
 
 
-@update_modified_timestamp.signal
-class User(Document):
-    meta = dict(
-        collection = "Users",
-        allow_inheritance = False,
-        indexes = ['otp'],
-    )
-    
-    # Field Definitions
-    
-    username = StringField(db_field='u', required=True, unique=True, regex=r'[a-zA-Z][a-zA-Z_.-]+')
-    email = EmailField(db_field='e', required=True, unique=True)
-    password = PasswordField(db_field='p')
-    active = BooleanField(db_field='a', default=False)
-    confirmed = DateTimeField(db_field='c')
-    admin = BooleanField(db_field='d', default=False)
-    otp = ListField(StringField(max_length=12), default=list)
-    
-    primary = ReferenceField('EVECharacter')
+log = __import__('logging').getLogger(__name__)
 
-    modified = DateTimeField(db_field='m', default=datetime.utcnow)
-    seen = DateTimeField(db_field='s')
-    
-    # Python Magic Methods
-    
-    def __repr__(self):
-        return 'User({0}, {1})'.format(self.id, self.username).encode('ascii', 'backslashreplace')
 
-    # Related Data Lookups
+def lookup(identifier):
+    """Thaw current user data based on session-stored user ID."""
     
-    @property
-    def credentials(self, **kw):
-        from adam.auth.model.eve import EVECredential
-        return EVECredential.objects(owner=self)
+    user = User.objects(id=identifier).first()
     
-    @property
-    def characters(self, **kw):
-        from adam.auth.model.eve import EVECharacter
-        return EVECharacter.objects(owner=self)
+    if user:
+        user.update(set__seen=datetime.utcnow(), set__host=request.remote_addr)
     
-    # WebCore Authentication
+    return user
+
+
+def authentication_logger(fn):
+    """Decorate the authentication handler to log attempts.
     
-    @classmethod
-    def authenticate(cls, identifier, password):
-        query = dict(active=True)
+    Log format:
+    
+    AUTHN {status} {ip} {uid or identifier}
+    """
+    def inner(identifier, password):
+        result = fn(identifier, password)
         
-        if isinstance(password, unicode):
-            password = password.encode('utf8')
+        if result:
+            record, user = result
+            log.info("AUTHN PASS %s %s", request.remote_addr, record)
+            return result
         
-        if '@' in identifier:
-            query[b'email'] = identifier
-        elif len(identifier) == 44:
-            query[b'otp'] = identifier[:12]
-        else:
-            query[b'username'] = identifier
+        log.info("AUTHN FAIL %s %s", request.remote_addr, identifier)
+        return result
+
+
+@authentication_logger
+def authenticate(identifier, password):
+    """Given an e-mail address (or Yubikey OTP) and password, authenticate a user."""
+    
+    ts = time()  # Record the 
+    query = dict(active=True)
+    
+    # Gracefully handle extended characters in passwords.
+    # The password storage algorithm works in binary.
+    if isinstance(password, unicode):
+        password = password.encode('utf8')
+    
+    # Build the MongoEngine query to find 
+    if '@' in identifier:
+        query[b'email'] = identifier
+    elif len(identifier) == 44:
+        query[b'otp'] = identifier[:12]
+    else:
+        query[b'username'] = identifier
+    
+    user = User.objects(**query).first()
+    
+    if not user or not User.password.check(user.password, password):
+        if user:
+            LoginHistory(user, False, request.remote_addr).save()
         
-        user = cls.objects(**query).first()
+        # Prevent basic timing attacks; always take at least one second to process.
+        sleep(max(min(1 - (time() - ts), 0), 1))
         
-        ts = time()
-        if not user or not User.password.check(user.password, password):
-            if user:
-                LoginHistory(user, False, web.core.request.remote_addr).save()
-            
-            # Prevent basic timing attacks; always take at least one second to process.
-            sleep(max(min(1 - (time() - ts), 0), 1))
-            
+        return None
+    
+    # Validate Yubikey OTP
+    if 'otp' in query:
+        client = yubico.Yubico(
+                config['yubico.client'],
+                config['yubico.key'],
+                boolean(config.get('yubico.secure', False))
+            )
+        
+        try:
+            status = client.verify(identifier, return_response=True)
+        except:
             return None
         
-        # Validate OTP
-        if 'otp' in query:
-            client = yubico.Yubico(
-                    web.core.config['yubico.client'],
-                    web.core.config['yubico.key'],
-                    True if web.core.config.get('yubico.secure', False) == 'True' else False
-                )
-            
-            try:
-                status = client.verify(identifier, return_response=True)
-            except:
-                return None
-            
-            if not status:
-                return None
-        
-        user.update(set__seen=datetime.utcnow())
-        LoginHistory(user, True, web.core.request.remote_addr).save()
-        
-        return user.id, user
+        if not status:
+            return None
     
-    @classmethod
-    def lookup(cls, identifier):
-        user = cls.objects(id=identifier).first()
-        
-        if user:
-            user.update(set__seen=datetime.utcnow())
-        
-        return user
+    user.update(set__seen=datetime.utcnow())
+    
+    # Record the fact the user signed in.
+    LoginHistory(user, True, request.remote_addr).save()
+    
+    return user.id, user
 
-
-class LoginHistory(Document):
-    meta = dict(
-            collection = "AuthHistory",
-            allow_inheritance = False,
-            indexes = [
-                    'user',
-                    # Automatically delete records as they expire.
-                    dict(fields=['expires'], expireAfterSeconds=0)
-                ]
-        )
-    
-    user = ReferenceField(User)
-    success = BooleanField(db_field='s', default=True)
-    location = IPAddressField(db_field='l')
-    expires = DateTimeField(db_field='e', default=lambda: datetime.utcnow() + timedelta(days=30))
-    
-    def __repr__(self):
-        return 'LoginHistory({0}, {1}, {2}, {3})'.format(
-                self.id.generation_time.isoformat(),
-                'PASS' if self.success else 'FAIL',
-                self.user_id,
-                self.location
-            )
