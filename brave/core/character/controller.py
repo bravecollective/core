@@ -30,7 +30,7 @@ class CharacterList(HTTPMethod):
             raise HTTPNotFound()
 
         return 'brave.core.character.template.list', dict(
-                area = 'characters',
+                area = 'chars',
                 admin = bool(admin),
                 records = user.characters
             )
