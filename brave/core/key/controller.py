@@ -1,0 +1,85 @@
+# encoding: utf-8
+
+from web.auth import user
+from web.core import Controller, HTTPMethod, request
+from web.core.locale import _
+from web.core.http import HTTPFound, HTTPNotFound, HTTPUnauthorized
+from marrow.util.convert import boolean
+from marrow.util.bunch import Bunch
+from mongoengine import ValidationError
+
+from brave.core.key.model import EVECredential
+from brave.core.util.predicate import authorize, authenticated, is_administrator
+
+
+class KeyInterface(HTTPMethod):
+    def __init__(self, key):
+        super(KeyInterface, self).__init__()
+
+        try:
+            self.key = EVECredential.objects.get(id=key)
+        except EVECredential.DoesNotExist:
+            raise HTTPNotFound()
+
+        if self.key.owner.id != user.id:
+            raise HTTPNotFound()
+
+    def delete(self):
+        self.key.delete()
+
+        if request.is_xhr:
+            return 'json:', dict(success=True)
+
+        raise HTTPFound(location='/key/')
+
+
+class KeyList(HTTPMethod):
+    @authorize(authenticated)
+    def get(self, admin=False):
+        admin = boolean(admin)
+        
+        if admin and not is_administrator:
+            raise HTTPNotFound()
+
+        return 'brave.core.key.template.list', dict(
+                area = 'keys',
+                admin = admin,
+                records = user.credentials
+            )
+
+    @authorize(authenticated)
+    def post(self, **kw):
+        data = Bunch(kw)
+
+        record = EVECredential(data.key, data.code, owner=user.id)
+        
+        try:
+            record.save()
+            record.importChars()
+            if request.is_xhr:
+                return 'json:', dict(
+                        success = True,
+                        message = _("Successfully added EVE API key."),
+                        identifier = str(record.id),
+                        key = record.key,
+                        code = record.code,
+                    )
+        
+        except ValidationError:
+            if request.is_xhr:
+                return 'json:', dict(
+                        success = False,
+                        message = _("Validation error: one or more fields are incorrect or missing."),
+                    )
+
+        raise HTTPFound(location='/key/')
+
+
+class KeyController(Controller):
+    """Entry point for the KEY management RESTful interface."""
+
+    index = KeyList()
+
+    def __lookup__(self, key, *args, **kw):
+        request.path_info_pop()  # We consume a single path element.
+        return KeyInterface(key), args

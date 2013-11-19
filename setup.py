@@ -4,9 +4,9 @@ import sys, os
 from setuptools import setup, find_packages
 
 setup(
-        name = "ADAM",
+        name = "Brave Core Services",
         version = "0.1",
-        description = "An EVE-authenticated collection of utilities, like a wiki.",
+        description = "EVE Online authentication, authorization, and API proxy service.",
         author = "Alice Bevan-McGregor",
         author_email = "alice@gothcandy.com",
         license = "MIT",
@@ -15,7 +15,7 @@ setup(
         include_package_data = True,
         zip_safe = False,
         paster_plugins = ['PasteScript', 'WebCore'],
-        namespace_packages = ['adam'],
+        namespace_packages = ['brave'],
         
         tests_require = ['nose', 'webtest', 'coverage'],
         test_suite = 'nose.collector',
