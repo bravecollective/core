@@ -1,258 +1,48 @@
 ## encoding: utf-8
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<%block name="header">
-		<meta charset="utf-8">
-		
-		<title><%block name="title"/> — Brave Newbies Inc.</title>
-		
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<meta name="description" content="">
-		<meta name="author" content="">
-		
-		<!--[if lt IE 9]>
-		<script src="/js/html5shiv.js"></script>
-		<![endif]-->
-		
-		<link rel="apple-touch-icon-precomposed" sizes="144x144" href="/ico/apple-touch-icon-144-precomposed.png">
+    <head>
+        <%block name="header">
+        <meta charset="utf-8">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <title><%block name="title"/> — Brave Collective: Core Services</title>
+
+        <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/ico/apple-touch-icon-144-precomposed.png">
 		<link rel="apple-touch-icon-precomposed" sizes="114x114" href="/ico/apple-touch-icon-114-precomposed.png">
 		<link rel="apple-touch-icon-precomposed" sizes="72x72" href="/ico/apple-touch-icon-72-precomposed.png">
 		<link rel="apple-touch-icon-precomposed" href="/ico/apple-touch-icon-57-precomposed.png">
 		<link rel="shortcut icon" href="/ico/favicon.png">
-		
-		<link rel="stylesheet" href="/css/fonts.css" type="text/css">
-		<link rel="stylesheet/less" href="/less/core.less">
-		<!--<link rel="stylesheet/less" href="/less/base.less">-->
-		
-		<script src="/js/libs/less-1.3.3.min.js"></script>
-		<script src="/js/libs/modernizr-2.5.3-respond-1.1.0.min.js"></script>
-		
-		</%block>
-	</head>
+        
+        <link rel="stylesheet/less" href="/css/base.less">
+        <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+        <link href='http://fonts.googleapis.com/css?family=Lato:300,400,700,900,300italic,400italic,700italic,900italic' rel='stylesheet' type='text/css'>
+        <%block name="styles"/>
 
-	<body>
-		<%block name="pre">
-		
-		<section id="top" class="preface">
-			<header>
-				<hgroup>
-					<h1 title=""><a href="/">Brave Newbies Inc.</a></h1>
-				</hgroup>
-				<nav>
-					<menu>
-						<li><a href="/Home"><i class="icon-home"></i> Home</a></li>
-						<li><a href="/Home"><i class="icon-comments-alt"></i> Forums</a></li>
-						<li class="dropdown"
-							><a href="" data-toggle="dropdown" class="dropdown-toggle"><i class="icon-group"></i> Wiki</a>
-							<ul class="dropdown-menu pull-left" role="menu" aria-labelledby="dLabel">
-								<li><a href="/Home"><i class="icon-home"></i> Home</a></li>
-								<li><a href="/random"><i class="icon-random"></i> Random Page</a></li>
-								<li class="divider"></li>
-								<li><a href="/pages"><i class="icon-sitemap"></i> Page Index</a></li>
-								<li><a href="/categories"><i class="icon-tags"></i> Categories</a></li>
-								<li><a href="/changes"><i class="icon-time"></i> Recent Changes</a></li>
-% if web.auth.authenticated:
-								<li class="divider"></li>
-								<li class="header">Sub-Wikis</li>
-								<li class="dropdown-submenu">
-									<a href=""><i class="icon-group"></i> Corporate</a>
-									<ul class="dropdown-menu">
-										<li><a href="/Home"><i class="icon-home"></i> Home</a></li>
-										<li><a href="/random"><i class="icon-random"></i> Random Page</a></li>
-										<li class="divider"></li>
-										<li><a href="/pages"><i class="icon-sitemap"></i> Page Index</a></li>
-										<li><a href="/categories"><i class="icon-tags"></i> Categories</a></li>
-										<li><a href="/changes"><i class="icon-time"></i> Recent Changes</a></li>
-										<li class="divider"></li>
-										<li><a href=""><i class="icon-lock"></i> Modify Protection</a></li>
-									</ul>
-								</li>
-								<li class="dropdown-submenu">
-									<a href=""><i class="icon-group"></i> Diplomatic</a>
-									<ul class="dropdown-menu">
-										<li><a href="/Home"><i class="icon-home"></i> Home</a></li>
-										<li><a href="/random"><i class="icon-random"></i> Random Page</a></li>
-										<li class="divider"></li>
-										<li><a href="/pages"><i class="icon-sitemap"></i> Page Index</a></li>
-										<li><a href="/categories"><i class="icon-tags"></i> Categories</a></li>
-										<li><a href="/changes"><i class="icon-time"></i> Recent Changes</a></li>
-										<li class="divider"></li>
-										<li><a href=""><i class="icon-lock"></i> Modify Protection</a></li>
-									</ul>
-								</li>
-								<li class="dropdown-submenu">
-									<a href=""><i class="icon-group"></i> Human Resources</a>
-									<ul class="dropdown-menu">
-										<li><a href="/Home"><i class="icon-home"></i> Home</a></li>
-										<li><a href="/random"><i class="icon-random"></i> Random Page</a></li>
-										<li class="divider"></li>
-										<li><a href="/pages"><i class="icon-sitemap"></i> Page Index</a></li>
-										<li><a href="/categories"><i class="icon-tags"></i> Categories</a></li>
-										<li><a href="/changes"><i class="icon-time"></i> Recent Changes</a></li>
-										<li class="divider"></li>
-										<li><a href=""><i class="icon-lock"></i> Modify Protection</a></li>
-									</ul>
-								</li>
-								<li class="dropdown-submenu">
-									<a href=""><i class="icon-group"></i> Intelligence</a>
-									<ul class="dropdown-menu">
-										<li><a href="/Home"><i class="icon-home"></i> Home</a></li>
-										<li><a href="/random"><i class="icon-random"></i> Random Page</a></li>
-										<li class="divider"></li>
-										<li><a href="/pages"><i class="icon-sitemap"></i> Page Index</a></li>
-										<li><a href="/categories"><i class="icon-tags"></i> Categories</a></li>
-										<li><a href="/changes"><i class="icon-time"></i> Recent Changes</a></li>
-										<li class="divider"></li>
-										<li><a href=""><i class="icon-lock"></i> Modify Protection</a></li>
-									</ul>
-								</li>
-								<li class="dropdown-submenu">
-									<a href=""><i class="icon-group"></i> Leadership</a>
-									<ul class="dropdown-menu">
-										<li><a href="/Home"><i class="icon-home"></i> Home</a></li>
-										<li><a href="/random"><i class="icon-random"></i> Random Page</a></li>
-										<li class="divider"></li>
-										<li><a href="/pages"><i class="icon-sitemap"></i> Page Index</a></li>
-										<li><a href="/categories"><i class="icon-tags"></i> Categories</a></li>
-										<li><a href="/changes"><i class="icon-time"></i> Recent Changes</a></li>
-										<li class="divider"></li>
-										<li><a href=""><i class="icon-lock"></i> Modify Protection</a></li>
-									</ul>
-								</li>
-							</ul>
-						</li>
-% endif
-					</menu>
-				</nav>
-				<aside>
-					<!--
-					<form action="/search">
-						<label for="si_target"><i class="icon-search"></i></label>
-						<input id="si_target" name="q" type="search" placeholder="Search">
-					</form>
-					-->
-					<menu>
-						<li><a href=""><i class="icon-comments"></i> Discuss</a></li>
-% if web.auth.authenticated:
-						<li class="dropdown">
-							<a href="" data-toggle="dropdown" class="dropdown-toggle"><i class="icon-asterisk"></i> Actions</a>
-							<ul class="dropdown-menu pull-right" role="menu" aria-labelledby="dLabel">
-								<li><a href=""><i class="icon-lock"></i> Modify Protection</a></li>
-								<li><a href=""><i class="icon-time"></i> History</a></li>
-								<li class="divider"></li>
-								<li><a href=""><i class="icon-refresh"></i> Monitor</a></li>
-								<li><a href="" id="edit"><i class="icon-pencil"></i> Modify</a></li>
-								<li><a href=""><i class="icon-remove"></i> Delete</a></li>
-								<li class="divider"></li>
-								<li><a href=""><i class="icon-flag"></i> Report</a></li>
-							</ul>
-						</li>
-						<li class="dropdown">
-							<a href="" data-toggle="dropdown" class="dropdown-toggle"><i class="icon-user"></i> ${web.auth.user.credentials['eve'].characterName}</a>
-							<ul class="dropdown-menu pull-right" role="menu" aria-labelledby="dLabel">
-								<li><img src="http://image.eveonline.com/Character/${web.auth.user.credentials['eve'].characterID}_256.jpg" style="width: 100%; display: block; margin: 0 0 5px;"></li>
-								<li><a href="/admin/"><i class="icon-dashboard"></i> Administration</a></li>
-								<li><a href=""><i class="icon-flag"></i> Petitions</a></li>
-								<li><a href=""><i class="icon-legal"></i> Motions</a></li>
-								<li class="divider"></li>
-								<li><a href=""><i class="icon-user"></i> Profile</a></li>
-								<li><a href=""><i class="icon-cog"></i> Settings</a></li>
-								<li class="divider"></li>
-								<li><a href=""><i class="icon-question-sign"></i> Help</a></li>
-								<li class="divider"></li>
-								<li><a href=""><i class="icon-signout"></i> Sign Out</a></li>
-							</ul>
-						</li>
-% else:
-						<li>
-							<a href="/account/authenticate"><i class="icon-signin"></i> Sign In</a>
-						</li>
-% endif
-					</menu>
-					<!--
-					<menu style="display: block; margin-top: 35px; padding-right: 10px;">
-						<li><a href=""><i class="icon-eye-open"></i> Preview</a></li>
-						<li><a href=""><i class="icon-ok"></i> Save</a></li>
-						<li><a href=""><i class="icon-minus"></i> Cancel</a></li>
-						<li><a href=""><i class="icon-flag"></i> Report</a></li>
-					</menu>
-					-->
-				</aside>
-			</header>
-		</section>
-		</%block>
-		
-		<section id="content">
-			${self.body()}
-			
-			<div class="modal fade" style="position: absolute; top: 20%;">
-				<div class="modal-header">
-					<h3>Authentication</h3>
-				</div>
-				<div class="modal-body">
-					
-					<dl class="tabbed">
-						<dt class="active">Sign In</dt>
-						<dd>
-							<form id="sign-in">
-								<dl class="horizontal">
-									<dt>User Name / OTP</dt>
-									<dd><input type="text"></dd>
-									<dt>Password</dt>
-									<dd><input type="password"></dd>
-								</dl>
-							</form>
-						</dd>
-						
-						<dt>Create Account</dt>
-						<dd>
-							<form id="sign-up">
-								<dl class="horizontal">
-									<dd><h4>General</h4></dd>
-									<dt>User Name</dt>
-									<dd><input type="text" name="name" id="sign-up-username"><i class="icon-ok icon-muted icon-field" id="sign-up-username-check"></i></dd>
-									<dt>Password</dt>
-									<dd><input type="password" name="password" id="pw1"> <input type="password" placeholder="Verify Password" id="pw2"><i id="sign-up-pw-check" class="icon-ok icon-muted icon-field"></i></dd>
-									<dt>E-Mail Address</dt>
-									<dd><input type="text" name="email" class="full"></dd>
-									<!--
-									<dt>Optional OTP</dt>
-									<dd><input type="text" name="otp" class="full"></dd>
-									-->
-									
-									<dd><h4>EVE API</h4></dd>
-									<dt>API Key ID</dt>
-									<dd><input type="text" name="apiKey" id="sign-up-apik" class="medium"><i class="icon-ok icon-muted icon-field" id="api-ok"></i></dd>
-									<dt>Verification Code</dt>
-									<dd><input type="text" name="apiCode" class="full" id="sign-up-apiv"></dd>
-									<dt>Character</dt>
-									<dd class="clearfix">
-										<div class="subtle">Enter a valid API KEY and Verification Code.</div>
-										<a href="" style="float: left; border: 1px solid rgba(82,168,236,.8); border-radius: 7px; box-shadow: 0 0 8px rgba(82,168,236,.6); padding: 1px; line-height: 0;"><img src="http://image.eveonline.com/Character/432286394_64.jpg" style="border-radius: 6px; display: block;"></a>
-										<a href="" style="float: left; border: 1px solid transparent; border-radius: 7px; padding: 1px; line-height: 0;"><img src="https://image.eveonline.com/Character/93072750_64.jpg" style="border-radius: 6px; display: block;"></a>
-									</dd>
-								</dl>
-							</form>
-						</dd>
-					</dl>
-					
-				</div>
-				<div class="modal-footer">
-					<button>Cancel</button>
-					<button class="primary"><i class="icon-signin"></i> Authenticate</button>
-					<button class="primary"><i class="icon-refresh icon-spin"></i> Authenticate</button>
-				</div>
-			</div>
-		</section>
-		
-		<%block name="post">
-		<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
-		<script src="/js/bootstrap-dropdown.js"></script>
-		<script src="/js/bootstrap-modal.js"></script>
-		<script src="/js/changedelay.js"></script>
-		<script src="/js/script.js"></script>
-		<script src="/js/authentication.js"></script>
-		</%block>
-  </body>
+        <script src="/js/vendor/less-1.4.0-beta.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/modernizr/2.5.3/modernizr.min.js"></script>
+        
+        <!--[if lt IE 9]>
+            <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+        </%block>
+    </head>
+    <body>
+        <%block name="pre">
+        <%include file="adam.auth.template.navigation"/>
+        </%block>
+
+        <!-- main container -->
+        <div class="content">
+            ${self.body()}
+        </div>
+
+        <%block name="post">
+        <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.1/js/bootstrap.min.js"></script>
+        <script src="/js/vendor/jquery-ui-1.10.2.custom.min.js"></script>
+        <script src="/js/script.js"></script>
+        </%block>
+    </body>
 </html>
