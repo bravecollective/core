@@ -6,6 +6,7 @@ from web.core.locale import _
 from web.core.http import HTTPFound, HTTPNotFound, HTTPUnauthorized
 from marrow.util.convert import boolean
 from marrow.util.bunch import Bunch
+from mongoengine import ValidationError
 
 from brave.core.key.model import EVECredential
 from brave.core.util.predicate import authorize, authenticated, is_administrator
