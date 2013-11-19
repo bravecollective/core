@@ -10,7 +10,8 @@
     <style>
         .modal-body form { margin-bottom: 0; }
         .modal-body form input.input-block-level:last-child { margin-bottom: 0; }
-        .key-code div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 284px; }
+        table.table { table-layout: fixed; width: 100%; }
+        span.ellipsis { display: inline-block; width: 100%; overflow: hidden !important; white-space: nowrap !important; text-overflow: ellipsis !important; word-break: break-all !important; word-wrap: break-word !important; }
     </style>
 </%block>
 
@@ -85,8 +86,8 @@
                         '<strong>Note:</strong> At no point are services given direct access to your API key.  Any API access a service ' +
                         'requests must be explicitly granted by you at the time you register for the service.' +
                         '<form>' +
-                            '<input name="key" type="text" class="input-block-level" placeholder="Key ID" pattern="^\\d+$" maxlength="8">' +
-                            '<input name="code" type="text" class="input-block-level" placeholder="Verification Code" maxlength="64">' +
+                            '<input name="key" type="text" class="input-block-level" placeholder="Key ID" pattern="^\\d+$" maxlength="8" autocomplete="off" required>' +
+                            '<input name="code" type="text" class="input-block-level" placeholder="Verification Code" maxlength="64" autocomplete="off" required>' +
                         '</form>' +
                     '</p>',
                     {
@@ -196,7 +197,7 @@
                     % for record in records:
                     <tr data-id="${record.id}">
                         <td class="key-id"><i class="icon-fixed-width icon-${'ok' if record.verified else 'remove'}"></i> ${record.key}</td>
-                        <td class="key-code"><div>${record.code}</div></td>
+                        <td class="key-code"><span class="ellipsis">${record.code}</span></td>
                         <td class="characters hidden-tablet hidden-phone">
                             % for char in record.characters:
                             <img src="http://image.eveonline.com/Character/${char.identifier}_32.jpg" style="vertical-align: middle; margin-right: 5px; border-radius: 3px; width: 24px; height: 24px;" title="${char.name}">
