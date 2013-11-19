@@ -1,17 +1,9 @@
 # encoding: utf-8
 
-from web.auth import authenticate, deauthenticate
-from web.core import Controller, HTTPMethod, request, config
+from __future__ import unicode_literals
+
+from web.core import Controller
 from web.core.locale import set_lang, LanguageError
-from web.core.http import HTTPFound, HTTPSeeOther, HTTPForbidden
-from web.core.locale import _
-
-from marrow.mailer import Mailer
-from marrow.util.bunch import Bunch
-
-from adam.auth.controller.key import KeyController
-from adam.auth.controller.character import CharacterController
-
 
 from brave.core import util
 from brave.core.util.signal import StartupMixIn
@@ -19,16 +11,14 @@ from brave.core.util.predicate import authorize, authenticated
 
 
 
-class RootController(Controller, StartupMixIn):
-    account = util.load('user', 'AccountController')
-    key = util.load('key', 'KeyController')
-    character = util.load('character', 'CharacterController')
-    
-    character = CharacterController()
+class RootController(StartupMixIn, Controller):
+    account = util.load('account')
+    key = util.load('key')
+    character = util.load('character')
     
     @authorize(authenticated)
     def index(self):
-        return "adam.auth.template.dashboard", dict()
+        return 'brave.core.template.dashboard', dict()
     
     def lang(self, lang):
         try:

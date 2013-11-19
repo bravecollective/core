@@ -1,13 +1,14 @@
 # encoding: utf-8
 
 from web.auth import user
-from web.core import Controller, HTTPMethod, request, config
+from web.core import Controller, HTTPMethod, request
 from web.core.locale import _
 from web.core.http import HTTPFound, HTTPNotFound, HTTPUnauthorized
+from marrow.util.convert import boolean
 from marrow.util.bunch import Bunch
 
-from adam.auth.model.eve import EVECredential
-from adam.auth.util.predicate import authorize, authenticated, is_administrator
+from brave.core.key.model import EVECredential
+from brave.core.util.predicate import authorize, authenticated, is_administrator
 
 
 class KeyInterface(HTTPMethod):
@@ -20,13 +21,13 @@ class KeyInterface(HTTPMethod):
             raise HTTPNotFound()
 
         if self.key.owner.id != user.id:
-            raise HTTPUnauthorized()
+            raise HTTPNotFound()
 
     def delete(self):
         self.key.delete()
 
         if request.is_xhr:
-            return 'json:', {'success': True}
+            return 'json:', dict(success=True)
 
         raise HTTPFound(location='/key/')
 
@@ -34,24 +35,41 @@ class KeyInterface(HTTPMethod):
 class KeyList(HTTPMethod):
     @authorize(authenticated)
     def get(self, admin=False):
-        if admin and not user.admin:
-            raise HTTPUnauthorized("Must be administrative user.")
+        admin = boolean(admin)
+        
+        if admin and not is_administrator:
+            raise HTTPNotFound()
 
-        return "adam.auth.template.key.list", dict(area='keys', admin=bool(admin), records=user.credentials)
+        return 'brave.core.key.template.list', dict(
+                area = 'keys',
+                admin = admin,
+                records = user.credentials
+            )
 
     @authorize(authenticated)
     def post(self, **kw):
         data = Bunch(kw)
 
         record = EVECredential(data.key, data.code, owner=user.id)
+        
         try:
             record.save()
             record.importChars()
             if request.is_xhr:
-                return 'json:', {'success': True, 'identifier': str(record.id), 'key': record.key, 'code': record.code}
+                return 'json:', dict(
+                        success = True,
+                        message = _("Successfully added EVE API key."),
+                        identifier = str(record.id),
+                        key = record.key,
+                        code = record.code,
+                    )
+        
         except ValidationError:
             if request.is_xhr:
-                return 'json:', {'success': False, 'message': 'Validation error for Eve Credential: One or more fields are incorrect or missing'}
+                return 'json:', dict(
+                        success = False,
+                        message = _("Validation error: one or more fields are incorrect or missing."),
+                    )
 
         raise HTTPFound(location='/key/')
 
@@ -62,4 +80,5 @@ class KeyController(Controller):
     index = KeyList()
 
     def __lookup__(self, key, *args, **kw):
+        request.path_info_pop()  # We consume a single path element.
         return KeyInterface(key), args

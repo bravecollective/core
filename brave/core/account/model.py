@@ -2,21 +2,17 @@
 
 from __future__ import unicode_literals
 
-from time import time, sleep
 from datetime import datetime, timedelta
-
-import web.core
 from mongoengine import Document, StringField, EmailField, DateTimeField, BooleanField, ReferenceField, ListField
-from yubico import yubico, yubico_exceptions
 
-from adam.auth.model.signals import update_modified_timestamp
-from adam.auth.model.fields import PasswordField, IPAddressField
+from brave.core.util.signal import update_modified_timestamp
+from brave.core.util.field import PasswordField, IPAddressField
 
 
 @update_modified_timestamp.signal
 class User(Document):
     meta = dict(
-        collection = "Users",
+        collection = 'Users',
         allow_inheritance = False,
         indexes = ['otp'],
     )
@@ -31,10 +27,11 @@ class User(Document):
     admin = BooleanField(db_field='d', default=False)
     otp = ListField(StringField(max_length=12), default=list)
     
-    primary = ReferenceField('EVECharacter')
+    primary = ReferenceField('EVECharacter')  # "Default" character to use during authz.
 
     modified = DateTimeField(db_field='m', default=datetime.utcnow)
     seen = DateTimeField(db_field='s')
+    host = IPAddressField(db_field='h')
     
     # Python Magic Methods
     
@@ -45,12 +42,12 @@ class User(Document):
     
     @property
     def credentials(self, **kw):
-        from adam.auth.model.eve import EVECredential
+        from brave.core.key.model import EVECredential
         return EVECredential.objects(owner=self)
     
     @property
     def characters(self, **kw):
-        from adam.auth.model.eve import EVECharacter
+        from brave.core.character.model import EVECharacter
         return EVECharacter.objects(owner=self)
 
 

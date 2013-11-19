@@ -6,8 +6,8 @@ from web.core import Controller, HTTPMethod, request, config
 from web.core.http import HTTPFound, HTTPSeeOther, HTTPForbidden
 from web.core.locale import _
 
-from brave.core.auth.model import User
-from brave.core.auth.form import authenticate as authenticate_form, register as register_form
+from brave.core.account.model import User
+from brave.core.account.form import authenticate as authenticate_form, register as register_form
 
 
 log = __import__('logging').getLogger(__name__)
@@ -20,7 +20,7 @@ class Authenticate(HTTPMethod):
             redirect = '/' if not referrer or referrer.endswith(request.script_name) else referrer
 
         form = authenticate_form(dict(redirect=redirect))
-        return "adam.auth.template.signin", dict(form=form)
+        return 'brave.core.account.template.signin', dict(form=form)
 
     def post(self, identity, password, remember=False, redirect=None):
         if not authenticate(identity, password):
@@ -42,7 +42,7 @@ class Register(HTTPMethod):
             redirect = '/' if not referrer or referrer.endswith(request.script_name) else referrer
 
         form = register_form(dict(redirect=redirect))
-        return "adam.auth.template.signup", dict(form=form)
+        return "brave.core.account.template.signup", dict(form=form)
 
     def post(self, **post):
         try:

@@ -16,10 +16,11 @@ from yubico import yubico, yubico_exceptions
 from marrow.util.convert import boolean
 from web.core import config, request
 
-from brave.core.user.model import User, LoginHistory
+from brave.core.account.model import User, LoginHistory
 
 
 log = __import__('logging').getLogger(__name__)
+
 
 
 def lookup(identifier):
@@ -28,7 +29,7 @@ def lookup(identifier):
     user = User.objects(id=identifier).first()
     
     if user:
-        user.update(set__seen=datetime.utcnow(), set__host=request.remote_addr)
+        user.update(set__seen=datetime.utcnow())  # , set__host=request.remote_addr -- chicken-egg problem
     
     return user
 
@@ -52,7 +53,7 @@ def authentication_logger(fn):
         return result
 
 
-@authentication_logger
+# @authentication_logger
 def authenticate(identifier, password):
     """Given an e-mail address (or Yubikey OTP) and password, authenticate a user."""
     
