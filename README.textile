@@ -45,7 +45,7 @@ Installing the current development version of the Core Service requires "Git":gi
 Once you have a copy of the code, copy `devlopment.ini` to `local.ini` and make changes as appropriate.  Finally, bootstrap the EVE API system by running:
 
 <pre><code>paster shell local.ini # or development.ini if you didn't customize
-from adam.api import populate_calls
+from brave.core.util.eve import populate_calls
 populate_calls()</code></pre>
 
 You can upgrade to the latest version at any time:
