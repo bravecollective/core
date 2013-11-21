@@ -1,0 +1,160 @@
+## encoding: utf-8
+
+<%inherit file="brave.core.template.master"/>
+
+<%block name="title">Settings</%block>
+
+<%block name="header">
+    ${parent.header()}
+</%block>
+
+<%block name="post">
+    ${parent.post()}
+
+    <script src="/js/changedelay.js" charset="utf-8"></script>
+    <script src="/js/vendor/zxcvbn.js" charset="utf-8"></script>
+
+    <script type="text/javascript" charset="utf-8">
+        $(function()
+        {
+            function ISODateString(d)
+            {
+                function pad(n){ return n < 10 ? '0' + n : n }
+
+                return d.getUTCFullYear()+'-'
+                    + pad(d.getUTCMonth()+1)+'-'
+                    + pad(d.getUTCDate())+'T'
+                    + pad(d.getUTCHours())+':'
+                    + pad(d.getUTCMinutes())+':'
+                    + pad(d.getUTCSeconds())+'Z';
+            }
+
+            function confirm(title, content, success, callback)
+            {
+                if ( ! success.hasOwnProperty('label') )
+                    success = {label: success, kind: 'btn-primary'};
+
+                var modal = $(
+                '<div id="modal" class="modal hide fade">' +
+                    '<div class="modal-header">' +
+                        '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>' +
+                        '<h3>' + title + '</h3>' +
+                    '</div>' +
+                    '<div class="modal-body">' + content + '</div>' +
+                    '<div class="modal-footer">' +
+                        '<a href="#" class="btn" data-dismiss="modal">Cancel</a>' +
+                        '<a href="#" class="success btn ' + success.kind + '">' + success.label + '</a>' +
+                    '</div>' +
+                '</div>').appendTo('body');
+
+                $('#modal .btn.success').on('click', function(e)
+                {
+                    if ( callback() )
+                        return;
+
+                    e.preventDefault();
+                    $('#modal').modal('hide')
+                });
+
+                $('#modal').on('hidden', function()
+                {
+                    $('#modal').remove();
+                }).modal();
+            }
+
+            $('.change').on('click', function()
+            {
+                confirm(
+                    "Change Password",
+                    '<p>' +
+                        'Fill in the form below to change the account password' +
+                    '</p>' +
+                    '<p>' +
+                        '<form>' +
+                            '<input id="id" name="id" type="hidden" class="input-block-level" value="${web.user.username}" required>' 
+                                +
+                            '<input id="old" name="old" type="password" class="input-block-level" placeholder="Old Password" maxlength="100" autocomplete="off" required>' 
+                                +
+                            '<input id="new-pass" name="passwd" type="password" class="input-block-level" placeholder="New Password" maxlength="100" autocomplete="off" required>'
+                                +
+                            '<input id="new-pass-confirm" name="passwd1" type="password" class="input-block-level" placeholder="Confirm New Password" maxlength="100" autocomplete="off" required>' 
+                                +
+                        '</form>' +
+                    '</p>',
+                    {
+                        label: "Change",
+                        kind: 'btn-success'
+                    },
+                    function()
+                    {
+                        $('#modal form .alert').remove();
+                        error = false;
+                        if ( $('#new-pass-confirm').val() !=  $('#new-pass').val()) {
+                            $('#new-pass-confirm').addClass('error');
+                            $('#new-pass-confirm').focus()
+                            $('#modal form input[name="passwd"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>Passwords must match</strong>'
+                            );
+                            error = true
+                        } 
+                        if ($('#old').val().length <= 0) {
+                            $('#old').addClass('error');
+                            $('#modal form input[name="old"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>Old password required</strong>'
+                            );
+                            error = true
+                        }
+                        
+                        if (error == true)
+                            return error   
+                        
+                        $.post('/account/settings', $('#modal form').serialize(), function(data)
+                        {
+                            console.log(data);
+
+                        });
+                    }
+                );
+                
+            });
+
+            //using changeDelay was slow to update the user about the limit.
+            $('#new-pass-confirm').on('input',function(){
+                var self = $(this);
+
+                if ( $('#new-pass-confirm').val() !=  $('#new-pass').val()) {
+                    self.addClass('error');
+                }
+                else {
+                    self.removeClass('error');
+                }
+            });
+
+
+
+            /*$('#pass2-field').changeDelay(function(){
+                var self = $(this),
+                    other = $('#password-field');
+
+                if ( self.val() != other.val() ) {
+                    self.removeClass('excellent').addClass('poor');
+                } else {
+                    self.removeClass('poor').addClass('excellent');
+                }
+            });*/
+            
+
+        });
+    </script>
+</%block>
+
+<div class="container-fluid">
+    <div id="pad-wrapper">
+        <div class="header">
+            <h3>Settings</h3>
+        </div>
+            <a class="btn change"><i class="icon-cog"></i> Change Password</a>
+    </div>
+</div>
