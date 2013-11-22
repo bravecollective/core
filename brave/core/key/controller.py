@@ -1,5 +1,7 @@
 # encoding: utf-8
 
+from __future__ import unicode_literals
+
 from web.auth import user
 from web.core import Controller, HTTPMethod, request
 from web.core.locale import _
@@ -10,6 +12,9 @@ from mongoengine import ValidationError
 
 from brave.core.key.model import EVECredential
 from brave.core.util.predicate import authorize, authenticated, is_administrator
+
+
+log = __import__('logging').getLogger(__name__)
 
 
 class KeyInterface(HTTPMethod):
