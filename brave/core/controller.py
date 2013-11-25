@@ -16,6 +16,7 @@ class RootController(StartupMixIn, Controller):
     key = util.load('key')
     character = util.load('character')
     application = util.load('application')
+    api = util.load('api')
     
     @authorize(authenticated)
     def index(self):
