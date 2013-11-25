@@ -4,9 +4,10 @@ from __future__ import unicode_literals
 
 from binascii import hexlify, unhexlify
 from hashlib import sha256
-
 from ecdsa.keys import SigningKey, VerifyingKey
 from ecdsa.curves import NIST256p
+
+from web.core import config
 
 from brave.core.util.signal import signal, post_save, validator_pool
 
