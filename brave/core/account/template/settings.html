@@ -26,18 +26,6 @@
     <script type="text/javascript" charset="utf-8">
         $(function()
         {
-            function ISODateString(d)
-            {
-                function pad(n){ return n < 10 ? '0' + n : n }
-
-                return d.getUTCFullYear()+'-'
-                    + pad(d.getUTCMonth()+1)+'-'
-                    + pad(d.getUTCDate())+'T'
-                    + pad(d.getUTCHours())+':'
-                    + pad(d.getUTCMinutes())+':'
-                    + pad(d.getUTCSeconds())+'Z';
-            }
-
             function confirm(title, content, success, callback)
             {
                 if ( ! success.hasOwnProperty('label') )
@@ -138,33 +126,6 @@
                 );
                 
             });
-
-            //using changeDelay was slow to update the user about the limit.
-            $('#new-pass-confirm').on('input',function(){
-                var self = $(this);
-
-                if ( $('#new-pass-confirm').val() !=  $('#new-pass').val()) {
-                    self.addClass('error');
-                }
-                else {
-                    self.removeClass('error');
-                }
-            });
-
-
-
-            /*$('#pass2-field').changeDelay(function(){
-                var self = $(this),
-                    other = $('#password-field');
-
-                if ( self.val() != other.val() ) {
-                    self.removeClass('excellent').addClass('poor');
-                } else {
-                    self.removeClass('poor').addClass('excellent');
-                }
-            });*/
-            
-
         });
     </script>
 </%block>
