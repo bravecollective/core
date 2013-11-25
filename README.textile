@@ -26,7 +26,9 @@ h2(#installation). %2.% Installation
 
 Development takes place on "GitHub":github in the "core":github-project project.  Issue tracking, documentation, and downloads are provided there.
 
-You will require a current "WebCore":http://www.web-core.org/ installation.  The following line will create a new Python virtual environment folder called "brave" in your current working directory, then activate the virtual environment.
+You will require an installed and running "MongoDB":mongodb installation.  Installation and configuration of MongoDB is beyond the scope of this documentation.
+
+You will require a current "WebCore":http://www.web-core.org/ installation.  The following will create a new Python virtual environment folder called "brave" in your current working directory, then activate the virtual environment.
 
 <pre><code>curl get.web-core.org | python - brave
 cd brave
@@ -37,12 +39,13 @@ Additionally, there are two requirements you will need to manually install as Co
 <pre><code>(git clone git@github.com:marrow/marrow.templating.git; cd marrow.templating; python setup.py develop)
 (git clone git@github.com:marrow/marrow.tags.git; cd marrow.tags; python setup.py develop)</code></pre>
 
-Installing the current development version of the Core Service requires "Git":git, a distributed source code management system.  If you have Git, you can run the following to download and _link_ the development version into your Python runtime:
+Installing the current development version of the Core Service requires "Git":git, a distributed source code management system.  Compilation additionally requires the Python development headers and the OpenSSL development headers.  In Debian/Ubuntu, these are found in packages `python-dev` and `libssl-dev`.
+Run the following to download the development version with Git, and _link_ it into your Python runtime:
 
 <pre><code>git clone https://github.com/bravecollective/core.git
 (cd core; python setup.py develop)</code></pre>
 
-Once you have a copy of the code, copy `devlopment.ini` to `local.ini` and make changes as appropriate.  Finally, bootstrap the EVE API system by running:
+Once you have successfully compiled the Core Service, copy `core/development.ini` to `core/local.ini`, and make changes as appropriate.  Finally, bootstrap the EVE API system by running:
 
 <pre><code>paster shell local.ini # or development.ini if you didn't customize
 from brave.core.util.eve import populate_calls
@@ -58,6 +61,7 @@ If you would like to make changes and contribute them back to the project, fork 
 [github]https://github.com/
 [git]http://git-scm.com/
 [github-help]http://help.github.com/
+[mongodb]http://www.mongodb.org/
 
 
 h2(#running). %3.% Running the Service
