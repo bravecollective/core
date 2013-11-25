@@ -2,6 +2,11 @@
 
 from __future__ import unicode_literals
 
+from binascii import hexlify, unhexlify
+from hashlib import sha256
+from ecdsa.keys import SigningKey, VerifyingKey
+from ecdsa.curves import NIST256p
+
 from web.auth import user
 from web.core import Controller, HTTPMethod, request
 from web.core.locale import _
@@ -41,6 +46,7 @@ class OwnApplicationInterface(HTTPMethod):
                             contact = app.contact,
                             key = dict(
                                     public = app.key.public,
+                                    private = app.key.private,
                                 ),
                             required = app.mask.required,
                             optional = app.mask.optional,
@@ -48,7 +54,11 @@ class OwnApplicationInterface(HTTPMethod):
                         )
                 )
         
-        return ""  # TODO: View details with stats for your application.  (I.e. count of active users)
+        key = SigningKey.from_string(unhexlify(app.key.private), curve=NIST256p, hashfunc=sha256)
+        return 'brave.core.application.template.view_own_app', dict(
+                app = app,
+                key = hexlify(key.get_verifying_key().to_string())
+            )
     
     def post(self, **kw):
         if not request.is_xhr:
