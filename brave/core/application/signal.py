@@ -17,7 +17,12 @@ def generate_key(identifier):
     from brave.core.application.model import Application
     
     key = SigningKey.generate(NIST256p, hashfunc=sha256)
-    Application.objects(id=identifier, key__private=None).update(set__key__private=hexlify(key.to_string()))
+    Application.objects(
+            id = identifier,
+            key__private = None  # Make sure we don't override an existing one.
+        ).update(
+            set__key__private = hexlify(key.to_string())
+        )
 
 
 def log_error(receipt):
