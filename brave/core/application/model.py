@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from mongoengine import Document, EmbeddedDocument, EmbeddedDocumentField, StringField, EmailField, URLField, DateTimeField, BooleanField, ReferenceField, ListField, IntField
 
 from brave.core.util.signal import update_modified_timestamp
+from brave.core.application.signal import trigger_private_key_generation
 from brave.core.util.field import PasswordField, IPAddressField
 
 
@@ -32,6 +33,7 @@ class ApplicationMasks(EmbeddedDocument):
 
 
 @update_modified_timestamp.signal
+@trigger_private_key_generation.signal
 class Application(Document):
     meta = dict(
             collection = 'Applications',
