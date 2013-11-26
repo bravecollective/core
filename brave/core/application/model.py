@@ -30,6 +30,9 @@ class ApplicationMasks(EmbeddedDocument):
     
     required = IntField(db_field='r', default=0)
     optional = IntField(db_field='o', default=0)
+    
+    def __repr__(self):
+        return 'Masks({0}, {1})'.format(self.required, self.optional)
 
 
 @update_modified_timestamp.signal

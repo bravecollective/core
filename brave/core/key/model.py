@@ -34,6 +34,9 @@ class EVECredential(Document):
     
     modified = DateTimeField(db_field='m', default=datetime.utcnow)
     
+    def __repr__(self):
+        return 'EVECredential({0}, {1}, {2}, {3!r})'.format(self.id, self.kind, self.mask, self.owner)
+    
     @property
     def characters(self):
         from brave.core.character.model import EVECharacter

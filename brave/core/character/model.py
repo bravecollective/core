@@ -24,6 +24,12 @@ class EVEEntity(Document):
     name = StringField(db_field='n')
     
     modified = DateTimeField(db_field='m', default=datetime.utcnow)
+    
+    def __repr__(self):
+        return '{0}({1}, {2}, "{3}")'.format(self.__class__.__name__, self.id, self.identifier, self.name)
+    
+    def __unicode__(self):
+        return self.name
 
 
 class EVEAlliance(EVEEntity):

@@ -37,6 +37,9 @@ class User(Document):
     
     def __repr__(self):
         return 'User({0}, {1})'.format(self.id, self.username).encode('ascii', 'backslashreplace')
+    
+    def __unicode__(self):
+        return self.username
 
     # Related Data Lookups
     
