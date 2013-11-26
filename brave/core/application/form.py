@@ -21,9 +21,9 @@ def manage_form(action='/application/manage/'):
                     EmailField('contact', L_("Primary Contact"), placeholder="user@example.com", class_='input-block-level'),
                 ]),
             EmbeddedDocumentTab('key', L_("ECDSA Key"), labels=False, children=[
-                    Paragraph('ecdsa', L_("You must generate a 256-bit NIST ECDSA key (using SHA256 hashing), hexlify encode the raw public key and paste it below.  The result should be 128 hexidecimal characters.")),
+                    Paragraph('ecdsa', L_("You must generate a 256-bit NIST ECDSA key (using SHA256 hashing), hexlify or PEM encode the raw public key and paste it below.  The result should be 128 hexidecimal characters.")),
                     Paragraph('private', L_("Once your application has been registered the core service will generate its own application-specific key which you will need to configure your application to expect.")),
-                    TextArea('public', placeholder=L_("Paste your application's public ECDSA key here."), rows=2, required=True, pattern='[0-9a-fA-F]{128}', class_="input-block-level validate")
+                    TextArea('public', placeholder=L_("Paste your application's public ECDSA key here."), rows=2, required=True, class_="input-block-level validate")
                 ]),
             Tab('perms', L_("Permissions"), children=[
                     TextField('required', L_("Required Mask"), placeholder='0', class_="input-small"),

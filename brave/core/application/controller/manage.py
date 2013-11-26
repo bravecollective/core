@@ -57,7 +57,8 @@ class OwnApplicationInterface(HTTPMethod):
         key = SigningKey.from_string(unhexlify(app.key.private), curve=NIST256p, hashfunc=sha256)
         return 'brave.core.application.template.view_own_app', dict(
                 app = app,
-                key = hexlify(key.get_verifying_key().to_string())
+                key = hexlify(key.get_verifying_key().to_string()),
+                pem = key.get_verifying_key().to_pem()
             )
     
     def post(self, **kw):
@@ -69,6 +70,10 @@ class OwnApplicationInterface(HTTPMethod):
         
         for k in ('name', 'description', 'groups', 'site', 'contact'):
             setattr(app, k, valid[k])
+        
+        if valid['key']['public'].startswith('-'):
+            # Assume PEM format.
+            valid['key']['public'] = hexlify(SigningKey.from_pem(valid['key']['public'], curve=NIST256p, hashfunc=sha256).to_string())
         
         app.key.public = valid['key']['public']
         app.mask.required = valid['required'] or 0
@@ -120,6 +125,11 @@ class OwnApplicationList(HTTPMethod):
         valid, invalid = manage_form().native(kw)
         
         app = Application(owner=u, **{k: v for k, v in valid.iteritems() if k in ('name', 'description', 'groups', 'site', 'contact')})
+        
+        if valid['key']['public'].startswith('-'):
+            # Assume PEM format.
+            valid['key']['public'] = hexlify(SigningKey.from_pem(valid['key']['public'], curve=NIST256p, hashfunc=sha256).to_string())
+        
         app.key.public = valid['key']['public']
         app.mask.required = valid['required'] or 0
         app.mask.optional = valid['optional'] or 0
