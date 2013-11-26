@@ -8,6 +8,8 @@ from web.core.locale import _
 
 from brave.core.account.model import User
 from brave.core.account.form import authenticate as authenticate_form, register as register_form
+from brave.core.account.authentication import lookup
+
 
 
 log = __import__('logging').getLogger(__name__)
@@ -63,10 +65,46 @@ class Register(HTTPMethod):
         
         return 'json:', dict(success=True, location="/")
 
+class Settings(HTTPMethod):
+    def get(self, admin=False):
+        if admin and not is_administrator:
+            raise HTTPNotFound()
+
+        return 'brave.core.account.template.settings', dict()
+
+    def post(self, **post):
+        try:
+            data = Bunch(post)
+        except Exception as e:
+            if config.get('debug', False):
+                raise
+            return 'json:', dict(success=False, message=_("Unable to parse data."), data=post, exc=str(e))
+
+        if data.passwd != data.passwd1:
+            return 'json:', dict(success=False, message=_("New passwords do not match."), data=data)
+        
+        if isinstance(data.old, unicode):
+            data.old = data.old.encode('utf-8')
+            #print(data.old)
+
+        query = dict(active=True)
+        query[b'username'] = data.id
+
+        user = User.objects(**query).first()
+
+        if not User.password.check(user.password, data.old):
+            return 'json:', dict(success=False, message=_("Old password incorrect."), data=data)
+
+        user.password = data.passwd
+        user.save()
+        
+        return 'json:', dict(success=True, location="/")
+
 
 class AccountController(Controller):
     authenticate = Authenticate()
     register = Register()
+    settings = Settings()
     
     def exists(self, **query):
         query.pop('ts', None)
@@ -80,3 +118,4 @@ class AccountController(Controller):
     def deauthenticate(self):
         deauthenticate()
         raise HTTPSeeOther(location='/')
+

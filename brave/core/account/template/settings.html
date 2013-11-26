@@ -1,0 +1,145 @@
+## encoding: utf-8
+
+<%inherit file="brave.core.template.master"/>
+
+<%block name="title">Settings</%block>
+
+<%block name="header">
+    ${parent.header()}
+
+    <style>
+        input[type=submit] { float: right; border: 0 none; height: 0; width: 0; padding: 0; margin: 0; overflow: hidden; }
+        .content-wrap.authentication { position: relative; }
+        .overlay { position: absolute; top: 15px; left: 0; right: 0; text-align: center; display: none; }
+        .overlay.result { text-shadow: 0 1px 4px rgba(0,0,0,0.75); }
+        .overlay.fail { color: #b00; }
+        .overlay.success { color: #0b0; }
+    </style>
+</%block>
+
+<%block name="post">
+    ${parent.post()}
+
+    <script src="/js/changedelay.js" charset="utf-8"></script>
+    <script src="/js/vendor/zxcvbn.js" charset="utf-8"></script>
+
+    <script type="text/javascript" charset="utf-8">
+        $(function()
+        {
+            function confirm(title, content, success, callback)
+            {
+                if ( ! success.hasOwnProperty('label') )
+                    success = {label: success, kind: 'btn-primary'};
+
+                var modal = $(
+                '<div id="modal" class="modal hide fade">' +
+                    '<div class="modal-header">' +
+                        '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>' +
+                        '<h3>' + title + '</h3>' +
+                    '</div>' +
+                    '<div class="modal-body">' + content + '</div>' +
+                    '<div class="modal-footer">' +
+                        '<a href="#" class="btn" data-dismiss="modal">Cancel</a>' +
+                        '<a href="#" class="success btn ' + success.kind + '">' + success.label + '</a>' +
+                    '</div>' +
+                '</div>').appendTo('body');
+
+                $('#modal .btn.success').on('click', function(e)
+                {
+                    if ( callback() )
+                        return;
+
+                    e.preventDefault();
+                    $('#modal').modal('hide')
+                });
+
+                $('#modal').on('hidden', function()
+                {
+                    $('#modal').remove();
+                }).modal();
+            }
+
+            $('.change').on('click', function()
+            {
+                confirm(
+                    "Change Password",
+                    '<p>' +
+                        'Fill in the form below to change the account password' +
+                    '</p>' +
+                    '<p>' +
+                        '<form>' +
+                            '<input id="id" name="id" type="hidden" class="input-block-level" value="${web.user.username}" required>' 
+                                +
+                            '<input id="old" name="old" type="password" class="input-block-level" placeholder="Old Password" maxlength="100" autocomplete="off" required>' 
+                                +
+                            '<input id="new-pass" name="passwd" type="password" class="input-block-level" placeholder="New Password" maxlength="100" autocomplete="off" required>'
+                                +
+                            '<input id="new-pass-confirm" name="passwd1" type="password" class="input-block-level" placeholder="Confirm New Password" maxlength="100" autocomplete="off" required>' 
+                                +
+                        '</form>' +
+                    '</p>',
+                    {
+                        label: "Change",
+                        kind: 'btn-success'
+                    },
+                    function()
+                    {
+                        $('#modal form .alert').remove();
+                        error = false;
+                        if ( $('#new-pass-confirm').val() !=  $('#new-pass').val()) {
+                            $('#new-pass-confirm').addClass('error');
+                            $('#new-pass-confirm').focus()
+                            $('#modal form input[name="passwd"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>Passwords must match</strong>'
+                            );
+                            error = true
+                        } 
+                        if ($('#old').val().length <= 0) {
+                            $('#old').addClass('error');
+                            $('#modal form input[name="old"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>Old password required</strong>'
+                            );
+                            error = true
+                        }
+                        
+                        if (error == true)
+                            return error   
+                        
+                        $('.overlay.wait').fadeIn(250);
+                        $.post('/account/settings', $('#modal form').serialize(), function(data)
+                        {
+                            console.log(data);
+                            $('.overlay.wait').fadeOut(125, function(){
+                                if (data.success) {
+                                   $('.overlay.success').fadeIn(250, function(){ window.location = data.location; });                                
+                                } else {
+                                    $('.overlay.fail').fadeIn(250, function(){
+                                        $('.overlay.fail').fadeOut(250);
+                                    });
+                                }
+                            });
+
+                        });
+                    }
+                );
+                
+            });
+        });
+    </script>
+</%block>
+
+<div class="container-fluid">
+    <div id="pad-wrapper">
+
+        <div class="overlay icon-4x wait"><i class="icon-spinner icon-spin icon-4x"></i></div>
+        <div class="overlay icon-4x result fail"><i class="icon-remove icon-4x"></i></div>
+        <div class="overlay icon-4x result success"><i class="icon-ok icon-4x"></i></div>
+
+        <div class="header">
+            <h3>Settings</h3>
+        </div>
+            <a class="btn change"><i class="icon-cog"></i> Change Password</a>
+    </div>
+</div>
