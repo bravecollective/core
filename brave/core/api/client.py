@@ -3,6 +3,8 @@
 from __future__ import unicode_literals, print_function
 
 from webob import Response
+from marrow.util.url import URL
+from marrow.util.bunch import Bunch
 from datetime import datetime
 from binascii import hexlify, unhexlify
 from hashlib import sha256
@@ -49,24 +51,35 @@ class SignedAuth(AuthBase):
         self.public.verify(unhexlify(response.headers['X-Signature']), canon)
 
 
-def test():
-    # echo "from brave.core.api.client import test; print(test().text)" | paster shell
+class API(object):
+    __slots__ = ('endpoint', 'identity', 'private', 'public')
     
-    import calendar
-    from datetime import datetime
+    def __init__(self, endpoint, identity, private, public):
+        self.endpoint = URL(endpoint)
+        self.identity = identity
+        self.private = private
+        self.public = public
     
-    identity = '5292f5de6f692bf7e20f9e57'
-    private = SigningKey.from_string(unhexlify('fe3dc8bfb1745fb8a697fed5d6680143e9f22acac6bf3031c31ee737ff50e501'), curve=NIST256p, hashfunc=sha256)
-    public = private.get_verifying_key()
+    def __getattr__(self, name):
+        return API(
+                "{0}/{1}".format(self.endpoint, name),
+                self.identity,
+                self.private,
+                self.public
+            )
     
-    
-    auth = SignedAuth(identity, private, public)
-    
-    
-    resp = requests.post(
-            'http://localhost:8080/api/ping',
-            data = dict(now=calendar.timegm(datetime.utcnow().utctimetuple())),
-            auth = auth
-        )
-    
-    return resp
+    def __call__(self, *args, **kwargs):
+        result = requests.post(
+                URL("{0}/{1}".format(self.endpoint, '/'.join(args))).render(),
+                data = kwargs,
+                auth = SignedAuth(self.identity, self.private, self.public)
+            )
+        
+        if not result.status_code == requests.codes.ok:
+            return None
+        
+        return Bunch(result.json())
+
+
+# Test function has been moved to brave.core.controller:DeveloperTools.authn
+# Web-accessible: http://localhost:8080/dev/authn
