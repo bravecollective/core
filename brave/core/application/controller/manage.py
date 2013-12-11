@@ -73,7 +73,7 @@ class OwnApplicationInterface(HTTPMethod):
         
         if valid['key']['public'].startswith('-'):
             # Assume PEM format.
-            valid['key']['public'] = hexlify(SigningKey.from_pem(valid['key']['public'], hashfunc=sha256).to_string())
+            valid['key']['public'] = hexlify(VerifyingKey.from_pem(valid['key']['public']).to_string())
         
         app.key.public = valid['key']['public']
         app.mask.required = valid['required'] or 0
