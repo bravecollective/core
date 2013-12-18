@@ -126,10 +126,6 @@ class OwnApplicationList(HTTPMethod):
         
         app = Application(owner=u, **{k: v for k, v in valid.iteritems() if k in ('name', 'description', 'groups', 'site', 'contact')})
         
-        if valid['key']['public'].startswith('-'):
-            # Assume PEM format.
-            valid['key']['public'] = hexlify(SigningKey.from_pem(valid['key']['public'], curve=NIST256p, hashfunc=sha256).to_string())
-        
         app.key.public = valid['key']['public']
         app.mask.required = valid['required'] or 0
         app.mask.optional = valid['optional'] or 0
