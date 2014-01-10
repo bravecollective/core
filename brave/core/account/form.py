@@ -22,7 +22,7 @@ class Container(NestedWidget):
 
 
 authenticate = Form('authenticate', action='/account/authenticate', method='post', children=[
-        EmailField('identity', autofocus=True, class_="span12", placeholder=L_("OTP, User Name, or E-Mail Address")),
+        TextField('identity', autofocus=True, class_="span12", placeholder=L_("OTP, User Name, or E-Mail Address")),
         PasswordField('password', class_="span12", placeholder=L_("Your Password")),
         BlankSubmit('submit'),
         HiddenField('redirect'),
