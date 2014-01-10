@@ -68,12 +68,19 @@ class EVECredential(Document):
                     alliance = alliance
                 )
             
-            character = EVECharacter(
-                    owner = self.owner,
-                    credential = self,
-                    name = info.characterName,
-                    corporation = corporation,
-                    alliance = alliance,
-                    identifier = charID,
-                )
-            character.save()
+            if EVECharacter.objects(owner=self.owner, credential=self, identifier=charID).count():
+                EVECharacter.objects(owner=self.owner, credential=self, identifier=charID).update_one(
+                        name = info.characterName,
+                        corporation = corporation,
+                        alliance = alliance
+                    )
+            else:
+                character = EVECharacter(
+                        owner = self.owner,
+                        credential = self,
+                        name = info.characterName,
+                        corporation = corporation,
+                        alliance = alliance,
+                        identifier = charID,
+                    )
+                character.save()
