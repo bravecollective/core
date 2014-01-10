@@ -3,7 +3,7 @@
 from __future__ import unicode_literals
 
 from web.core.locale import L_
-from marrow.widgets import Form, TextField, PasswordField, CheckboxField, EmailField, Widget, NestedWidget
+from marrow.widgets import Form, TextField, HiddenField, PasswordField, CheckboxField, EmailField, Widget, NestedWidget
 from marrow.tags import html5 as H
 
 
@@ -25,9 +25,7 @@ authenticate = Form('authenticate', action='/account/authenticate', method='post
         EmailField('identity', autofocus=True, class_="span12", placeholder=L_("OTP, User Name, or E-Mail Address")),
         PasswordField('password', class_="span12", placeholder=L_("Your Password")),
         BlankSubmit('submit'),
-        Container('remember', class_="remember", children=[
-                CheckboxField('remember', title=L_("Stay authenticated for seven days."))
-            ])
+        HiddenField('redirect'),
     ])
 
 register = Form('register', action='/account/register', method='post', children=[
