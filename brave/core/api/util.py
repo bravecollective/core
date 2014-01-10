@@ -58,8 +58,8 @@ class SignedController(Controller):
                     req = request,
                     resp = response
             )
-        response.headers['X-Signature'] = hexlify(key.sign(canon))
-        log.debug("Signing response: %s", response.headers['X-Signature'])
+        response.headers[b'X-Signature'] = hexlify(key.sign(canon))
+        log.debug("Signing response: %s", response.headers[b'X-Signature'])
         log.debug("Canonical data:\n%r", canon)
         
         del response.date
