@@ -70,9 +70,9 @@ class EVECredential(Document):
             
             if EVECharacter.objects(owner=self.owner, credential=self, identifier=charID).count():
                 EVECharacter.objects(owner=self.owner, credential=self, identifier=charID).update_one(
-                        name = info.characterName,
-                        corporation = corporation,
-                        alliance = alliance
+                        set__name = info.characterName,
+                        set__corporation = corporation,
+                        set__alliance = alliance
                     )
             else:
                 character = EVECharacter(
