@@ -50,8 +50,9 @@ class SignedController(Controller):
         response.date = datetime.utcnow()
         response.last_modified = result.pop('updated', None)
         
-        response.content_type, response.body = render('json:', result)
-        response.content_type = str(response.content_type)  # protect against lack of conversion in Flup
+        ct, body = render('json:', result)
+        response.content_type = ct.encode('ascii')  # protect against lack of conversion in Flup
+        response.body = body
         
         canon = "{req.service.id}\n{resp.headers[Date]}\n{req.url}\n{resp.body}".format(
                     req = request,
