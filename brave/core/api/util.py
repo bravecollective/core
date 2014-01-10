@@ -35,6 +35,7 @@ class SignedController(Controller):
         
         key = VerifyingKey.from_string(unhexlify(request.service.key.public), curve=NIST256p, hashfunc=sha256)
         
+        log.debug("Canonical request:\n\n\"{r.headers[Date]}\n{r.url}\n{r.body}\"".format(r=request))
         if not key.verify(unhexlify(request.headers['X-Signature']), "{r.headers[Date]}\n{r.url}\n{r.body}".format(r=request)):
             raise HTTPBadRequest("Invalid request signature.")
         

@@ -25,14 +25,15 @@ class SignedAuth(AuthBase):
         self.public = public
     
     def __call__(self, request):
-        log.info("Signing request to: %s", request.url)
         request.headers['Date'] = Response(date=datetime.utcnow()).headers['Date']
         request.headers['X-Service'] = self.identity
-        canon = "{r.headers[date]}\n{r.url}\n{r.body}".format(r=request)
-        request.headers['X-Signature'] = hexlify(self.private.sign(canon))
         
-        log.debug("Signature: %s", request.headers['X-Signature'])
-        log.debug("Canonical data:\n%r", canon)
+        if request.body is None:
+            request.body = ''
+        
+        canon = "{r.headers[date]}\n{r.url}\n{r.body}".format(r=request)
+        log.debug("Canonical request:\n\n\"{0}\"".format(canon))
+        request.headers['X-Signature'] = hexlify(self.private.sign(canon))
         
         request.register_hook('response', self.validate)
         
@@ -52,25 +53,34 @@ class SignedAuth(AuthBase):
 
 
 class API(object):
-    __slots__ = ('endpoint', 'identity', 'private', 'public')
+    __slots__ = ('endpoint', 'identity', 'private', 'public', 'pool')
     
-    def __init__(self, endpoint, identity, private, public):
-        self.endpoint = URL(endpoint)
+    def __init__(self, endpoint, identity, private, public, pool=None):
+        self.endpoint = unicode(endpoint)
         self.identity = identity
         self.private = private
         self.public = public
+        
+        if not pool:
+            self.pool = requests.Session()
+        else:
+            self.pool = pool
     
     def __getattr__(self, name):
         return API(
                 "{0}/{1}".format(self.endpoint, name),
                 self.identity,
                 self.private,
-                self.public
+                self.public,
+                self.pool
             )
     
     def __call__(self, *args, **kwargs):
-        result = requests.post(
-                URL("{0}/{1}".format(self.endpoint, '/'.join(args))).render(),
+        url = URL(self.endpoint)
+        url.path = [unicode(url.path)] + list(args)
+        
+        result = self.pool.post(
+                url.render(),
                 data = kwargs,
                 auth = SignedAuth(self.identity, self.private, self.public)
             )

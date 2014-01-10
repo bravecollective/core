@@ -7,7 +7,6 @@ from mongoengine import Document, EmbeddedDocument, EmbeddedDocumentField, Strin
 
 from brave.core.util.signal import update_modified_timestamp
 from brave.core.application.signal import trigger_private_key_generation
-from brave.core.util.field import PasswordField, IPAddressField
 
 
 log = __import__('logging').getLogger(__name__)
@@ -72,12 +71,15 @@ class ApplicationGrant(Document):
     meta = dict(
             collection = 'Grants',
             allow_inheritance = False,
-            indexes = [],
+            indexes = [
+                    dict(fields=['expires'], expireAfterSeconds=0)
+                ],
         )
 
     user = ReferenceField('User', db_field='u')
     application = ReferenceField(Application, db_field='a')
     
+    character = ReferenceField('EVECharacter', db_field='c')
     mask = IntField(db_field='m', default=0)
     
     immutable = BooleanField(db_field='i', default=False)  # Onboarding is excempt from removal by the user.

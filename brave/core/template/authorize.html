@@ -1,0 +1,144 @@
+## encoding: utf-8
+
+<%inherit file="brave.core.template.light"/>
+
+<%block name="title">${_("Authorize {0}").format(ar.application.name)}</%block>
+
+<%block name="header">
+    ${parent.header()}
+
+    <style>
+        input[type=submit] { float: right; border: 0 none; height: 0; width: 0; padding: 0; margin: 0; overflow: hidden; }
+        .content-wrap.authentication { position: relative; }
+        .overlay { position: absolute; top: 15px; left: 0; right: 0; text-align: center; display: none; }
+        .overlay.result { text-shadow: 0 1px 4px rgba(0,0,0,0.75); }
+        .overlay.fail, .overlay.bad { color: #b00; }
+        .overlay.success { color: #0b0; }
+        
+        blockquote { background: white; border-width: 0; color: black; padding: 10px; border-radius: 5px; font-size: 16pt; line-height: 1.4em; box-shadow: inset 0px 1px 2px rgba(0,0,0,0.5); }
+        p, ul { text-align: left; }
+        li { line-height: 1.2em; }
+        
+        .login-wrapper .box { width: 500px; }
+        .login-wrapper .box .content-wrap { width: 440px; }
+    </style>
+</%block>
+
+<%block name="post">
+    ${parent.post()}
+
+    <script type="text/javascript" charset="utf-8">
+        $(function(){
+            function process(){
+                var self = $(this),
+                    id = self.data('id');
+                
+                // Fade to the progress spinner.
+                $('.auth').animate({opacity: 0.25}, 250);
+                $('.btn').addClass('disabled').attr('disabled', true);
+                $('.overlay.wait').fadeIn(250);
+                
+                // Submit XHR request.
+                var receipt = $.post(window.location, {grant: true, character: id});
+                receipt.fail(function(jqXHR, textStatus, errorThrown){
+                    // Something went wrong.
+                    console.log(jqXHR, textStatus, errorThrown);
+                    $('.overlay.wait').fadeOut(125, function(){
+                    $('.overlay.bad').fadeIn(250, function(){
+                        $('.overlay.bad').fadeOut(250);
+                        $('.auth').animate({opacity: 1}, 250);
+                        $('.btn').removeClass('disabled').attr('disabled', false);
+                    });
+                    });
+                }).done(function(data, textStatus, jqXHR){
+                    // Determine if we were successful or not and fade the appropriate icon.
+                    $('.overlay.wait').fadeOut(125, function(){
+                        if ( data.success ) {
+                            $('.overlay.success').fadeIn(250, function(){ window.location = data.location; });
+                        } else {
+                            $('.overlay.fail').fadeIn(250, function(){
+                                $('.overlay.fail').fadeOut(250);
+                                $('.auth').animate({opacity: 1}, 250);
+                                $('.btn').removeClass('disabled').attr('disabled', false);
+                            });
+                        }
+                    });
+                });
+
+                return false;
+            }
+
+            $('.allow').click(process);
+            
+            // Utility to size text to available space.
+            // I'd love to use the TeX algorithm for this to add intra-character spacing as a variable.
+            
+            $('<div />', {id: 'hidden-resizer', style: 'font-size: 24px'}).hide().appendTo(document.body);
+            
+            var size;
+            var resizer = $("#hidden-resizer");
+            var target = $('blockquote');
+            var desired_width = target.width() - 20;
+            
+            resizer.html(target.data('application'));
+            
+            for ( var i = 36; i > 12; i-- ) {
+                resizer.css("font-size", i + 'px');
+                if ( resizer.width() < desired_width ) break;
+            }
+            
+            target.css("font-size", i + 'px').html(resizer.html());
+            
+            // End Utility
+        });
+    </script>
+</%block>
+
+<div class="box">
+    <div class="content-wrap authentication clearfix">
+        <div class="auth">
+            <h6>${_("Granting Authorization")}</h6>
+            
+            <blockquote data-application="${ar.application.name}"></blockquote>
+            
+            <p>This application wishes to know certain information about your character.  All applications are given access to the following information:</p>
+            
+            <ul>
+                <li><strong>Public Character Information</strong><span class="pull-right">Name, Corporation, Alliance</span></li>
+            </ul>
+            
+            <!--
+            <p>Additionally, this application requires the following additional information:</p>
+            
+            <ul>
+                <li>permission</li>
+                <li>permission</li>
+            </ul>
+            -->
+            
+            <div style="text-align: right; margin-top: 30px;">
+                <div class="btn-group dropup">
+                    <a class="btn btn-success btn-large allow" style="padding-left: 50px;" href="#" data-id="${default.id}"><img src="http://image.eveonline.com/Character/${default.identifier}_32.jpg" style="border-radius: 4px; position: absolute; left: 4px; top: 4px; border: 1px inset rgba(127,127,127,0.5);"> Authorize</a>
+                    <a class="btn btn-success btn-large dropdown-toggle" data-toggle="dropdown" href="#"><i class="icon icon-caret-up"></i></a>
+                    <ul class="dropdown-menu" style="width: 300px; left: auto; right: 0px;">
+                        % for record in characters:
+                        <li><a tabindex="-1" href="#" data-id="${record.id}" class="allow"><span class="ellipsis">
+                            <img src="http://image.eveonline.com/Character/${record.identifier}_32.jpg" style="vertical-align: -60%; margin-right: 5px; border-radius: 6px; width: 32px; height: 32px;">
+                            <strong>${record.name}</strong>
+                            % if default == record:
+                            <span class="label label-inverse" style="margin-left: 5px;">Default</span>
+                            % endif
+                        </span></a></li>
+                        % endfor
+                    </ul>
+                </div>
+                <a class="btn btn-inverse pull-left" style="margin-top: 15px;">Deny Authorization</a>
+            </div>
+        </div>
+
+        <div class="overlay icon-4x wait"><i class="icon-spinner icon-spin icon-4x"></i></div>
+        <div class="overlay icon-4x result fail"><i class="icon-remove icon-4x"></i></div>
+        <div class="overlay icon-4x result success"><i class="icon-ok icon-4x"></i></div>
+        <div class="overlay icon-4x result bad"><i class="icon-exclamation icon-4x"></i></div>
+    </div>
+</div>
