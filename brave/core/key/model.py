@@ -55,9 +55,12 @@ class EVECredential(Document):
             charID = row['@characterID']
             info = APICall.objects.get(name='eve.CharacterInfo')(self, characterID=charID)
             
-            alliance, _ = EVEAlliance.objects.get_or_create(
-                    name = info.alliance,
-                    identifier = info.allianceID)
+            if 'alliance' in info and info.alliance:
+                alliance, _ = EVEAlliance.objects.get_or_create(
+                        name = info.alliance,
+                        identifier = info.allianceID)
+            else:
+                alliance = None
             
             corporation, _ = EVECorporation.objects.get_or_create(
                     name = info.corporation,
