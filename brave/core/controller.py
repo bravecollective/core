@@ -14,7 +14,6 @@ from marrow.util.url import URL
 from brave.core import util
 from brave.core.util.signal import StartupMixIn
 from brave.core.util.predicate import authorize, authenticated
-from brave.core.api.client import API
 from brave.core.api.model import AuthenticationRequest
 
 
@@ -30,32 +29,6 @@ class DeveloperTools(Controller):
         """Return an HTML/templating scratch pad."""
         return 'brave.core.template.test', dict(data=None)
     
-    def authn(self):
-        """Request the API to authenticate a user, see what we get back."""
-        
-        # To make API calls, we need the API keys.
-        # The private key is *our* private key, to sign requests.
-        # The public key is the *server's* public key, given after registering your application.
-        # We're cheating here so they're one and the same for simplicity.
-        # (Generally you'd do this once on startup.)
-        from binascii import hexlify, unhexlify
-        from hashlib import sha256
-        from ecdsa.keys import SigningKey, VerifyingKey
-        from ecdsa.curves import NIST256p
-        private = SigningKey.from_string(unhexlify(config['api.key']), curve=NIST256p, hashfunc=sha256)
-        public = private.get_verifying_key()
-        
-        # Construct an API instance to get easy attribute-access to the remote functions.
-        api = API(config['api.endpoint'], config['api.identity'], private, public)
-        
-        # We request an authenticated session from the server.
-        result = api.authorize(
-                success = 'http://localhost:8080/dev/win',
-                failure = 'http://localhost:8080/dev/fail'
-            )
-        
-        return 'brave.core.template.test', dict(data=result)
-
 
 class RootController(StartupMixIn, Controller):
     account = util.load('account')

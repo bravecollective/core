@@ -2,8 +2,7 @@
 
 from __future__ import unicode_literals
 
-from web.core import request, url
-from marrow.util.object import load_object as load
+from web.core import request
 
 from brave.core.api.model import AuthenticationRequest
 from brave.core.api.util import SignedController
