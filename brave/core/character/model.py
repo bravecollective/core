@@ -3,7 +3,7 @@
 from __future__ import unicode_literals
 
 from datetime import datetime
-from mongoengine import Document, StringField, DateTimeField, ReferenceField, IntField
+from mongoengine import Document, StringField, DateTimeField, ReferenceField, IntField, BooleanField
 from brave.core.util.signal import update_modified_timestamp
 from brave.core.key.model import EVECredential
 
@@ -52,3 +52,4 @@ class EVECharacter(EVEEntity):
     
     owner = ReferenceField('User', db_field='o', reverse_delete_rule='NULLIFY')
     credential = ReferenceField(EVECredential, db_field='r', reverse_delete_rule='NULLIFY')
+    default = BooleanField(db_field='d')

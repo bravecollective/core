@@ -12,7 +12,7 @@ from brave.core.util.predicate import authorize, authenticated, is_administrator
 
 class CharacterInterface(HTTPMethod):
     def __init__(self, key):
-        super(KeyInterface, self).__init__()
+        super(CharacterInterface, self).__init__()
 
         try:
             self.key = EVECharacter.objects.get(id=key)
@@ -22,6 +22,22 @@ class CharacterInterface(HTTPMethod):
         if self.key.owner.id != user.id:
             raise HTTPNotFound()
 
+    @authorize(authenticated)
+    def put(self):
+        if self.key.owner.id != user.id:
+            raise HTTPNotFound()
+
+        for row in user.characters:
+            row.default = False
+            row.save()
+
+        self.key.default = True
+        self.key.save()
+
+        if request.is_xhr:
+            return 'json:', dict(success=True)
+
+        raise HTTPFound(location='/character/')
 
 class CharacterList(HTTPMethod):
     @authorize(authenticated)
