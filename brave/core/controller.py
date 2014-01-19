@@ -107,7 +107,7 @@ class RootController(StartupMixIn, Controller):
         
         characters = list(user.characters.order_by('name').all())
         
-        default = user.characters(d=True).first()
+        default = user.characters(default=True).first()
        
 	if default == None:
             default = characters[0]
