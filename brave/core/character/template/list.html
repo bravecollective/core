@@ -12,6 +12,7 @@
         .modal-body form input.input-block-level:last-child { margin-bottom: 0; }
         table.table { table-layout: fixed; width: 100%; }
         span.ellipsis { display: inline-block; width: 100%; overflow: hidden !important; white-space: nowrap !important; text-overflow: ellipsis !important; word-break: break-all !important; word-wrap: break-word !important; }
+    .makedefault { cursor: pointer; }
     </style>
 </%block>
 
@@ -38,6 +39,16 @@
 
             $('time').timeago();
             $('tr:first-child').addClass('first');
+
+            $(document).off().on('click','.makedefault',function() {
+                var row = $(this).parents('tr');
+                $.ajax('/character/' + row.attr('data-id'),
+                        {
+                            type: 'PUT'
+                        }).done(function() {
+                            location.reload();
+			});
+            });
 
             function confirm(title, content, success, callback)
             {
@@ -98,10 +109,11 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th class="span4 sortable name">Name</th>
-                        <th class="span4 sortable corporation"><span class="line"></span>Corporation</th>
-                        <th class="span4 sortable alliance"><span class="line"></span>Alliance</th>
-                    </tr>
+                        <th class="span3 sortable name">Name</th>
+                        <th class="span3 sortable corporation"><span class="line"></span>Corporation</th>
+                        <th class="span3 sortable alliance"><span class="line"></span>Alliance</th>
+                        <th class="span3 sortable default">Default</th>
+		    </tr>
                 </thead>
                 <tbody>
                     % for record in records:
@@ -130,6 +142,13 @@
                             <em>None</em>
                         </td>
                         % endif
+                        <td class="default">
+				% if record.default:
+				    <i class="icon-fixed-width icon-ok">
+				% else:
+				    <i class="icon-fixed-width icon-remove makedefault" title rel="tooltip" data-placement="bottom" data-original-title="Make Default">
+				% endif
+                        </td>
                     </tr>
                     % endfor
                 </tbody>
