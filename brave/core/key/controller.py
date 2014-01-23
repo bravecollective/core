@@ -55,7 +55,12 @@ class KeyList(HTTPMethod):
     @authorize(authenticated)
     def post(self, **kw):
         data = Bunch(kw)
-
+        
+        try:
+            data.key = int(data.key)
+        except ValueError:
+            return 'json:', dict(success=False, message=_("Key ID must be a number."), field='key')
+        
         record = EVECredential(data.key, data.code, owner=user.id)
         
         try:
