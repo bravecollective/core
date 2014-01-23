@@ -26,13 +26,10 @@ class CharacterInterface(HTTPMethod):
     def put(self):
         if self.key.owner.id != user.id:
             raise HTTPNotFound()
-
-        for row in user.characters:
-            row.default = False
-            row.save()
-
-        self.key.default = True
-        self.key.save()
+        
+        u = user._current_obj()
+        u.primary = self.key
+        u.save()
 
         if request.is_xhr:
             return 'json:', dict(success=True)

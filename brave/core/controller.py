@@ -107,11 +107,9 @@ class RootController(StartupMixIn, Controller):
         
         characters = list(user.characters.order_by('name').all())
         
-        default = user.characters(default=True).first()
+        default = user.primary or user.characters.first()
        
-	if default == None:
+        if default == None:
             default = characters[0]
  
         return 'brave.core.template.authorize', dict(ar=ar, characters=characters, default=default)
-    
-    

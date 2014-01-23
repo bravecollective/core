@@ -52,4 +52,3 @@ class EVECharacter(EVEEntity):
     
     owner = ReferenceField('User', db_field='o', reverse_delete_rule='NULLIFY')
     credential = ReferenceField(EVECredential, db_field='r', reverse_delete_rule='NULLIFY')
-    default = BooleanField(db_field='d')
