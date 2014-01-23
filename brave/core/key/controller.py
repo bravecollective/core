@@ -6,6 +6,7 @@ from web.auth import user
 from web.core import Controller, HTTPMethod, request
 from web.core.locale import _
 from web.core.http import HTTPFound, HTTPNotFound, HTTPUnauthorized
+from web.core.templating import render
 from marrow.util.convert import boolean
 from marrow.util.bunch import Bunch
 from mongoengine import ValidationError
@@ -89,7 +90,16 @@ class KeyController(Controller):
     """Entry point for the KEY management RESTful interface."""
 
     index = KeyList()
-
+    
+    def add(self):
+        # TODO: mpAjax mime/multipart this to save on escaping the HTML.
+        # https://github.com/getify/mpAjax
+        return 'json:', dict(
+                title = _("Add New API Key"),
+                content = render('mako:brave.core.key.template.add', dict()),
+                label = dict(label=_("Add Key"), kind='btn-success')
+            )
+    
     def __lookup__(self, key, *args, **kw):
         request.path_info_pop()  # We consume a single path element.
         return KeyInterface(key), args
