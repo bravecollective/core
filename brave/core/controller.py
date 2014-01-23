@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 
 from datetime import datetime, timedelta
 
-from web.core import Controller, config, session, request
+from web.core import Controller, HTTPMethod, config, session, request
 from web.auth import user
 from web.core.http import HTTPFound, HTTPNotFound
 from web.core.locale import set_lang, LanguageError
@@ -28,7 +28,89 @@ class DeveloperTools(Controller):
     def test(self):
         """Return an HTML/templating scratch pad."""
         return 'brave.core.template.test', dict(data=None)
+
+
+class AuthorizeHandler(HTTPMethod):
+    def ar(self, ar):
+        if not session.get('ar', None) == ar:
+            session['ar'] = ar
+            session.save()
+            raise HTTPFound(location='/account/authenticate?redirect=%2Fauthorize%2F{0}'.format(ar))
+        
+        try:
+            return AuthenticationRequest.objects.get(id=ar, user=None, grant=None)
+        except AuthenticationRequest.NotFound:
+            raise HTTPNotFound()
     
+    def get(self, ar):
+        from brave.core.application.model import ApplicationGrant
+        
+        ar = self.ar(ar)
+        u = user._current_obj()
+        grant = ApplicationGrant.objects(user=u, application=ar.application).first()
+        
+        if not grant:
+            # TODO: We need a 'just logged in' flag in the request.
+            
+            characters = list(u.characters.order_by('name').all())
+            default = u.primary or characters[0]
+           
+            return 'brave.core.template.authorize', dict(ar=ar, characters=characters, default=default)
+        
+        ngrant = ApplicationGrant(user=u, application=ar.application, mask=grant.mask, expires=datetime.utcnow() + timedelta(days=30), character=grant.character)
+        ngrant.save()
+        
+        ar.user = u
+        ar.grant = ngrant
+        ar.expires = datetime.utcnow() + timedelta(minutes=10)  # extend to allow time for verification
+        ar.save()
+        
+        r = grant.delete()
+        
+        target = URL(ar.success)
+        target.query.update(dict(token=str(ngrant.id)))
+        raise HTTPFound(location=str(target))
+    
+    def post(self, ar, grant=None, character=None):
+        from brave.core.character.model import EVECharacter
+        from brave.core.application.model import ApplicationGrant
+        
+        ar = self.ar(ar)
+        u = user._current_obj()
+        
+        if not grant:
+            # Deny access.
+            ar.user = u
+            ar.grant = None
+            ar.expires = datetime.utcnow() + timedelta(minutes=10)  # extend to allow time for verification
+            ar.save()
+            
+            target = URL(ar.failure)
+            target.query.update(dict(token=str(ar.id)))
+            
+            return 'json:', dict(success=True, location=str(target))
+        
+        try:
+            character = EVECharacter.objects.get(owner=u, id=character)
+        except EVECharacter.NotFound:
+            return 'json:', dict(success=False, message="Unknown character ID.")
+        except:
+            log.exception("Error loading character.")
+            return 'json:', dict(success=False, message="Error loading character.")
+        
+        # TODO: Non-zero grants.
+        grant = ApplicationGrant(user=u, application=ar.application, mask=0, expires=datetime.utcnow() + timedelta(days=30), character=character)
+        grant.save()
+        
+        ar.user = u
+        ar.grant = grant
+        ar.expires = datetime.utcnow() + timedelta(minutes=10)  # extend to allow time for verification
+        ar.save()
+        
+        target = URL(ar.success)
+        target.query.update(dict(token=str(grant.id)))
+        return 'json:', dict(success=True, location=str(target))
+
 
 class RootController(StartupMixIn, Controller):
     account = util.load('account')
@@ -39,6 +121,8 @@ class RootController(StartupMixIn, Controller):
     
     def __init__(self, *args, **kw):
         super(RootController, self).__init__(*args, **kw)
+        
+        self.authorize = AuthorizeHandler()  # to avoid gumming up the @authorize decorator
         
         if boolean(config.get('debug', False)):
             self.dev = DeveloperTools()
@@ -54,62 +138,3 @@ class RootController(StartupMixIn, Controller):
             return 'json:', dict(success=False)
         
         return 'json:', dict(success=True)
-    
-    def authorize(self, ar, grant=None, character=None):
-        from brave.core.character.model import EVECharacter
-        from brave.core.application.model import ApplicationGrant
-        
-        # TODO: The updates in this should be atomic update-if-not-changed.
-        
-        # TODO: This security needs a bit of work.
-        # We need a 'just logged in' flag in the request.
-        if not session.get('ar', None) == ar:
-            session['ar'] = ar
-            session.save()
-            raise HTTPFound(location='/account/authenticate?redirect=%2Fauthorize%2F{0}'.format(ar))
-        
-        ar = AuthenticationRequest.objects.get(id=ar)
-        
-        if ar.user or ar.grant:
-            raise HTTPNotFound()
-        
-        if request.method == 'POST':
-            if not grant:
-                ar.user = user._current_obj()
-                ar.grant = None
-                ar.expires = datetime.utcnow() + timedelta(minutes=10)  # extend to allow time for verification
-                ar.save()
-                
-                target = URL(ar.failure)
-                target.query.update(dict(token=str(ar.id)))
-                return 'json:', dict(success=True, location=str(target))
-            
-            try:
-                character = EVECharacter.objects.get(owner=user._current_obj(), id=character)
-            except:
-                log.exception("Error loading character.")
-                return 'json:', dict(success=False, message="Unknown character ID.")
-            
-            user_ = user._current_obj()
-            
-            # TODO: Non-zero grants.
-            grant = ApplicationGrant(user=user_, application=ar.application, mask=0, expires=datetime.utcnow() + timedelta(days=30), character=character)
-            grant.save()
-            
-            ar.user = user_
-            ar.grant = grant
-            ar.expires = datetime.utcnow() + timedelta(minutes=10)  # extend to allow time for verification
-            ar.save()
-            
-            target = URL(ar.success)
-            target.query.update(dict(token=str(grant.id)))
-            return 'json:', dict(success=True, location=str(target))
-        
-        characters = list(user.characters.order_by('name').all())
-        
-        default = user.primary or user.characters.first()
-       
-        if default == None:
-            default = characters[0]
- 
-        return 'brave.core.template.authorize', dict(ar=ar, characters=characters, default=default)

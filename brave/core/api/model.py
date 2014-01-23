@@ -47,7 +47,7 @@ class AuthenticationRequest(Document):
     success = URLField(db_field='s')
     failure = URLField(db_field='f')
     
-    expires = DateTimeField(db_field='e', default=lambda: datetime.utcnow() + timedelta(hours=24, minutes=10))  # TODO: Set this back for prod.
+    expires = DateTimeField(db_field='e', default=lambda: datetime.utcnow() + timedelta(minutes=10))
     
     def __repr__(self):
         return 'AuthenticationRequest({0}, {1}, {2}, {3})'.format(self.id, self.application, self.user, self.grant)
