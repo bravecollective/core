@@ -1,6 +1,7 @@
 ## encoding: utf-8
 
 <%inherit file="brave.core.template.master"/>
+<%namespace name="f" file="brave.forums.template.filter"/>
 
 <%block name="title">Authorized Applications</%block>
 
@@ -56,10 +57,11 @@
                     % for record in records:
                     <tr data-id="${record.id}">
                         <td class="name">
-                            <a href="/application/${record.id}"><strong>${record.name}</strong></a><br>
-                            <span class="subtext">${record.description}</span>
+                            <a href="/application/${record.application.id}"><strong>${record.application.name}</strong></a><br>
+                            <span class="subtext">${record.application.description}</span>
                         </td>
                         <td class="date">
+                            <time class="relative" datetime="${record.id.generation_time |n,f.iso}">${record.id.generation_time |n,f.pretty}</time>
                         </td>
                         <td class="actions">
                             <button class="btn btn-danger btn-small delete" title="Revoke application permissions." rel="tooltip" data-placement="left"><i class="fa fa-times"></i></button>

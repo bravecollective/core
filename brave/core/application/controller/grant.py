@@ -45,7 +45,9 @@ class GrantInterface(HTTPMethod):
 class GrantList(HTTPMethod):
     @authorize(authenticated)
     def get(self):
-        records = ApplicationGrant.objects(user=user._current_obj())
+        records = ApplicationGrant.objects(
+                user = user._current_obj()
+            ).order_by('-id')
         
         return 'brave.core.application.template.list_grants', dict(
                 area = 'apps',
