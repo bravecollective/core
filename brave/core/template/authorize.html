@@ -118,12 +118,12 @@
             
             <div style="text-align: right; margin-top: 30px;">
                 <div class="btn-group dropup">
-                    <a class="btn btn-success btn-large allow" style="padding-left: 50px;" href="#" data-id="${default.id}"><img src="http://image.eveonline.com/Character/${default.identifier}_32.jpg" style="border-radius: 4px; position: absolute; left: 4px; top: 4px; border: 1px inset rgba(127,127,127,0.5);"> Authorize</a>
+                    <a class="btn btn-success btn-large allow" style="padding-left: 50px;" href="#" data-id="${default.id}"><img src="//image.eveonline.com/Character/${default.identifier}_32.jpg" style="border-radius: 4px; position: absolute; left: 4px; top: 4px; border: 1px inset rgba(127,127,127,0.5);"> Authorize</a>
                     <a class="btn btn-success btn-large dropdown-toggle" data-toggle="dropdown" href="#"><i class="icon icon-caret-up"></i></a>
                     <ul class="dropdown-menu" style="width: 300px; left: auto; right: 0px;">
                         % for record in characters:
                         <li><a tabindex="-1" href="#" data-id="${record.id}" class="allow"><span class="ellipsis">
-                            <img src="http://image.eveonline.com/Character/${record.identifier}_32.jpg" style="vertical-align: -60%; margin-right: 5px; border-radius: 6px; width: 32px; height: 32px;">
+                            <img src="//image.eveonline.com/Character/${record.identifier}_32.jpg" style="vertical-align: -60%; margin-right: 5px; border-radius: 6px; width: 32px; height: 32px;">
                             <strong>${record.name}</strong>
                             % if default == record:
                             <span class="label label-inverse" style="margin-left: 5px;">Default</span>

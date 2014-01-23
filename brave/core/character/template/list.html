@@ -12,7 +12,6 @@
         .modal-body form input.input-block-level:last-child { margin-bottom: 0; }
         table.table { table-layout: fixed; width: 100%; }
         span.ellipsis { display: inline-block; width: 100%; overflow: hidden !important; white-space: nowrap !important; text-overflow: ellipsis !important; word-break: break-all !important; word-wrap: break-word !important; }
-    .makedefault { cursor: pointer; }
     </style>
 </%block>
 
@@ -39,16 +38,6 @@
 
             $('time').timeago();
             $('tr:first-child').addClass('first');
-
-            $(document).off().on('click','.makedefault',function() {
-                var row = $(this).parents('tr');
-                $.ajax('/character/' + row.attr('data-id'),
-                        {
-                            type: 'PUT'
-                        }).done(function() {
-                            location.reload();
-			});
-            });
 
             function confirm(title, content, success, callback)
             {
@@ -109,31 +98,30 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th class="span3 sortable name">Name</th>
-                        <th class="span3 sortable corporation"><span class="line"></span>Corporation</th>
-                        <th class="span3 sortable alliance"><span class="line"></span>Alliance</th>
-                        <th class="span3 sortable default">Default</th>
-		    </tr>
+                        <th class="span4 sortable name">Name</th>
+                        <th class="span4 sortable corporation"><span class="line"></span>Corporation</th>
+                        <th class="span4 sortable alliance"><span class="line"></span>Alliance</th>
+                    </tr>
                 </thead>
                 <tbody>
                     % for record in records:
                     <tr data-id="${record.id}">
                         <td class="name">
                             <span class="ellipsis">
-                            <img src="http://image.eveonline.com/Character/${record.identifier}_32.jpg" style="vertical-align: -55%; margin-right: 5px; border-radius: 6px; width: 32px; height: 32px;">
+                            <img src="//image.eveonline.com/Character/${record.identifier}_32.jpg" style="vertical-align: -55%; margin-right: 5px; border-radius: 6px; width: 32px; height: 32px;">
                             <strong>${record.name}</strong>
                             </span>
                         </td>
                         <td class="corporation">
                             <span class="ellipsis">
-                            <img src="http://image.eveonline.com/Corporation/${record.corporation.identifier}_32.png" style="vertical-align: -55%; margin-right: 5px; width: 32px; height: 32px;">
+                            <img src="//image.eveonline.com/Corporation/${record.corporation.identifier}_32.png" style="vertical-align: -55%; margin-right: 5px; width: 32px; height: 32px;">
                             ${record.corporation.name}
                             </span>
                         </td>
                         % if record.alliance:
                         <td class="alliance">
                             <span class="ellipsis">
-                            <img src="http://image.eveonline.com/Alliance/${record.alliance.identifier}_32.png" style="vertical-align: -55%; margin-right: 5px; width: 32px; height: 32px;">
+                            <img src="//image.eveonline.com/Alliance/${record.alliance.identifier}_32.png" style="vertical-align: -55%; margin-right: 5px; width: 32px; height: 32px;">
                             ${record.alliance.name}
                             </span>
                         </td>
@@ -142,13 +130,6 @@
                             <em>None</em>
                         </td>
                         % endif
-                        <td class="default">
-				% if record.default:
-				    <i class="icon-fixed-width icon-ok">
-				% else:
-				    <i class="icon-fixed-width icon-remove makedefault" title rel="tooltip" data-placement="bottom" data-original-title="Make Default">
-				% endif
-                        </td>
                     </tr>
                     % endfor
                 </tbody>
