@@ -119,7 +119,7 @@
 
 <%def name="row(record)">
     <tr data-id="${record.id}">
-        <td class="key-id"><i class="icon-fixed-width icon-${'ok' if record.verified else 'remove'}"></i> ${record.key}</td>
+        <td class="key-id"><i class="fa fa-fw fa-${'check' if record.verified else 'times'}"></i> ${record.key}</td>
         <td class="key-code"><span class="ellipsis">${record.code}</span></td>
         <td class="characters hidden-tablet hidden-phone">
             % for char in record.characters:
@@ -128,7 +128,7 @@
         </td>
         <td class="key-date hidden-phone"><time datetime="${record.id.generation_time.isoformat().replace('+00:00', 'Z')}">${record.id.generation_time.isoformat(' ').replace('+00:00', '')}</time></td>
         <td class="actions">
-            <button class="btn btn-danger btn-small delete" title="${_('Remove API Key')}" rel="tooltip" data-placement="bottom"><i class="icon-remove"></i></button>
+            <button class="btn btn-danger btn-small delete" title="${_('Remove API Key')}" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i></button>
         </td>
     </tr>
 </%def>
@@ -150,7 +150,7 @@
 
     <div id="pad-wrapper">
         <div class="row-fluid header">
-            <a class="btn btn-success pull-right add"><i class="icon-plus"></i> ${_("Add Key")}</a>
+            <a class="btn btn-success pull-right add"><i class="fa fa-plus"></i> ${_("Add Key")}</a>
             <h3>${_("EVE Online API Keys")}</h3>
         </div>
         
@@ -168,7 +168,7 @@
                 <tbody>
                     % for record in records:
                     <tr data-id="${record.id}">
-                        <td class="key-id"><i class="icon-fixed-width icon-${'ok' if record.verified else 'remove'}"></i> ${record.key}</td>
+                        <td class="key-id"><i class="fa fa-fw fa-${'check' if record.verified else 'times'}"></i> ${record.key}</td>
                         <td class="key-code"><span class="ellipsis">${record.code}</span></td>
                         <td class="characters hidden-tablet hidden-phone">
                             % for char in record.characters:
@@ -177,7 +177,7 @@
                         </td>
                         <td class="key-date hidden-phone"><time datetime="${record.id.generation_time.isoformat().replace('+00:00', 'Z')}">${record.id.generation_time.isoformat(' ').replace('+00:00', '')}</time></td>
                         <td class="actions">
-                            <button class="btn btn-danger btn-small delete" title="Remove API Key" rel="tooltip" data-placement="bottom"><i class="icon-remove"></i></button>
+                            <button class="btn btn-danger btn-small delete" title="Remove API Key" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i></button>
                         </td>
                     </tr>
                     % endfor

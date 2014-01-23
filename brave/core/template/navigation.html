@@ -14,7 +14,7 @@ areas = [
 %>
 <div class="navbar navbar-inverse">
     <div class="navbar-inner">
-        <i class="brand icon-key"></i>
+        <i class="brand fa fa-key"></i>
         <h1 class="brand">
              <a href="index.html">Brave<span class="hidden-phone"> Collective</span></a> <span class="app">Core Services</span>
         </h1>
@@ -32,18 +32,18 @@ areas = [
                     <b class="caret"></b>
                 </a>
                 <ul class="dropdown-menu">
-                    <li><a href="/account/"><i class="icon-cog"></i> ${_("Profile")}</a></li>
-                    <li><a href="/account/settings"><i class="icon-cog"></i> ${_("Settings")}</a></li>
+                    <li><a href="/account/"><i class="fa fa-cog"></i> ${_("Profile")}</a></li>
+                    <li><a href="/account/settings"><i class="fa fa-cog"></i> ${_("Settings")}</a></li>
                     <li class="divider"></li>
-                    <li><a href="/help"><i class="icon-question-sign"></i> ${_("Help")}</a></li>
+                    <li><a href="/help"><i class="fa fa-question"></i> ${_("Help")}</a></li>
                     <li class="divider"></li>
-                    <li><a href="/account/deauthenticate"><i class="icon-signout"></i> ${_("Sign Out")}</a></li>
+                    <li><a href="/account/deauthenticate"><i class="fa fa-sign-out"></i> ${_("Sign Out")}</a></li>
                 </ul>
             </li>
 % else:
             <li>
                 <a href="/account/authenticate">
-                    <i class="icon-signin"></i><span class="hidden-phone"> ${_("Sign In")}</span>
+                    <i class="fa fa-sign-in"></i><span class="hidden-phone"> ${_("Sign In")}</span>
                 </a>
             </li>
 % endif
@@ -58,11 +58,9 @@ areas = [
         <div class="nav-collapse collapse visible-phone mobile-menu">
             <ul class="nav">
 % for id, icon, label, url in areas:
-    % if context.get('area', 'overview') == id:
-                <li class="active"><a href="${url}"><i class="icon-${icon}"></i> ${label}</a></li>
-    % else:
-                <li><a href="${url}"><i class="icon-${icon}"></i> ${label}</a></li>
-    % endif
+                <li \
+                    ${'class="active"' if context.get('area', 'overview') == id else ''} \
+                    ><a href="${url}"><i class="fa fa-${icon}"></i> ${label}</a></li>
 % endfor
             </ul>
         </div>
@@ -83,7 +81,7 @@ areas = [
         <li>
     % endif
             <a href="${url}">
-                <i class="icon-${icon}"></i>
+                <i class="fa fa-${icon} fa-2x fa-fw"></i>
                 <span>${label}</span>
             </a>
         </li>

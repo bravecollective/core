@@ -119,7 +119,7 @@
             <div style="text-align: right; margin-top: 30px;">
                 <div class="btn-group dropup">
                     <a class="btn btn-success btn-large allow" style="padding-left: 50px;" href="#" data-id="${default.id}"><img src="//image.eveonline.com/Character/${default.identifier}_32.jpg" style="border-radius: 4px; position: absolute; left: 4px; top: 4px; border: 1px inset rgba(127,127,127,0.5);"> Authorize</a>
-                    <a class="btn btn-success btn-large dropdown-toggle" data-toggle="dropdown" href="#"><i class="icon icon-caret-up"></i></a>
+                    <a class="btn btn-success btn-large dropdown-toggle" data-toggle="dropdown" href="#"><i class="fa fa-caret-up"></i></a>
                     <ul class="dropdown-menu" style="width: 300px; left: auto; right: 0px;">
                         % for record in characters:
                         <li><a tabindex="-1" href="#" data-id="${record.id}" class="allow"><span class="ellipsis">
@@ -136,9 +136,10 @@
             </div>
         </div>
 
-        <div class="overlay icon-4x wait"><i class="icon-spinner icon-spin icon-4x"></i></div>
-        <div class="overlay icon-4x result fail"><i class="icon-remove icon-4x"></i></div>
-        <div class="overlay icon-4x result success"><i class="icon-ok icon-4x"></i></div>
-        <div class="overlay icon-4x result bad"><i class="icon-exclamation icon-4x"></i></div>
+        <div class="overlay fa-4x wait"><i class="fa fa-spinner fa-spin fa-4x"></i></div>
+        <div class="overlay fa-4x result fail"><i class="fa fa-times fa-4x"></i></div>
+        <div class="overlay fa-4x result success"><i class="fa fa-check fa-4x"></i></div>
+        <div class="overlay fa-4x result bad"><i class="fa fa-exclamation-triangle fa-4x"></i></div>
+        
     </div>
 </div>
