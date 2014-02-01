@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <title>Applications — Core Services — Brave Collective</title>
+
+        <!-- bootstrap -->
+        <link href="css/bootstrap/bootstrap.css" rel="stylesheet">
+        <link href="css/bootstrap/bootstrap-responsive.css" rel="stylesheet">
+        <link href="css/bootstrap/bootstrap-overrides.css" type="text/css" rel="stylesheet">
+
+        <!-- libraries -->
+        <link href="css/lib/jquery-ui-1.10.2.custom.css" rel="stylesheet" type="text/css">
+        <link href="css/lib/font-awesome.css" type="text/css" rel="stylesheet">
+
+        <!-- global styles -->
+        <link rel="stylesheet" type="text/css" href="css/compiled/layout.css">
+        <link rel="stylesheet" type="text/css" href="css/elements.css">
+        <link rel="stylesheet" type="text/css" href="css/icons.css">
+
+        <!-- this page specific styles -->
+        <!--<link rel="stylesheet" href="css/compiled/index.css" type="text/css" media="screen">-->
+        <link rel="stylesheet" href="css/compiled/user-list.css" type="text/css" media="screen">
+
+        <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+        <link href='http://fonts.googleapis.com/css?family=Lato:300,400,700,900,300italic,400italic,700italic,900italic' rel='stylesheet' type='text/css'>
+
+        <!--[if lt IE 9]>
+        <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+    </head>
+    <body>
+        <!-- navbar -->
+        <div class="navbar navbar-inverse">
+            <div class="navbar-inner">
+                <style>.navbar .brand { line-height: 18px; } .navbar-inverse i.brand { padding: 12px 10px 12px 20px; } .navbar .brand a {font-weight: 700; color: white; margin-right: 5px;} .navbar-inverse .brand .app { vertical-align: top; font-size: 75%; font-weight: 100; } .navbar-inverse .nav { line-height: 18px; } .navbar-inverse .nav > li > a { padding: 13px 15px 11px; border-left-width: 0; }</style>
+
+                <i class="brand icon-key"></i>
+                <h1 class="brand">
+                     <a href="index.html">Brave<span class="hidden-phone"> Collective</span></a> <span class="app">Core Services</span>
+                </h1>
+
+                <ul class="nav pull-right">
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                            <i class="icon-user"></i><span class="hidden-phone"> Draleth</span>
+                            <b class="caret"></b>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="personal-info.html"><i class="icon-user"></i> Profile</a></li>
+                            <li><a href=""><i class="icon-cog"></i> Settings</a></li>
+                            <li class="divider"></li>
+                            <li><a href=""><i class="icon-question-sign"></i> Help</a></li>
+                            <li class="divider"></li>
+                            <li><a href=""><i class="icon-signout"></i> Sign Out</a></li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <!-- shows same menu as sidebar but for mobile devices -->
+                <button type="button" class="btn btn-navbar visible-phone" data-toggle="collapse" data-target=".nav-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>            
+                <div class="nav-collapse collapse visible-phone mobile-menu">
+                    <ul class="nav">
+                        <li class="active"><a href="index.html">Home</a></li>
+                        <li><a href="chart-showcase.html">Charts</a></li>
+                        <li><a href="user-list.html">Users</a></li>
+                        <li><a href="form-showcase.html">Forms</a></li>
+                        <li><a href="gallery.html">Gallery</a></li>
+                        <li><a href="icons.html">Icons</a></li>
+                        <li><a href="calendar.html">Calendar</a></li>
+                        <li><a href="tables.html">Tables</a></li>
+                        <li><a href="ui-elements.html">UI Elements</a></li>
+                    </ul>
+                </div>
+                <!-- end navbar for mobile devices -->
+            </div>
+        </div>
+        <!-- end navbar -->
+
+        <!-- sidebar -->
+        <div id="sidebar-nav" class="hidden-phone">
+            <ul id="dashboard-menu">
+                <li class="">
+                    <a href="admin.html">
+                        <i class="sidebar-home"></i>
+                        <span>Overview</span>
+                    </a>
+                </li>            
+                <li class="active">
+                    <div class="pointer">
+                        <div class="arrow"></div>
+                        <div class="arrow_border"></div>
+                    </div>
+                    <a href="application.html">
+                        <i class="icon-globe icon-2x"></i>
+                        <span>Applications</span>
+                    </a>
+                </li>
+                <li class="">
+                    <a href="character.html">
+                        <i class="icon-group"></i>
+                        <span>Characters</span>
+                    </a>
+                </li>
+                <li class="">
+                    <a href="group.html">
+                        <i class="icon-group"></i>
+                        <span>Groups</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <!-- end sidebar -->
+
+
+        <!-- main container -->
+        <div class="content">
+
+            <div class="container-fluid">
+                <div id="tabs-wrapper">
+                    <div class="row-fluid">
+                        <a class="span2 tab active" href="">
+                            Authorized
+                        </a>
+                        <a class="span2 tab" href="">
+                            Available
+                        </a>
+                        <a class="span2 tab" href="">
+                            Manage
+                        </a>
+                    </div>
+                </div>
+
+
+                <div id="pad-wrapper" class="users-list">
+                    <div class="row-fluid header">
+                        <h3>Authorized Applications</h3>
+                        <div class="span7 pull-right">
+                            <input type="text" class="span6 search pull-right" placeholder="Filter Application List">
+                        </div>
+                    </div>
+                
+                    <!-- Users table -->
+                    <style>.users-list .table td { vertical-align: top; }</style>
+                    <div class="row-fluid table">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th class="span10 sortable">
+                                        Name
+                                    </th>
+                                    <th class="span4 sortable">
+                                        <span class="line"></span>Authorized
+                                    </th>
+                                    <th class="span2 sortable align-right">
+                                        <span class="line"></span>Actions
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            <!-- row -->
+                            <tr class="first">
+                                <td>
+                                    <i class="icon-picture icon-3x pull-left hidden-phone"></i>
+                                    <div>
+                                        <a href="user-profile.html" class="name" style="margin-top: 0;">Alliance Wiki</a>
+                                        <span class="subtext">Official Brave Collective wiki.</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    Mar 13, 2012
+                                </td>
+                                <td class="align-right">
+                                    <a href="#">Remove</a>
+                                </td>
+                            </tr>
+                            <!-- row -->
+                            <tr>
+                                <td>
+                                    <i class="icon-picture icon-3x pull-left hidden-phone"></i>
+                                    <div>
+                                        <a href="user-profile.html" class="name" style="margin-top: 0;">Alliance Forums</a>
+                                        <span class="subtext">Official Brave Collective forums.</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    Jun 03, 2012
+                                </td>
+                                <td class="align-right">
+                                    <a href="#">Remove</a>
+                                </td>
+                            </tr>
+                            <!-- row -->
+                            <tr>
+                                <td>
+                                    <i class="icon-picture icon-3x pull-left hidden-phone"></i>
+                                    <div>
+                                        <a href="user-profile.html" class="name" style="margin-top: 0;">Alliance Intelligence</a>
+                                        <span class="subtext">Official intelligence gathering service.</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    Mar 01, 2013
+                                </td>
+                                <td class="align-right">
+                                    <a href="#">Remove</a>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination pull-right">
+                        <ul>
+                            <li><a href="#">‹</a></li>
+                            <li><a class="active" href="#">1</a></li>
+                            <li><a href="#">2</a></li>
+                            <li><a href="#">3</a></li>
+                            <li><a href="#">4</a></li>
+                            <li><a href="#">5</a></li>
+                            <li><a href="#">›</a></li>
+                        </ul>
+                    </div>
+                    <!-- end users table -->
+                </div>
+            </div>
+        </div>
+
+
+        <!-- scripts -->
+        <script src="http://code.jquery.com/jquery-latest.js"></script>
+        <script src="js/bootstrap.min.js"></script>
+        <script src="js/jquery-ui-1.10.2.custom.min.js"></script>
+        <!-- knob -->
+        <script src="js/jquery.knob.js"></script>
+        <script src="js/theme.js"></script>
+
+        <script type="text/javascript">
+            $(function () {
+
+                // jQuery Knobs
+                $(".knob").knob();
+
+
+
+                // jQuery UI Sliders
+                $(".slider-sample1").slider({
+                    value: 100,
+                    min: 1,
+                    max: 500
+                });
+                $(".slider-sample2").slider({
+                    range: "min",
+                    value: 130,
+                    min: 1,
+                    max: 500
+                });
+                $(".slider-sample3").slider({
+                    range: true,
+                    min: 0,
+                    max: 500,
+                    values: [ 40, 170 ],
+                });
+
+            });
+        </script>
+    </body>
+</html>

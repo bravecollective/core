@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        <title>Overview — Core Services — Brave Collective</title>
+
+        <!-- bootstrap -->
+        <link href="css/bootstrap/bootstrap.css" rel="stylesheet">
+        <link href="css/bootstrap/bootstrap-responsive.css" rel="stylesheet">
+        <link href="css/bootstrap/bootstrap-overrides.css" type="text/css" rel="stylesheet">
+    
+        <!-- libraries -->
+        <link href="css/lib/jquery-ui-1.10.2.custom.css" rel="stylesheet" type="text/css">
+        <link href="css/lib/font-awesome.css" type="text/css" rel="stylesheet">
+    
+        <!-- global styles -->
+        <link rel="stylesheet" type="text/css" href="css/compiled/layout.css">
+        <link rel="stylesheet" type="text/css" href="css/elements.css">
+        <link rel="stylesheet" type="text/css" href="css/icons.css">
+    
+        <!-- this page specific styles -->
+        <!--<link rel="stylesheet" href="css/compiled/index.css" type="text/css" media="screen">-->
+        <link rel="stylesheet" href="css/compiled/user-profile.css" type="text/css" media="screen">
+        
+        <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+        <link href='http://fonts.googleapis.com/css?family=Lato:300,400,700,900,300italic,400italic,700italic,900italic' rel='stylesheet' type='text/css'>
+    
+        <!--[if lt IE 9]>
+        <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+    </head>
+    <body>
+        <!-- navbar -->
+        <div class="navbar navbar-inverse">
+            <div class="navbar-inner">
+                <style>.navbar .brand { line-height: 18px; } .navbar-inverse i.brand { padding: 12px 10px 12px 20px; } .navbar .brand a {font-weight: 700; color: white; margin-right: 5px;} .navbar-inverse .brand .app { vertical-align: top; font-size: 75%; font-weight: 100; } .navbar-inverse .nav { line-height: 18px; } .navbar-inverse .nav > li > a { padding: 13px 15px 11px; border-left-width: 0; }</style>
+                
+                <i class="brand icon-key"></i>
+                <h1 class="brand">
+                     <a href="index.html">Brave<span class="hidden-phone"> Collective</span></a> <span class="app">Core Services</span>
+                </h1>
+    
+                <ul class="nav pull-right">
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                            <i class="icon-user"></i><span class="hidden-phone"> Draleth</span>
+                            <b class="caret"></b>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="personal-info.html"><i class="icon-user"></i> Profile</a></li>
+							<li><a href=""><i class="icon-cog"></i> Settings</a></li>
+							<li class="divider"></li>
+							<li><a href=""><i class="icon-question-sign"></i> Help</a></li>
+							<li class="divider"></li>
+							<li><a href=""><i class="icon-signout"></i> Sign Out</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                
+                <!-- shows same menu as sidebar but for mobile devices -->
+                <button type="button" class="btn btn-navbar visible-phone" data-toggle="collapse" data-target=".nav-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>            
+                <div class="nav-collapse collapse visible-phone mobile-menu">
+                    <ul class="nav">
+                        <li class="active"><a href="index.html">Home</a></li>
+                        <li><a href="chart-showcase.html">Charts</a></li>
+                        <li><a href="user-list.html">Users</a></li>
+                        <li><a href="form-showcase.html">Forms</a></li>
+                        <li><a href="gallery.html">Gallery</a></li>
+                        <li><a href="icons.html">Icons</a></li>
+                        <li><a href="calendar.html">Calendar</a></li>
+                        <li><a href="tables.html">Tables</a></li>
+                        <li><a href="ui-elements.html">UI Elements</a></li>
+                    </ul>
+                </div>
+                <!-- end navbar for mobile devices -->
+            </div>
+        </div>
+        <!-- end navbar -->
+    
+        <!-- sidebar -->
+        <div id="sidebar-nav" class="hidden-phone">
+            <ul id="dashboard-menu">
+                <li class="active">
+                    <div class="pointer">
+                        <div class="arrow"></div>
+                        <div class="arrow_border"></div>
+                    </div>
+                    <a href="admin.html">
+                        <i class="sidebar-home"></i>
+                        <span>Overview</span>
+                    </a>
+                </li>            
+                <li class="">
+                    <a href="keys.html">
+                        <i class="icon-key icon-2x"></i>
+                        <span>API Keys</span>
+                    </a>
+                </li>
+                <li class="">
+                    <a href="application.html">
+                        <i class="icon-globe icon-2x"></i>
+                        <span>Applications</span>
+                    </a>
+                </li>
+                <li class="">
+                    <a href="character.html">
+                        <i class="icon-group"></i>
+                        <span>Characters</span>
+                    </a>
+                </li>
+                <li class="">
+                    <a href="group.html">
+                        <i class="icon-group"></i>
+                        <span>Groups</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <!-- end sidebar -->
+    
+    
+        <!-- main container -->
+        <div class="content">
+    
+            <div class="container-fluid">
+    
+                <div id="pad-wrapper" class="user-profile">
+                    
+                    <div class="row-fluid header">
+                        <div class="span8">
+                            <img src="http://image.eveonline.com/Character/432286394_128.jpg" class="avatar" style="width: 96px; height: 96px;">
+                            <h3 class="name" style="margin-top: 12px;">Draleth</h3>
+                            <span class="area">Head Diplomat, Council Member, Leadership</span>
+                            <div class="area"><a href="">Brave Newbies Inc.</a> <span style="margin: 0 5px;">›</span> <a href="">Brave Collective</a></div>
+                        </div>
+                    </div>
+                    
+                    <div class="row-fluid profile">
+                        <!-- bio, new note & orders column -->
+                        <div class="span9 bio">
+                            <div class="profile-box">
+                                <!-- biography -->
+                                <h6>Welcome</h6>
+                                <p>
+                                    Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+                                </p>
+                                
+                                <hr>
+                                
+                                <h6>Authentication Attempts</h6>
+                                
+                                <style>.table td {  } .table thead th { padding-bottom: 5px; }</style>
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                            <th class="span3">
+                                                Date
+                                            </th>
+                                            <th class="span3">
+                                                <span class="line"></span>
+                                                Application
+                                            </th>
+                                            <th class="span3">
+                                                <span class="line"></span>
+                                                From
+                                            </th>
+                                            <th class="span1"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="first">
+                                            <td><i class="icon-ok-circle"></i></td>
+                                            <td>Four hours ago.</td>
+                                            <td>Alliance Forums</td>
+                                            <td>1.2.3.4</td>
+                                            <td><i class="icon-flag"></i></td>
+                                        </tr>
+                                        <tr>
+                                            <td><i class="icon-ok-circle"></i></td>
+                                            <td>A day ago.</td>
+                                            <td>Alliance Wiki</td>
+                                            <td>1.2.3.4</td>
+                                            <td><i class="icon-flag"></i></td>
+                                        </tr>
+                                        <tr>
+                                            <td><i class="icon-ban-circle"></i></td>
+                                            <td>Two days ago.</td>
+                                            <td>Alliance Forums</td>
+                                            <td>255.255.255.255</td>
+                                            <td><i class="icon-flag"></i></td>
+                                        </tr>
+                                    </tbody>
+                                    <thead>
+                                        <tr>
+                                            <th colspan="5" style="text-align: center;"><a href="">View Full Authentication History</a></th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                    
+                            </div>
+                        </div>
+                    
+                        <!-- side address column -->
+                        <div class="span3 pull-right">
+                            <i class="icon-globe icon-4x pull-right icon-muted"></i>
+                            <h6>Authorized Applications</h6>
+                            <ul>
+                                <li><a href="">Alliance Forums</a></li>
+                                <li><a href="">Alliance Wiki</a></li>
+                                <li><a href="">Alliance Jabber</a></li>
+                                <li><a href="">Alliance Intelligence</a></li>
+                            </ul>
+                            
+                            <hr>
+                            
+                            <i class="icon-group icon-4x pull-right icon-muted"></i>
+                            <h6>Group Membership</h6>
+                            <ul>
+                                <li>Foo</li>
+                                <li>Bar</li>
+                                <li>Baz</li>
+                            </ul>
+                        </div>
+                    </div>
+
+
+    
+                </div>
+            </div>
+        </div>
+    
+    
+        <!-- scripts -->
+        <script src="http://code.jquery.com/jquery-latest.js"></script>
+        <script src="js/bootstrap.min.js"></script>
+        <script src="js/jquery-ui-1.10.2.custom.min.js"></script>
+        <!-- knob -->
+        <script src="js/jquery.knob.js"></script>
+        <script src="js/theme.js"></script>
+    
+        <script type="text/javascript">
+            $(function () {
+    
+                // jQuery Knobs
+                $(".knob").knob();
+    
+    
+    
+                // jQuery UI Sliders
+                $(".slider-sample1").slider({
+                    value: 100,
+                    min: 1,
+                    max: 500
+                });
+                $(".slider-sample2").slider({
+                    range: "min",
+                    value: 130,
+                    min: 1,
+                    max: 500
+                });
+                $(".slider-sample3").slider({
+                    range: true,
+                    min: 0,
+                    max: 500,
+                    values: [ 40, 170 ],
+                });
+    
+            });
+        </script>
+    </body>
+</html>
