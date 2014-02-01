@@ -43,7 +43,7 @@ class ACLList(ACLRule):
         return character.corporation.identifier in self.ids
     
     def evaluate_alliance(self, user, character):
-        return character.alliance.identifier in self.ids
+        return character.alliance and character.alliance.identifier in self.ids
     
     def evaluate(self, user, character):
         if getattr(self, 'evaluate_' + self.KINDS[self.kind].lower())(user, character):
