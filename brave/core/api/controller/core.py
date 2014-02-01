@@ -122,10 +122,17 @@ class CoreAPI(SignedController):
     
     def info(self, token):
         from brave.core.application.model import ApplicationGrant
+        from brave.core.group.model import Group
         
         # Step 1: Get the appropraite grant.
         token = ApplicationGrant.objects.get(id=token, application=request.service)
         character = token.character
+        
+        # Step 2: Match ACLs.
+        tags = []
+        for group in Group.objects(id__in=request.service.groups):
+            if group.evaluate(token.user, character):
+                tags.append(group.id)
         
         # TODO: Verify continued character ownership.
         
@@ -133,6 +140,6 @@ class CoreAPI(SignedController):
                 character = dict(id=character.identifier, name=character.name),
                 corporation = dict(id=character.corporation.identifier, name=character.corporation.name),
                 alliance = dict(id=character.alliance.identifier, name=character.alliance.name) if character.alliance else None,
-                tags = [],
+                tags = tags,
                 expires = None
             )
