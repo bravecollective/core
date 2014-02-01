@@ -20,72 +20,113 @@
     
     <script src="/js/vendor/jquery.timeago.js" charset="utf-8"></script>
     <script src="/js/vendor/bootbox.js" charset="utf-8"></script>
+    <script src="/js/vendor/species.js" charset="utf-8"></script>
     
     <script type="text/javascript" charset="utf-8">
         $(function()
         {
 
             $('time').timeago();
-
-            $('.add').on('click', function()
-            {
-                confirm(
-                    "Add New API Key",
-                    '<p>' +
-                        'Enter your API key details below. ' +
-                        'You can <a target="_blank" href="http://community.eveonline.com/support/api-key/CreatePredefined?accessMask=8921088">use a standard key</a> or ' +
-                        '<a target="_blank" href="http://community.eveonline.com/support/api-key/CreatePredefined?accessMask=268435455">use a full key</a> ' +
-                        'if you are leadership.  Additional permissions can determine access to services or the features those services will be able to offer you.' +
-                    '</p>' +
-                    '<p>' +
-                        '<strong>Note:</strong> At no point are services given direct access to your API key.  Any API access a service ' +
-                        'requests must be explicitly granted by you at the time you register for the service.' +
-                        '<form>' +
-                            '<input name="key" type="text" class="input-block-level" placeholder="Key ID" pattern="^\\d+$" maxlength="8" autocomplete="off" required>' +
-                            '<input name="code" type="text" class="input-block-level" placeholder="Verification Code" maxlength="64" autocomplete="off" required>' +
-                        '</form>' +
-                    '</p>',
-                    {
-                        label: "Add Key",
-                        kind: 'btn-success'
-                    },
-                    function()
-                    {
-                        $('#modal form .alert').remove();
-                        if (!/\d+/.test($('#modal form input[name="key"]').val())) {
-                            errors = true;
-                            $('#modal form input[name="key"]').after(
-                                '<div class="alert alert-error">' +
-                                    '<strong>Key ID must be a number</strong>'
-                            );
-                            return true;
+            
+            
+            var KeyListView = Species.Class({
+                
+                basePath: $('body').data('base-path'),
+                
+                initialize: function _KeyListView() {
+                    this.bindEvents();
+                },
+                
+                
+                bindEvents: function() {
+                
+                    $('.add').on('click', $.proxy(this, this.onClickAdd));
+                
+                },
+                
+                
+                onClickAdd: function() {
+                    var self = this;
+                    
+                    // TODO: mpAjax this, see the /key/add controller.
+                    $.get('/key/add', function(result){
+                        if ( result.success ) {
+                            confirm(
+                                    result.title,
+                                    result.content,
+                                    result.label,
+                                    function(){
+                                        self.addKey(
+                                                $('#modal form input[name="key"]').val(),
+                                                $('#modal form input[name="code"]').val()
+                                            );
+                                    }
+                                );
+                            return;
                         }
-                        $.post('/key/', $('#modal form').serialize(), function(data)
-                        {
-                            $(
-                                '<tr data-id="' + data.identifier + '">' +
-                                    '<td class="key-id">' +
-                                        '<i class="icon-fixed-width icon-remove"></i> ' + data.key +
-                                    '</td>' +
-                                    '<td class="key-code">' +
-                                        '<div>' + data.code + '</div>' +
-                                    '</td>' +
-                                    '<td class="key-date">' +
-                                        '<time datetime="'+ISODateString(new Date())+'"></time>' +
-                                    '</td>' +
-                                    '<td class="actions">' +
-                                        '<button class="btn btn-danger btn-small delete" title="Remove API Key" rel="tooltip" data-placement="bottom">' +
-                                        '<i class="icon-remove"></i>' +
-                                        '</button>' +
-                                    '</td>' +
-                                '</tr>'
-                            ).appendTo('table.table tbody');
-
-                            $('time').timeago();
-                        });
+                        
+                        // TODO: Handle errors.
+                        
+                        return true;
+                    });
+                    
+                },
+                
+                addKey: function(keyId, keyCode) {
+                    if (!/\d+/.test(keyId)) {
+                        $('#modal form input[name="key"]').after(
+                            '<div class="alert alert-error">' +
+                                '<strong>Key ID must be a number</strong>'
+                        );
+                        return true;
                     }
-                );
+                    
+                    $('#modal input').prop('disabled', true);
+                    $('#modal a.btn').addClass('disabled');
+                    
+                    // TODO: AJAX-y spinner!  Woo!
+                    
+                    
+                    
+                    
+                    
+                    $('#modal form .alert').remove();
+                    
+                    $.post('/key/', $('#modal form').serialize(), function(data)
+                    {
+                        $(
+                            '<tr data-id="' + data.identifier + '">' +
+                                '<td class="key-id">' +
+                                    '<i class="fa fa-fw fa-times"></i> ' + data.key +
+                                '</td>' +
+                                '<td class="key-code">' +
+                                    '<div>' + data.code + '</div>' +
+                                '</td>' +
+                                '<td class="key-date">' +
+                                    '<time datetime="'+ISODateString(new Date())+'"></time>' +
+                                '</td>' +
+                                '<td class="actions">' +
+                                    '<button class="btn btn-danger btn-small delete" title="Remove API Key" rel="tooltip" data-placement="bottom">' +
+                                    '<i class="fa fa-times"></i>' +
+                                    '</button>' +
+                                '</td>' +
+                            '</tr>'
+                        ).appendTo('table.table tbody');
+
+                        $('time').timeago();
+                    });
+                },
+                
+                
             });
+            
+            
+            $(function(){
+                
+                var view = KeyListView.New();
+                
+            });
+            
 
             $(document).on('click', '.delete', function()
             {
