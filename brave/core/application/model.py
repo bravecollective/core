@@ -56,6 +56,8 @@ class Application(Document):
     mask = EmbeddedDocumentField(ApplicationMasks, db_field='m', default=lambda: ApplicationMasks())
     groups = ListField(StringField(), db_field='g', default=list)
     
+    # TODO: "Development"-only applications.
+    
     owner = ReferenceField('User', db_field='o')
     
     # Python Magic Methods

@@ -50,6 +50,8 @@ class BrowseController(Controller):
     def index(self):
         records = Application.objects()  # TODO: This needs to be ACL-filtered!
         
+        # TODO: "Development"-only applications.
+        
         return 'brave.core.application.template.list_apps', dict(
                 area = 'apps',
                 records = records

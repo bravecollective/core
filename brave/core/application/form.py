@@ -12,6 +12,7 @@ log = __import__('logging').getLogger(__name__)
 
 
 # TODO: Secondary form with additional 'owner' selector.
+# TODO: "Development"-only applications.
 def manage_form(action='/application/manage/'):
     return Form('application', action=action, method='post', class_='modal-body tab-content form-horizontal', children=[
             Tab('general', L_("General"), class_='active', children=[
