@@ -39,7 +39,7 @@ class AuthorizeHandler(HTTPMethod):
         
         try:
             return AuthenticationRequest.objects.get(id=ar, user=None, grant=None)
-        except AuthenticationRequest.NotFound:
+        except AuthenticationRequest.DoesNotExist:
             raise HTTPNotFound()
     
     def get(self, ar):
@@ -92,7 +92,7 @@ class AuthorizeHandler(HTTPMethod):
         
         try:
             character = EVECharacter.objects.get(owner=u, id=character)
-        except EVECharacter.NotFound:
+        except EVECharacter.DoesNotExist:
             return 'json:', dict(success=False, message="Unknown character ID.")
         except:
             log.exception("Error loading character.")
