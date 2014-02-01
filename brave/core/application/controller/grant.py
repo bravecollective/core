@@ -31,7 +31,14 @@ class GrantInterface(HTTPMethod):
     def delete(self):
         log.info("REVOKE %r %r", self.grant.user, self.grant.application)
         
-        self.grant.delete()
+        try:
+            self.grant.delete()
+        except:
+            log.exception("Error revoking grant.")
+            return 'json:', dict(
+                    success = False,
+                    message = _("Unable to revoke application permission.")
+                )
 
         if request.is_xhr:
             return 'json:', dict(

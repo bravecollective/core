@@ -23,6 +23,32 @@
         $(function()
         {
             
+            $(document).on('click', '.delete', function()
+            {
+                var row = $(this).parents('tr');
+
+                confirm(
+                    "Are you really, <em>really</em> sure?",
+                    "By removing authorization you may lose access to the service; services may remove data they have associated with the character you authorized.<br/>" +
+                        "It may even make pandas cry. Please, think of the high-altitude melting pandas.",
+                    {
+                        label: "Revoke Authorization",
+                        kind: 'btn-danger'
+                    },
+                    function()
+                    {
+                        $.ajax('/application/' + row.attr('data-id'),
+                        {
+                            type: 'DELETE'
+                        }).
+                        done(function()
+                        {
+                            row.remove();
+                        });
+                    }
+                );
+            });
+            
         });
     </script>
 </%block>
