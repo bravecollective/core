@@ -6,6 +6,15 @@
 
 <%block name="header">
     ${parent.header()}
+    
+    <style>
+        .user-profile .header span.area { color: #7d848c; font-style: italic; font-size: 14px; }
+        .user-profile .header .avatar { width: 96px; height: 96px; float: left; margin-right: 25px; border: 2px solid #e9ecee; position: relative; top: 3px; border-radius: 12px; }
+        .user-profile .header .name { font-weight: 600; margin: 0 0 10px; line-height: 26px; float: none; padding-top: 12px; }
+        .user-profile .header .area span { margin: 0 5px; }
+        #pad-wrapper.user-profile h4 { margin: 0 0 10px; font-weight: 600; font-size: 14px; font-style: normal; text-indent: 0; color: black; }
+        .user-profile .profile .bio p { 
+    </style>
 </%block>
 
 <%block name="post">
@@ -18,11 +27,32 @@
 </%block>
 
 <div class="container-fluid">
-    <div id="pad-wrapper">
+    <div id="pad-wrapper" class="user-profile">
+    % if web.user.primary:
         <div class="header">
-            <h3>Welcome</h3>
+            <img src="//image.eveonline.com/Character/${web.user.primary.identifier}_128.jpg" class="avatar">
+            
+            <h3 class="name">${web.user.primary.name}</h3>
+            <span class="area">Some day your character’s corporate title will go here.</span>
+            <div class="area">
+                <a href="#">${web.user.primary.corporation.name}</a>
+                % if web.user.primary.alliance:
+                <span>›</span> <a href="#">${web.user.primary.alliance.name}</a>
+                % endif
+            </div>
         </div>
         
-        <p>Actual content coming soon.</p>
+        <div class="row bio">
+            <div class="col-xs-9">
+                <h4>Welcome</h4>
+                <p>Actual content coming soon.</p>
+                
+                <h4>Authentication Attempts</h4>
+            </div>
+            
+            <div class="col-xs-3">
+            </div>
+        </div>
+    % endif
     </div>
 </div>
