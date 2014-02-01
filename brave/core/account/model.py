@@ -25,6 +25,7 @@ class User(Document):
     active = BooleanField(db_field='a', default=False)
     confirmed = DateTimeField(db_field='c')
     admin = BooleanField(db_field='d', default=False)
+    rotp = BooleanField(default=False)
     otp = ListField(StringField(max_length=12), default=list)
     
     primary = ReferenceField('EVECharacter')  # "Default" character to use during authz.
@@ -52,6 +53,24 @@ class User(Document):
     def characters(self, **kw):
         from brave.core.character.model import EVECharacter
         return EVECharacter.objects(owner=self)
+
+    # Functions to manage YubiKey OTP
+
+    def addOTP(self, yid):
+        yid = yid[:12]
+        if yid in self.otp:
+            return False
+        self.otp.append(yid)
+        self.save()
+        return True
+
+    def removeOTP(self, yid):
+        yid = yid[:12]
+        if not yid in self.otp:
+            return False
+        self.otp.remove(yid)
+        self.save()
+        return True
 
 
 class LoginHistory(Document):
