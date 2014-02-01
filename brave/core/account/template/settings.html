@@ -24,8 +24,10 @@
     <script src="/js/vendor/zxcvbn.js" charset="utf-8"></script>
 
     <script type="text/javascript" charset="utf-8">
+
         $(function()
         {
+
             function confirm(title, content, success, callback)
             {
                 if ( ! success.hasOwnProperty('label') )
@@ -59,6 +61,28 @@
                 }).modal();
             }
 
+            $(document).on('click', '.delete', function()
+            {
+                var username = $(this).attr('data-otpusername');
+                var yid = $(this).attr('data-otp');
+
+                $('#modal').modal('hide');
+                $('.overlay.wait').fadeIn(250);
+                $.post('/account/settings', {form: 'removeotp', 'id': username, otp: yid} , function(data)
+                {
+                    console.log(data);
+                    $('.overlay.wait').fadeOut(125, function(){
+                        if (data.success) {
+                           $('.overlay.success').fadeIn(250, function(){window.location = data.location;});
+                        } else {
+                            $('.overlay.fail').fadeIn(250, function(){
+                                $('.overlay.fail').fadeOut(250);
+                            });
+                        }
+                    });
+                });
+            });
+
             $('.change').on('click', function()
             {
                 confirm(
@@ -68,7 +92,9 @@
                     '</p>' +
                     '<p>' +
                         '<form>' +
-                            '<input id="id" name="id" type="hidden" class="input-block-level" value="${web.user.username}" required>' 
+                            '<input id="id" name="id" type="hidden" class="input-block-level" value="${web.user.username}" required>'
+                                +
+                            '<input id="form" name="form" type="hidden" class="input-block-level" value="changepassword" required>' 
                                 +
                             '<input id="old" name="old" type="password" class="input-block-level" placeholder="Old Password" maxlength="100" autocomplete="off" required>' 
                                 +
@@ -91,7 +117,8 @@
                             $('#new-pass-confirm').focus()
                             $('#modal form input[name="passwd"]').after(
                                 '<div class="alert alert-error">' +
-                                    '<strong>Passwords must match</strong>'
+                                    '<strong>Passwords must match</strong>' +
+                                '</div>'
                             );
                             error = true
                         } 
@@ -99,7 +126,152 @@
                             $('#old').addClass('error');
                             $('#modal form input[name="old"]').after(
                                 '<div class="alert alert-error">' +
-                                    '<strong>Old password required</strong>'
+                                    '<strong>Old password required</strong>' +
+                                '</div>'
+                            );
+                            error = true
+                        }
+                        
+                        if (error == true)
+                            return error   
+                        
+                        $('.overlay.wait').fadeIn(250);
+                        $.post('/account/settings', $('#modal form').serialize(), function(data)
+                        {
+                            console.log(data);
+                            $('.overlay.wait').fadeOut(125, function(){
+                                if (data.success) {
+                                   $('.overlay.success').fadeIn(250, function(){ window.location = data.location; });                                
+                                } else {
+                                    $('.overlay.fail').fadeIn(250, function(){
+                                        $('.overlay.fail').fadeOut(250);
+                                    });
+                                }
+                            });
+
+                        });
+                    }
+                );
+                
+            });
+
+            $('.configureotp').on('click', function()
+            {
+                confirm(
+                    "Configure OTP",
+                    '<p>' +
+                        '<form>' +
+                            '<input id="id" name="id" type="hidden" class="input-block-level" value="${web.user.username}" required>'
+                                +
+                            '<input id="form" name="form" type="hidden" class="input-block-level" value="configureotp" required>'
+                                +
+                            '<input id="password" name="password" type="password" class="input-block-level" placeholder="Current Password" maxlength="100" autocomplete="off" required>' 
+                                +
+                            '<label><input type="checkbox" id="rotp" name="rotp"'
+                                %if web.user.rotp:
+                                +
+                                ' checked'
+                                %endif 
+                                +
+                                '> Require OTP on sign in</label>'
+                                +
+                        '</form>' +
+                        '<table class="table table-hover">' +
+                            '<thead>' +
+                                '<tr>' +
+                                    '<th>YubiKey ID</th>' +
+                                    '<th style="width: 16px;"></th>' +
+                                '</tr>' +
+                            '</thead>' +
+                            '<tbody>'
+
+                        %for otp in web.user.otp:
+                            +
+                            '<tr id="otp-${otp}">' +
+                                '<td>${otp}</td>' +
+                                '<td>' +
+                                    '<button data-otpusername="${web.user.username}" data-otp="${otp}" class="btn btn-danger btn-small delete"><i class="fa fa-times"></i></button>' +
+                                '</td>' +
+                            '</tr>'
+                        %endfor
+                        +
+                            '</tbody>' +
+                        '</table>' +
+                    '</p>',
+                    {
+                        label: "Save",
+                        kind: 'btn-success'
+                    },
+                    function()
+                    {
+                        $('#modal form .alert').remove();
+                        error = false;
+                        if ($('#password').val().length <= 0) {
+                            $('#password').addClass('error');
+                            $('#modal form input[name="password"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>Current password required</strong>' +
+                                '</div>'
+                            );
+                            error = true
+                        }
+                        
+                        if (error == true)
+                            return error   
+                        
+                        $('.overlay.wait').fadeIn(250);
+                        $.post('/account/settings', $('#modal form').serialize(), function(data)
+                        {
+                            console.log(data);
+                            $('.overlay.wait').fadeOut(125, function(){
+                                if (data.success) {
+                                   $('.overlay.success').fadeIn(250, function(){ window.location = data.location; });                                
+                                } else {
+                                    $('.overlay.fail').fadeIn(250, function(){
+                                        $('.overlay.fail').fadeOut(250);
+                                    });
+                                }
+                            });
+
+                        });
+                    }
+                );
+                
+            });
+
+            $('.addotp').on('click', function()
+            {
+                confirm(
+                    "Add OTP",
+                    '<p>' +
+                        'Fill in the form below to add an YubiKey' +
+                    '</p>' +
+                    '<p>' +
+                        '<form>' +
+                            '<input id="id" name="id" type="hidden" class="input-block-level" value="${web.user.username}" required>'
+                                +
+                            '<input id="form" name="form" type="hidden" class="input-block-level" value="addotp" required>'
+                                +
+                            '<input id="password" name="password" type="password" class="input-block-level" placeholder="Current Password" maxlength="100" autocomplete="off" required>'
+                                +
+                            '<input id="otp" name="otp" type="text" class="input-block-level" placeholder="OTP" maxlength="44" autocomplete="off" required>'
+                                +
+                        '</form>' +
+                    '</p>',
+                    {
+                        label: "Save",
+                        kind: 'btn-success'
+                    },
+                    function()
+                    {
+                        $('#modal form .alert').remove();
+                        error = false;
+                        if ($('#password').val().length <= 0) {
+                            $('#password').addClass('error');
+                            $('#modal form input[name="password"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>Current password required</strong>' +
+                                '</div>'
                             );
                             error = true
                         }
@@ -140,6 +312,8 @@
         <div class="header">
             <h3>Settings</h3>
         </div>
-            <a class="btn change"><i class="fa fa-cog"></i> Change Password</a>
+            <a class="btn change"><i class="fa fa-cog"></i> Change Password</a><br /><br />
+            <a class="btn configureotp"><i class="fa fa-cog"></i> Configure OTP</a><br /><br />
+            <a class="btn addotp"><i class="fa fa-cog"></i> Add OTP</a><br /><br />
     </div>
 </div>

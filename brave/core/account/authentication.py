@@ -75,7 +75,7 @@ def authenticate(identifier, password):
     
     user = User.objects(**query).first()
     
-    if not user or not User.password.check(user.password, password):
+    if not user or not User.password.check(user.password, password) or (user.rotp and len(user.otp) != 0 and not 'otp' in query):
         if user:
             LoginHistory(user, False, request.remote_addr).save()
         
