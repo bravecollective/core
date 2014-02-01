@@ -6,6 +6,7 @@ from datetime import datetime
 from mongoengine import Document, EmbeddedDocument, EmbeddedDocumentField, StringField, EmailField, URLField, DateTimeField, BooleanField, ReferenceField, ListField, IntField
 
 from brave.core.util.signal import update_modified_timestamp
+from brave.core.group.acl import ACLRule
 
 
 log = __import__('logging').getLogger(__name__)
@@ -21,7 +22,7 @@ class Group(Document):
     
     id = StringField(db_field='_id', primary_key=True)
     title = StringField(db_field='t')
-    rules = LsitField(EmbeddedDocumentField(ACLRule), db_field='r')
+    rules = ListField(EmbeddedDocumentField(ACLRule), db_field='r')
     
     creator = ReferenceField('User', db_field='c')
     modified = DateTimeField(db_field='m', default=datetime.utcnow)
