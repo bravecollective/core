@@ -66,6 +66,8 @@ def validate_key(identifier):
     cred.expires = datetime.strptime(result.key['@expires'], '%Y-%m-%d %H:%M:%S') if result.key.get('@expires', None) else None
     cred.verified = True
     cred.save()
+    
+    cred.importChars()
 
 
 @signal(post_save)

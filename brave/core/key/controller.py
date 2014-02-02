@@ -66,7 +66,6 @@ class KeyList(HTTPMethod):
         
         try:
             record.save()
-            record.importChars()
             if request.is_xhr:
                 return 'json:', dict(
                         success = True,
