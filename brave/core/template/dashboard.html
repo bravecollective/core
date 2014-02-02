@@ -22,6 +22,7 @@
 
     <script type="text/javascript" charset="utf-8">
         $(function(){
+            $('time').timeago();
         });
     </script>
 </%block>
@@ -35,24 +36,90 @@
             <h3 class="name">${web.user.primary.name}</h3>
             <span class="area">Some day your character’s corporate title will go here.</span>
             <div class="area">
-                <a href="#">${web.user.primary.corporation.name}</a>
+                <a target="_blank" href="https://gate.eveonline.com/Corporation/${web.user.primary.corporation.name}">${web.user.primary.corporation.name}</a>
                 % if web.user.primary.alliance:
-                <span>›</span> <a href="#">${web.user.primary.alliance.name}</a>
+                <span>›</span> <a target="_blank" href="https://gate.eveonline.com/Alliance/${web.user.primary.alliance.name}">${web.user.primary.alliance.name}</a>
                 % endif
             </div>
         </div>
         
-        <div class="row bio">
-            <div class="col-xs-9">
-                <h4>Welcome</h4>
-                <p>Actual content coming soon.</p>
-                
-                <h4>Authentication Attempts</h4>
+        <div class="row-fluid profile">
+            <div class="span9 bio" style="box-shadow: 4px 0px 3px -1px rgba(226,226,226,0.1); border-right: 1px solid #edeef1">
+                <div class="profile-box" style="padding-right: 25px;">
+                    <h4>Welcome</h4>
+                    <p>
+                        Welcome to the Brave Collective Core service.  This site provides a way for you to securely provide EVE API keys and manage the applications you can use Core to authenticate.
+                    </p>
+                    <p>
+                        Use the <em>Authorized Applications</em> links on the right-hand side to quickly jump to the application of your choice.
+                    </p>
+                    <p>
+                        The listing of <em>Authentication Attempts</em> below will list all successful and unsuccessful attempts made to log into your account.  If you notice suspicious activity please <a href="https://github.com/bravecollective/core/issues" target="_blank">open a ticket</a>.
+                    </p>
+                    
+                    <hr>
+                    
+                    <h4>Authentication Attempts</h4>
+                    
+                    <style>.table td {  } .table thead th { padding-bottom: 5px; }</style>
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th class="span5">
+                                    Date
+                                </th>
+                                <th class="span6">
+                                    <span class="line"></span>
+                                    From
+                                </th>
+                                <th class="span1">
+                                    <span class="line"></span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            % for attempt in web.user.attempts.order_by('-id').limit(10):
+                            <tr>
+                                <td><time datetime="${attempt.id.generation_time.isoformat().replace('+00:00', 'Z')}">${attempt.id.generation_time.isoformat(' ').replace('+00:00', '')}</time></td>
+                                <td>${attempt.location}</td>
+                                % if attempt.success:
+                                <td><i class="fa fa-check-circle-o fa-lg text-success"></i></td>
+                                % else:
+                                <td><i class="fa fa-times-circle-o fa-lg text-error"></i></td>
+                                % endif
+                            </tr>
+                            % endfor
+                        </tbody>
+##                        <tfoot>
+##                            <tr>
+##                                <th colspan="5" style="text-align: center;"><a href="">View Full Authentication History</a></th>
+##                            </tr>
+##                        </tfoot>
+                    </table>
+        
+                </div>
             </div>
-            
-            <div class="col-xs-3">
+        
+            <!-- side address column -->
+            <div class="span3 pull-right">
+                <h4>Authorized Applications</h4>
+                <ul>
+                    % for grant in web.user.grants:
+                    <li><a target="_blank" href="${grant.application.site}" title="${grant.application.description}">${grant.application.name}</a></li>
+                    % endfor
+                </ul>
+                
+                <hr>
+                
+                <h4>Group Membership</h4>
+                <ul>
+                    % for id, group in web.user.primary.tags.iteritems():
+                    <li>${group.title}</li>
+                    % endfor
+                </ul>
             </div>
         </div>
+
     % endif
     </div>
 </div>
