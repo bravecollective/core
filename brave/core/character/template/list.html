@@ -13,7 +13,6 @@
         table.table { table-layout: fixed; width: 100%; }
         span.ellipsis { display: inline-block; width: 100%; overflow: hidden !important; white-space: nowrap !important; text-overflow: ellipsis !important; word-break: break-all !important; word-wrap: break-word !important; }
         td.alliance { position: relative; }
-        .makedefault { position: absolute; right: 10px; top: 50%; margin-top: -12px; }
         .makedefault.fa-star-o { color: rgb(153, 153, 153); }
         .makedefault.fa-star, .makedefault.fa-star-o:hover { color: rgb(58, 135, 173); }
     </style>
@@ -113,9 +112,10 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th class="span4 sortable name">Name</th>
+                        <th class="span3 sortable name">Name</th>
                         <th class="span4 sortable corporation"><span class="line"></span>Corporation</th>
                         <th class="span4 sortable alliance"><span class="line"></span>Alliance</th>
+                        <th class="span1 sortable actions"><span class="line"></span></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -134,7 +134,6 @@
                             </span>
                         </td>
                         <td class="alliance">
-                            <i class="makedefault fa fa-star${'' if web.user.primary and record.id == web.user.primary.id else '-o'} fa-2x"></i>
                             % if record.alliance:
                             <span class="ellipsis">
                             <img src="//image.eveonline.com/Alliance/${record.alliance.identifier}_32.png" style="vertical-align: -55%; margin-right: 5px; width: 32px; height: 32px;">
@@ -143,6 +142,9 @@
                             % else:
                             <em>None</em>
                             % endif
+                        </td>
+                        <td class="actions">
+                            <i class="makedefault fa fa-star${'' if web.user.primary and record.id == web.user.primary.id else '-o'} fa-2x"></i>
                         </td>
                     </tr>
                     % endfor
