@@ -2,6 +2,7 @@
 
 from __future__ import unicode_literals
 
+from itertools import chain
 from datetime import datetime, timedelta
 from mongoengine import Document, StringField, EmailField, DateTimeField, BooleanField, ReferenceField, ListField
 
@@ -19,7 +20,7 @@ class User(Document):
     
     # Field Definitions
     
-    username = StringField(db_field='u', required=True, unique=True, regex=r'[a-zA-Z][a-zA-Z_.-]+')
+    username = StringField(db_field='u', required=True, unique=True, regex=r'[a-zA-Z][a-zA-Z0-9_.-]+')
     email = EmailField(db_field='e', required=True, unique=True)
     password = PasswordField(db_field='p')
     active = BooleanField(db_field='a', default=False)
@@ -71,6 +72,22 @@ class User(Document):
         self.otp.remove(yid)
         self.save()
         return True
+    
+    def merge(self, other):
+        """Consumes other and takes its children."""
+        
+        other.credentials.update(set__owner=self)
+        other.characters.update(set__owner=self)
+        
+        LoginHistory.objects(user=other).update(set__user=self)
+        
+        from brave.core.group.model import Group
+        from brave.core.application.model import Application
+        
+        Group.objects(creator=other).update(set__creator=self)
+        Application.objects(owner=other).update(set__owner=self)
+        
+        other.delete()
 
 
 class LoginHistory(Document):
