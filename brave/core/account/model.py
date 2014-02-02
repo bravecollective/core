@@ -46,14 +46,19 @@ class User(Document):
     # Related Data Lookups
     
     @property
-    def credentials(self, **kw):
+    def credentials(self):
         from brave.core.key.model import EVECredential
         return EVECredential.objects(owner=self)
     
     @property
-    def characters(self, **kw):
+    def characters(self):
         from brave.core.character.model import EVECharacter
         return EVECharacter.objects(owner=self)
+    
+    @property
+    def grants(self):
+        from brave.core.application.model import ApplicationGrant
+        return ApplicationGrant.objects(user=self)
 
     # Functions to manage YubiKey OTP
 
@@ -82,10 +87,11 @@ class User(Document):
         LoginHistory.objects(user=other).update(set__user=self)
         
         from brave.core.group.model import Group
-        from brave.core.application.model import Application
+        from brave.core.application.model import Application, ApplicationGrant
         
         Group.objects(creator=other).update(set__creator=self)
         Application.objects(owner=other).update(set__owner=self)
+        ApplicationGrant.objects(user=other).update(set__user=self)
         
         other.delete()
 
