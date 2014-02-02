@@ -69,10 +69,10 @@ class EVECredential(Document):
             
             char, _ = EVECharacter.objects.get_or_create(
                     owner = self.owner,
-                    credential = self,
                     identifier = charID
                 )
             
+            char.credential = self
             char.name = info.characterName
             char.corporation = corporation
             char.alliance = alliance
