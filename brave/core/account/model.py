@@ -59,7 +59,11 @@ class User(Document):
     def grants(self):
         from brave.core.application.model import ApplicationGrant
         return ApplicationGrant.objects(user=self)
-
+    
+    @property
+    def attempts(self):
+        return LoginHistory.objects(user=self)
+    
     # Functions to manage YubiKey OTP
 
     def addOTP(self, yid):
