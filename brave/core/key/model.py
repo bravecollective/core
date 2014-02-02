@@ -43,7 +43,6 @@ class EVECredential(Document):
         return EVECharacter.objects(credential=self)
     
     def importChars(self):
-        # TODO: Move into a background signal handler.
         from brave.core.util.eve import APICall
         from brave.core.character.model import EVEAlliance, EVECorporation, EVECharacter
         
@@ -68,19 +67,14 @@ class EVECredential(Document):
                     alliance = alliance
                 )
             
-            if EVECharacter.objects(owner=self.owner, credential=self, identifier=charID).count():
-                EVECharacter.objects(owner=self.owner, credential=self, identifier=charID).update_one(
-                        set__name = info.characterName,
-                        set__corporation = corporation,
-                        set__alliance = alliance
-                    )
-            else:
-                character = EVECharacter(
-                        owner = self.owner,
-                        credential = self,
-                        name = info.characterName,
-                        corporation = corporation,
-                        alliance = alliance,
-                        identifier = charID,
-                    )
-                character.save()
+            char, _ = EVECharacter.objects.get_or_create(
+                    owner = self.owner,
+                    credential = self,
+                    identifier = charID
+                )
+            
+            char.name = info.characterName
+            char.corporation = corporation
+            char.alliance = alliance
+            
+            char.save()
