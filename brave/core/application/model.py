@@ -60,6 +60,12 @@ class Application(Document):
     
     owner = ReferenceField('User', db_field='o')
     
+    # Related Data
+    
+    @property
+    def grants(self):
+        return ApplicationGrant.objects(application=self)
+    
     # Python Magic Methods
     
     def __repr__(self):
