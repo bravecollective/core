@@ -74,8 +74,9 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th class="span7 sortable name">Name</th>
-                        <th class="span4 sortable date"><span class="line"></span>Authorized</th>
+                        <th class="span5 sortable name">Name</th>
+                        <th class="span3 sortable character hidden-tablet hidden-phone"><span class="line"></span>Character</th>
+                        <th class="span3 sortable date"><span class="line"></span>Authorized</th>
                         <th class="span1 actions"><span class="line"></span></th>
                     </tr>
                 </thead>
@@ -85,6 +86,9 @@
                         <td class="name">
                             <a href="${record.application.site}"><strong>${record.application.name}</strong></a> <i class="fa fa-external-link muted"></i><br>
                             <span class="subtext">${record.application.description}</span>
+                        </td>
+                        <td class="character hidden-tablet hidden-phone">
+                            <img src="//image.eveonline.com/Character/${record.character.identifier}_32.jpg" style="vertical-align: middle; margin-right: 5px; border-radius: 3px; width: 24px; height: 24px;" title="${record.character.name}"> ${record.character.name}
                         </td>
                         <td class="date">
                             <time class="relative" datetime="${record.id.generation_time |n,f.iso}">${record.id.generation_time |n,f.pretty}</time>
