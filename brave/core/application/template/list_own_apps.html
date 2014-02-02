@@ -77,7 +77,7 @@
                     <tr>
                         <th class="span9 sortable name">Name</th>
                         <th class="span2 sortable name tr"><span class="line"></span>Users</th>
-                        <th class="span1 actions"></th>
+                        <th class="span1 actions"><span class="line"></span></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -88,7 +88,7 @@
                             <span class="subtext">${record.description}</span>
                         </td>
                         <td class="tr">
-                            0
+                            ${record.grants.count()}
                         </td>
                         <td class="actions">
                             <button class="btn btn-small authorize">Authorize</button>
