@@ -181,3 +181,6 @@ class EVECredential(Document):
             if 'corporationName' not in char: continue
             char = Bunch({k.replace('@', ''): int(v) if v.isdigit() else v for k, v in char.iteritems()})
             implementation(char)
+        
+        self.modified = datetime.utcnow()
+        self.save()
