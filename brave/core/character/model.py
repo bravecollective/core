@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 
 from collections import OrderedDict
 from datetime import datetime
-from mongoengine import Document, StringField, DateTimeField, ReferenceField, IntField, BooleanField
+from mongoengine import Document, StringField, DateTimeField, ReferenceField, IntField, BooleanField, FloatField, ListField, NULLIFY, PULL
 from brave.core.util.signal import update_modified_timestamp
 from brave.core.key.model import EVECredential
 
@@ -51,8 +51,18 @@ class EVECharacter(EVEEntity):
     alliance = ReferenceField(EVEAlliance)
     corporation = ReferenceField(EVECorporation)
     
-    owner = ReferenceField('User', db_field='o', reverse_delete_rule='NULLIFY')
-    credential = ReferenceField(EVECredential, db_field='r', reverse_delete_rule='NULLIFY')
+    race = StringField(db_field='ra')
+    bloodline = StringField(db_field='bl')
+    ancestry = StringField(db_field='an')
+    gender = StringField(db_field='g')
+    security = FloatField(db_field='sec')
+    
+    titles = ListField(StringField(), db_field='ti', default=list)
+    roles = ListField(StringField(), db_field='ro', default=list)
+    
+    credentials = ListField(ReferenceField(EVECredential, reverse_delete_rule=PULL), db_field='e', default=list)
+    
+    owner = ReferenceField('User', db_field='o', reverse_delete_rule=NULLIFY)
     
     @property
     def tags(self):
