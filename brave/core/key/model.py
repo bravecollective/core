@@ -103,6 +103,8 @@ class EVECredential(Document):
         """Populate character details using an authenticated eve.CharacterInfo call."""
         from brave.core.util.eve import APICall
         
+        log.info('pull_basic')
+        
         try:
             results = APICall.objects.get(name='eve.CharacterInfo')(self, characterID=info.characterID)
         except:
@@ -123,6 +125,8 @@ class EVECredential(Document):
     def pull_full(self, info):
         """Populate character details using a character.CharacterSheet call."""
         from brave.core.util.eve import APICall
+        
+        log.info('pull_full')
         
         try:
             results = APICall.objects.get(name='char.CharacterSheet')(self, characterID=info.characterID)
