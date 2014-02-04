@@ -174,5 +174,6 @@ class EVECredential(Document):
             implementation = self.pull_minimal
         
         for char in result.key.rowset.row if isinstance(result.key.rowset.row, list) else [result.key.rowset.row]:
+            if 'corporationName' not in char: continue
             char = Bunch({k.replace('@', ''): int(v) if v.isdigit() else v for k, v in char.iteritems()})
             implementation(char)
