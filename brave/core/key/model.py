@@ -64,11 +64,11 @@ class EVECredential(Document):
             
         corporation, created = EVECorporation.objects.get_or_create(
                 identifier = info.corporationID,
-                defaults = dict(name=info.corporationName, alliance=alliance)
+                defaults = dict(name=corporationName, alliance=alliance)
             )
         
-        if corporation.name != info.corporationName:
-            corporation.name = info.corporationName
+        if corporation.name != corporationName:
+            corporation.name = corporationName
         
         if alliance and corporation.alliance != alliance:
             corporation.alliance = alliance
