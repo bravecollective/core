@@ -87,8 +87,7 @@
                 );
             });
 
-            $(document).on('click', '.delete', function()
-            {
+            $(document).on('click', '.delete', function() {
                 var row = $(this).parents('tr');
 
                 confirm(
@@ -111,6 +110,16 @@
                         });
                     }
                 );
+            });
+            
+            $(document).on('click', '.refresh', function() {
+                var row = $(this).parents('tr');
+                $('i', this).addClass('fa-spin');
+                $.ajax('/key/' + row.attr('data-id') + '/refresh', {
+                        type: 'POST'
+                    }).done(function() {
+                        window.location = window.location;
+                    });
             });
         });
     </script>
@@ -159,10 +168,10 @@
                 <thead>
                     <tr>
                         <th class="span2 sortable key-id">${_("Key ID")}</th>
-                        <th class="span4 sortable key-code"><span class="line"></span>${_("Verification Code")}</th>
+                        <th class="span3 sortable key-code"><span class="line"></span>${_("Verification Code")}</th>
                         <th class="span2 sortable characters hidden-tablet hidden-phone"><span class="line"></span>${_("Characters")}</th>
                         <th class="span3 sortable key-date hidden-phone"><span class="line"></span>${_("Added")}</th>
-                        <th class="span1 actions"><span class="line"></span>${_("Actions")}</th>
+                        <th class="span2 actions"><span class="line"></span>${_("Actions")}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -177,6 +186,7 @@
                         </td>
                         <td class="key-date hidden-phone"><time datetime="${record.id.generation_time.isoformat().replace('+00:00', 'Z')}">${record.id.generation_time.isoformat(' ').replace('+00:00', '')}</time></td>
                         <td class="actions">
+                            <button class="btn btn-default btn-small refresh" title="Refresh API Key" rel="tooltip" data-placement="bottom"><i class="fa fa-refresh"></i></button>
                             <button class="btn btn-danger btn-small delete" title="Remove API Key" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i></button>
                         </td>
                     </tr>
