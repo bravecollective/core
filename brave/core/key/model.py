@@ -163,7 +163,8 @@ class EVECredential(Document):
         try:
             result = APICall.objects.get(name='account.APIKeyInfo')(self)  # cached
         except:
-            log.exception("Unable to call: account.APIKeyInfo(%d)", self.code)
+            log.exception("Unable to call: account.APIKeyInfo(%d)", self.key)
+            return
         
         if self.mask & 8:  # character.CharacterSheet
             implementation = self.pull_full
