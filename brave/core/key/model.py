@@ -170,9 +170,9 @@ class EVECredential(Document):
             log.exception("Unable to call: account.APIKeyInfo(%d)", self.key)
             return
         
-        if self.mask & 8:  # character.CharacterSheet
+        if self.mask & 8 == 8:  # character.CharacterSheet
             implementation = self.pull_full
-        elif self.mask & 8388608:  # eve.CharacterInfo
+        elif self.mask & 8388608 == 8388608:  # eve.CharacterInfo
             implementation = self.pull_basic
         else:
             implementation = self.pull_minimal
@@ -182,7 +182,7 @@ class EVECredential(Document):
             return
         
         for char in result.key.rowset.row if isinstance(result.key.rowset.row, list) else [result.key.rowset.row]:
-            if 'corporationName' not in char: continue
+            if '@corporationName' not in char: continue
             char = Bunch({k.replace('@', ''): int(v) if v.isdigit() else v for k, v in char.iteritems()})
             implementation(char)
         
