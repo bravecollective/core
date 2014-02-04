@@ -84,10 +84,14 @@ class EVECredential(Document):
         
         corporation, alliance = self.get_membership(info)
         
-        char, created = EVECharacter.objects.get_or_create(
-                owner = self.owner,
-                identifier = info.characterID
-            )
+        try:
+            char, created = EVECharacter.objects.get_or_create(
+                    owner = self.owner,
+                    identifier = info.characterID
+                )
+        except:
+            log.exception("failed to get/create character for key %d", self.key)
+            return None, None, None
         
         if self not in char.credentials:
             char.credentials.append(self)
