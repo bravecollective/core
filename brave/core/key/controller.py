@@ -3,7 +3,7 @@
 from __future__ import unicode_literals
 
 from web.auth import user
-from web.core import Controller, HTTPMethod, request
+from web.core import Controller, HTTPMethod, request, config
 from web.core.locale import _
 from web.core.http import HTTPFound, HTTPNotFound, HTTPUnauthorized
 from web.core.templating import render
@@ -18,17 +18,10 @@ from brave.core.util.predicate import authorize, authenticated, is_administrator
 log = __import__('logging').getLogger(__name__)
 
 
-class KeyInterface(HTTPMethod):
+class KeyIndex(HTTPMethod):
     def __init__(self, key):
-        super(KeyInterface, self).__init__()
-
-        try:
-            self.key = EVECredential.objects.get(id=key)
-        except EVECredential.DoesNotExist:
-            raise HTTPNotFound()
-
-        if self.key.owner.id != user.id:
-            raise HTTPNotFound()
+        super(KeyIndex, self).__init__()
+        self.key = key
 
     def delete(self):
         self.key.delete()
@@ -37,6 +30,34 @@ class KeyInterface(HTTPMethod):
             return 'json:', dict(success=True)
 
         raise HTTPFound(location='/key/')
+
+
+class KeyInterface(Controller):
+    def __init__(self, key):
+        super(KeyInterface, self).__init__()
+        
+        try:
+            self.key = EVECredential.objects.get(id=key)
+        except EVECredential.DoesNotExist:
+            raise HTTPNotFound()
+
+        if self.key.owner.id != user.id:
+            raise HTTPNotFound()
+        
+        self.index = KeyIndex(self.key)
+    
+    def refresh(self):
+        try:
+            self.key.pull()
+        except:
+            log.exception("Unable to reload key.")
+            
+            if boolean(config.get('debug', False)):
+                raise
+            
+            return 'json:', dict(success=False)
+        
+        return 'json:', dict(success=True)
 
 
 class KeyList(HTTPMethod):
