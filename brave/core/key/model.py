@@ -4,7 +4,9 @@ from __future__ import unicode_literals
 
 from datetime import datetime
 from mongoengine import Document, StringField, DateTimeField, BooleanField, ReferenceField, IntField
+from marrow.util.bunch import Bunch
 
+from brave.core.util import strip_tags
 from brave.core.util.signal import update_modified_timestamp, trigger_api_validation
 
 
@@ -40,41 +42,136 @@ class EVECredential(Document):
     @property
     def characters(self):
         from brave.core.character.model import EVECharacter
-        return EVECharacter.objects(credential=self)
+        return EVECharacter.objects(credentials=self)
     
-    def importChars(self):
-        from brave.core.util.eve import APICall
+    # EVE API Integration
+    
+    def get_membership(self, info):
         from brave.core.character.model import EVEAlliance, EVECorporation, EVECharacter
         
-        result = APICall.objects.get(name='account.APIKeyInfo')(self)
-        key = result.key
-        rows = key.rowset.row if isinstance(key.rowset.row, list) else [key.rowset.row]
-
-        for row in rows:
-            charID = row['@characterID']
-            info = APICall.objects.get(name='eve.CharacterInfo')(self, characterID=charID)
+        # This is a stupid edge-case to cover inconsistency between API calls.
+        allianceName = info.alliance if 'alliance' in info else (info.allianceName if 'allianceName' in info else None)
+        corporationName = info.corporation if 'corporation' in info else info.corporationName
+        
+        alliance, created = EVEAlliance.objects.get_or_create(
+                identifier = info.allianceID,
+                defaults = dict(name=allianceName)
+            ) if 'allianceID' in info else (None, False)
+        
+        if alliance and not created and alliance.name != allianceName:
+            alliance.name = allianceName
+            alliance = alliance.save()
             
-            if 'alliance' in info and info.alliance:
-                alliance, _ = EVEAlliance.objects.get_or_create(
-                        name = info.alliance,
-                        identifier = info.allianceID)
-            else:
-                alliance = None
-            
-            corporation, _ = EVECorporation.objects.get_or_create(
-                    name = info.corporation,
-                    identifier = info.corporationID,
-                    alliance = alliance
-                )
-            
-            char, _ = EVECharacter.objects.get_or_create(
-                    owner = self.owner,
-                    identifier = charID
-                )
-            
-            char.credential = self
-            char.name = info.characterName
-            char.corporation = corporation
-            char.alliance = alliance
-            
-            char.save()
+        corporation, created = EVECorporation.objects.get_or_create(
+                identifier = info.corporationID,
+                defaults = dict(name=info.corporationName, alliance=alliance)
+            )
+        
+        if corporation.name != info.corporationName:
+            corporation.name = info.corporationName
+        
+        if alliance and corporation.alliance != alliance:
+            corporation.alliance = alliance
+        
+        if corporation._changed_fields:
+            corporation = corporation.save()
+        
+        return corporation, alliance
+    
+    def pull_minimal(self, info):
+        """Populate character details given nothing but a validated API key."""
+        from brave.core.character.model import EVECharacter
+        
+        corporation, alliance = self.get_membership(info)
+        
+        char, created = EVECharacter.objects.get_or_create(
+                owner = self.owner,
+                identifier = info.characterID
+            )
+        
+        if self not in char.credentials:
+            char.credentials.append(self)
+        
+        char.name = info.characterName if 'characterName' in info else info.name
+        char.corporation = corporation
+        
+        if alliance: char.alliance = alliance
+        
+        return char.save(), corporation, alliance
+    
+    def pull_basic(self, info):
+        """Populate character details using an authenticated eve.CharacterInfo call."""
+        from brave.core.util.eve import APICall
+        
+        try:
+            results = APICall.objects.get(name='eve.CharacterInfo')(self, characterID=info.characterID)
+        except:
+            log.exception("Unable to retrieve character information for: %d", info.characterID)
+            return None, None, None
+        
+        results = Bunch({k.replace('@', ''): int(v) if isinstance(v, (unicode, str)) and v.isdigit() else v for k, v in results.iteritems()})
+        
+        char, corporation, alliance = self.pull_minimal(results)
+        
+        char.race = results.race
+        char.bloodline = results.bloodLine if 'bloodLine' in info else results.bloodline
+        char.security = float(results.securityStatus)
+        char.save()
+        
+        return char, corporation, alliance
+    
+    def pull_full(self, info):
+        """Populate character details using a character.CharacterSheet call."""
+        from brave.core.util.eve import APICall
+        
+        try:
+            results = APICall.objects.get(name='char.CharacterSheet')(self, characterID=info.characterID)
+        except:
+            log.exception("Unable to retrieve character sheet for: %d", info.characterID)
+            return None, None, None
+        
+        results = Bunch({k.replace('@', ''): int(v) if isinstance(v, (unicode, str)) and v.isdigit() else v for k, v in results.iteritems()})
+    
+        char, corporation, alliance = self.pull_minimal(results)
+        if not char: return None, None, None
+        
+        # Pivot the returned rowsets.
+        data = Bunch()
+        for row in results.rowset:
+            if 'row' not in row: continue
+            data[row['@name']] = row['row'] if isinstance(row['row'], list) else [row['row']]
+        
+        char.titles = [strip_tags(i['@titleName']) for i in data.corporationTitles] if 'corporationTitles' in data else []
+        char.roles = [i['@roleName'] for i in data.corporationRoles] if 'corporationRoles' in data else []
+        
+        char.save()
+        
+        return char, corporation, alliance
+    
+    def pull_corp(self):
+        """Populate corporation details."""
+        pass
+    
+    def pull(self):
+        """Pull all details available for this key."""
+        
+        from brave.core.util.eve import APICall
+        
+        if self.kind == 'Corporation':
+            return self.pull_corp()
+        
+        try:
+            result = APICall.objects.get(name='account.APIKeyInfo')(self)  # cached
+        except:
+            log.exception("Unable to call: account.APIKeyInfo(%d)", self.code)
+        
+        if self.mask & 8:  # character.CharacterSheet
+            implementation = self.pull_full
+        elif self.mask & 8388608:  # eve.CharacterInfo
+            implementation = self.pull_basic
+        else:
+            implementation = self.pull_minimal
+        
+        for char in result.key.rowset.row if isinstance(result.key.rowset.row, list) else [result.key.rowset.row]:
+            char = Bunch({k.replace('@', ''): int(v) if v.isdigit() else v for k, v in char.iteritems()})
+            implementation(char)
