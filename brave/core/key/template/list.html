@@ -30,7 +30,7 @@
             $('.add').on('click', function()
             {
                 confirm(
-                    "Add New API key",
+                    "Add New API Key",
                     '<p>' +
                         'Enter your API key details below. The minimum permissions required for Alliance applications are: CharacterInfo, Standings, and Medals, all under the Public Information category.' +
                     '</p>' +
@@ -44,7 +44,7 @@
                     '</p>' +
                     '<p>' +
                         '<form>' +
-                            '<input name="key" type="text" class="input-block-level" placeholder="Key ID" pattern="^\d+$" maxlength="8" autocomplete="off" required>' +
+                            '<input name="key" type="text" class="input-block-level" placeholder="Key ID" pattern="^\\d+$" maxlength="8" autocomplete="off" required>' +
                             '<input name="code" type="text" class="input-block-level" placeholder="Verification Code" maxlength="64" autocomplete="off" required>' +
                         '</form>' +
                     '</p>',
