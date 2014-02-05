@@ -73,6 +73,9 @@ class EVECredential(Document):
         if alliance and corporation.alliance != alliance:
             corporation.alliance = alliance
         
+        elif not alliance and corporation.alliance:
+            alliance = corporation.alliance
+        
         if corporation._changed_fields:
             corporation = corporation.save()
         
