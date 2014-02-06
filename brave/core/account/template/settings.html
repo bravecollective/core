@@ -112,6 +112,17 @@
                     {
                         $('#modal form .alert').remove();
                         error = false;
+			if ( $('#new-pass').val().length >= 100 ) {
+                            $('#new-pass').addClass('error');
+                            $('#new-pass').focus()
+                            $('#modal form input[name="passwd"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>Passwords must not be longer than 100 characters</strong>' +
+                                '</div>'
+                            );
+                            error = true
+                        }
+
                         if ( $('#new-pass-confirm').val() !=  $('#new-pass').val()) {
                             $('#new-pass-confirm').addClass('error');
                             $('#new-pass-confirm').focus()
