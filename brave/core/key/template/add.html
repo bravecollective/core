@@ -1,12 +1,18 @@
 ## encoding: utf-8
 
 <p>
-    Enter your API key details below.  You can <a target="_blank" href="http://community.eveonline.com/support/api-key/CreatePredefined?accessMask=8921088">use a standard key</a> or <a target="_blank" href="http://community.eveonline.com/support/api-key/CreatePredefined?accessMask=268435455">use a full key</a> if you are leadership.  Additional permissions can determine access to services or the features those services will be able to offer you.
+Enter your API key details below.  The minimum permissions required for Alliance applications are: CharacterInfo, Standings, and Medals, all under the Public Information category.  
 </p>
 <p>
-    <strong>Note:</strong>
-    At no point are services given direct access to your API key.  Any API access a service requests must be explicitly granted by you at the time you register for the service.
-    
+You may use one of the following links to go to CCP&apos;s New API Key page with the correct permissions pre-selected:<br />
+<a target="_blank" href="https://community.eveonline.com/support/api-key/CreatePredefined?accessMask=8921088">Create a standard API key</a> with minimum permissions.<br/>
+<a target="_blank" href="https://community.eveonline.com/support/api-key/CreatePredefined?accessMask=268435455">Create a full API key</a> with all permissions.  BRAVE Leadership should choose this, as should anyone who wishes to avoid adding more API keys for future Core apps.<br/>
+</p>
+<p>
+<strong>Note:</strong> When creating a new API key, you must click Submit on CCP&apos;s New API Key page to actually save the key.  The keyID and vCode will be found on the <a target="_blank" href="https://community.eveonline.com/support/api-key/">API Key Management page</a>.
+</p>
+
+<p>
     <form>
         <input name="key" type="text" class="input-block-level" placeholder="Key ID" pattern="^\d+$" maxlength="8" autocomplete="off" required>
         <input name="code" type="text" class="input-block-level" placeholder="Verification Code" maxlength="64" autocomplete="off" required>
