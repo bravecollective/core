@@ -98,9 +98,9 @@
                                 +
                             '<input id="old" name="old" type="password" class="input-block-level" placeholder="Old Password" maxlength="100" autocomplete="off" required>' 
                                 +
-                            '<input id="new-pass" name="passwd" type="password" class="input-block-level" placeholder="New Password" maxlength="100" autocomplete="off" required>'
+                            '<input id="new-pass" name="passwd" type="password" class="input-block-level" placeholder="New Password" maxlength="1000" autocomplete="off" required>'
                                 +
-                            '<input id="new-pass-confirm" name="passwd1" type="password" class="input-block-level" placeholder="Confirm New Password" maxlength="100" autocomplete="off" required>' 
+                            '<input id="new-pass-confirm" name="passwd1" type="password" class="input-block-level" placeholder="Confirm New Password" maxlength="1000" autocomplete="off" required>' 
                                 +
                         '</form>' +
                     '</p>',
@@ -112,7 +112,7 @@
                     {
                         $('#modal form .alert').remove();
                         error = false;
-			if ( $('#new-pass').val().length >= 100 ) {
+			            /*if ( $('#new-pass').val().length >= 100 ) {
                             $('#new-pass').addClass('error');
                             $('#new-pass').focus()
                             $('#modal form input[name="passwd"]').after(
@@ -121,7 +121,7 @@
                                 '</div>'
                             );
                             error = true
-                        }
+                        }*/
 
                         if ( $('#new-pass-confirm').val() !=  $('#new-pass').val()) {
                             $('#new-pass-confirm').addClass('error');

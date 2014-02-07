@@ -88,8 +88,12 @@ class Settings(HTTPMethod):
         user = User.objects(**query).first()
 
         if data.form == "changepassword":
+            print len(data.passwd)
             if data.passwd != data.passwd1:
                 return 'json:', dict(success=False, message=_("New passwords do not match."), data=data)
+
+            if len(data.passwd) > 100:
+                return 'json:', dict(success=False, message=_("Password over 100 charactor limit"), data=data)
 
             if isinstance(data.old, unicode):
                 data.old = data.old.encode('utf-8')
