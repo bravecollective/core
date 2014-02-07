@@ -88,7 +88,6 @@ class Settings(HTTPMethod):
         user = User.objects(**query).first()
 
         if data.form == "changepassword":
-            print len(data.passwd)
             if data.passwd != data.passwd1:
                 return 'json:', dict(success=False, message=_("New passwords do not match."), data=data)
 
