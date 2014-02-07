@@ -63,24 +63,30 @@
                         $.post('/key/', $('#modal form').serialize(), function(data)
                         {
                             $(
-                                '<tr data-id="' + data.identifier + '">' +
+				'<tr data-id="' + data.identifier + '">' +
                                     '<td class="key-id">' +
                                         '<i class="icon-fixed-width icon-remove"></i> ' + data.key +
                                     '</td>' +
                                     '<td class="key-code">' +
-                                        '<div>' + data.code + '</div>' +
+                                        '<span class="ellipsis">' + data.code + '</span>' +
                                     '</td>' +
-                                    '<td class="key-date">' +
-                                        '<time datetime="'+ISODateString(new Date())+'"></time>' +
+                                    '<td class="characters hidden-tablet hidden-phone">' +
+                                        '<img src="" style="vertical-align: middle; margin-right: 5px; border-radius: 3px; width: 24px; height: 24px;" title="">Refresh to view' +
+                                    '</td>' +
+                                    '<td class="key-date  hidden-phone">' +
+                                        '<time datetime="'+new Date().toISOString()+'">just now</time>' +
                                     '</td>' +
                                     '<td class="actions">' +
-                                        '<button class="btn btn-danger btn-small delete" title="Remove API Key" rel="tooltip" data-placement="bottom">' +
-                                        '<i class="icon-remove"></i>' +
+                                        '<button class="btn btn-default btn-small refresh" title="" rel="tooltip" data-placement="bottom" data-original-title="Refresh API Key">' +
+                                        '<i class="fa fa-refresh"></i>' +
+                                        '</button>' +
+                                        '<button class="btn btn-danger btn-small delete" title="" rel="tooltip" data-placement="bottom" data-original-title="Remove API Key">' +
+                                        '<i class="fa fa-times"></i>' +
                                         '</button>' +
                                     '</td>' +
                                 '</tr>'
-                            ).appendTo('table.table tbody');
-
+			).appendTo('table.table tbody');
+			console.log("ADDED TO TBODY");
                             $('time').timeago();
                         });
                     }
