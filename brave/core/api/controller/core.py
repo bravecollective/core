@@ -120,6 +120,16 @@ class CoreAPI(SignedController):
                 location = url.complete('/authorize/{0}'.format(ar.id))
             )
     
+    def deauthorize(self, token):
+        from brave.core.application.model import ApplicationGrant
+        count = ApplicationGrant.objects(id=token, application=request.service).delete()
+        return dict(success=bool(count))
+    
+    def reauthorize(self, token, success=None, failure=None):
+        result = self.deauthorize(token)
+        if not result['success']: return result
+        return self.authorize(success=success, failure=failure)
+    
     def info(self, token):
         from brave.core.application.model import ApplicationGrant
         from brave.core.group.model import Group
