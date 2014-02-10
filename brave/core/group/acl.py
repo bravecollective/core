@@ -25,6 +25,13 @@ class ACLRule(EmbeddedDocument):
     
     def evaluate(self, user, character):
         raise NotImplementedError()
+    
+    def __repr__(self):
+        return "{0}({1}{2})".format(
+                self.__class__.__name__,
+                '!' if self.inverse else '',
+                'grant' if self.grant else 'deny'
+            )
 
 
 class ACLList(ACLRule):
@@ -54,6 +61,14 @@ class ACLList(ACLRule):
         
         # this acl rule doesn't match or is not applicable
         return self.grant if self.inverse else None
+    
+    def __repr__(self):
+        return "ACLList({0}{1} {2} {3!r})".format(
+                '!' if self.inverse else '',
+                'grant' if self.grant else 'deny',
+                self.KINDS[self.kind],
+                self.ids
+            )
 
 
 class ACLKey(ACLRule):
@@ -73,6 +88,13 @@ class ACLKey(ACLRule):
                 return None if self.inverse else self.grant
         
         return self.grant if self.inverse else None
+    
+    def __repr__(self):
+        return "ACLKey({0}{1} {2})".format(
+                '!' if self.inverse else '',
+                'grant' if self.grant else 'deny',
+                self.KINDS[self.kind]
+            )
 
 
 class ACLTitle(ACLRule):
@@ -86,6 +108,13 @@ class ACLTitle(ACLRule):
         
         # this acl rule doesn't match or is not applicable
         return self.grant if self.inverse else None
+    
+    def __repr__(self):
+        return "ACLTitle({0}{1} {2!r})".format(
+                '!' if self.inverse else '',
+                'grant' if self.grant else 'deny',
+                self.titles
+            )
 
 
 class ACLRole(ACLRule):
@@ -99,3 +128,32 @@ class ACLRole(ACLRule):
         
         # this acl rule doesn't match or is not applicable
         return self.grant if self.inverse else None
+    
+    def __repr__(self):
+        return "ACLRole({0}{1} {2!r})".format(
+                '!' if self.inverse else '',
+                'grant' if self.grant else 'deny',
+                self.roles
+            )
+
+
+class ACLMask(ACLRule):
+    """Grant or deny access based on having a key capable of evaluating the given mask."""
+    
+    mask = IntField(db_field='m')
+    
+    def evaluate(self, user, character):
+        mask = self.mask
+        
+        for cred in character.credentials:
+            if cred.mask & mask == mask:
+                return None if self.inverse else self.grant
+        
+        return self.grant if self.inverse else None
+    
+    def __repr__(self):
+        return "ACLMask({0}{1} {2})".format(
+                '!' if self.inverse else '',
+                'grant' if self.grant else 'deny',
+                self.mask
+            )
