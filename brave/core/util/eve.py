@@ -84,11 +84,7 @@ def bunchify(data, name=None):
         
         if 'rowset' in data:
             rowset = bunchify(data['rowset'] if isinstance(data['rowset'], list) else [data['rowset']], 'rowset')
-            if len(rowset) == 1:
-                result.rowset = rowset
-            else:
-                log.info("populating rowset")
-                result.update(rowset)
+            result.update(rowset)
         
         if name == 'rowset':  # rowsets always contain rows, even if there are no results
             result.setdefault('row', [])
