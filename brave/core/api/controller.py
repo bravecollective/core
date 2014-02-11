@@ -6,7 +6,8 @@ from web.core import request
 
 from brave.core.api.model import AuthenticationRequest
 from brave.core.api.util import SignedController
-from brave.core.api.controller.core import CoreAPI
+from brave.core.api.core import CoreAPI
+from brave.core.api.eve import ProxyAPI
 
 
 log = __import__('logging').getLogger(__name__)
@@ -14,6 +15,7 @@ log = __import__('logging').getLogger(__name__)
 
 class ApiController(SignedController):
     core = CoreAPI()
+    proxy = ProxyAPI()
     
     def ping(self, now=None):
         import calendar

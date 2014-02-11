@@ -151,5 +151,6 @@ class CoreAPI(SignedController):
                 corporation = dict(id=character.corporation.identifier, name=character.corporation.name),
                 alliance = dict(id=character.alliance.identifier, name=character.alliance.name) if character.alliance else None,
                 tags = tags,
-                expires = None
+                expires = None,
+                mask = token.mask
             )

@@ -121,7 +121,7 @@ class API(object):
         if self.root:
             try:
                 return APICall.objects.get(name=self.root + '.' + name)
-            except APICall.NotFound:
+            except APICall.DoesNotExist:
                 raise AttributeError("api object has no attribute '{0}'".format(self.root + '.' + name))
         
         return self.__class__(name)
@@ -208,6 +208,8 @@ class APICall(Document):
         if cv and cv.current:
             log.info("Returning cached result of %s for key ID %d.", self.name, payload.get('keyID', -1))
             return bunchify_lite(cv.result)
+        
+        log.info("Making query to %s for key ID %d.", self.name, payload['keyID'])
         
         # Actually perform the query if a cached version could not be found.
         response = requests.post(uri, data=payload or None)

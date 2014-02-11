@@ -12,6 +12,14 @@ from brave.core.key.model import EVECredential
 log = __import__('logging').getLogger(__name__)
 
 
+def bitcount(mask):
+    count = 0
+    while mask:
+        mask &= mask - 1
+        count += 1
+    return count
+
+
 @update_modified_timestamp.signal
 class EVEEntity(Document):
     meta = dict(
@@ -77,3 +85,17 @@ class EVECharacter(EVEEntity):
             return mapping[i].title
         
         return OrderedDict((i, mapping[i]) for i in sorted(mapping.keys(), key=titlesort))
+    
+    def credential_for(self, mask):
+        """Return the least-permissive API key that can satisfy the given mask."""
+        
+        candidates = [i for i in self.credentials if not mask or not i.mask or i.mask & mask == mask]
+        
+        lowest = None
+        lowest_count = None
+        for candidate in candidates:
+            bc = bitcount(candidate.mask)
+            if lowest_count is None or bc < lowest_count:
+                lowest, lowest_count = candidate, bc
+        
+        return lowest
