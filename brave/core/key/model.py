@@ -118,13 +118,13 @@ class EVECredential(Document):
             log.exception("Unable to retrieve character information for: %d", info.characterID)
             return None, None, None
         
-        results = Bunch({k.replace('@', ''): int(v) if isinstance(v, (unicode, str)) and v.isdigit() else v for k, v in results.iteritems()})
+        info = Bunch({k.replace('@', ''): int(v) if isinstance(v, (unicode, str)) and v.isdigit() else v for k, v in results.iteritems()})
         
-        char, corporation, alliance = self.pull_minimal(results)
+        char, corporation, alliance = self.pull_minimal(info)
         
-        char.race = results.race
-        char.bloodline = results.bloodLine if 'bloodLine' in info else results.bloodline
-        char.security = float(results.securityStatus)
+        char.race = info.race
+        char.bloodline = info.bloodLine if 'bloodLine' in info else info.bloodline
+        char.security = info.securityStatus
         char.save()
         
         return char, corporation, alliance
@@ -136,24 +136,16 @@ class EVECredential(Document):
         log.info('pull_full')
         
         try:
-            results = APICall.objects.get(name='char.CharacterSheet')(self, characterID=info.characterID)
+            info = APICall.objects.get(name='char.CharacterSheet')(self, characterID=info.characterID)
         except:
             log.exception("Unable to retrieve character sheet for: %d", info.characterID)
             return None, None, None
         
-        results = Bunch({k.replace('@', ''): int(v) if isinstance(v, (unicode, str)) and v.isdigit() else v for k, v in results.iteritems()})
-    
-        char, corporation, alliance = self.pull_minimal(results)
+        char, corporation, alliance = self.pull_minimal(info)
         if not char: return None, None, None
         
-        # Pivot the returned rowsets.
-        data = Bunch()
-        for row in results.rowset:
-            if 'row' not in row: continue
-            data[row['@name']] = row['row'] if isinstance(row['row'], list) else [row['row']]
-        
-        char.titles = [strip_tags(i['@titleName']) for i in data.corporationTitles] if 'corporationTitles' in data else []
-        char.roles = [i['@roleName'] for i in data.corporationRoles] if 'corporationRoles' in data else []
+        char.titles = [strip_tags(i.titleName) for i in info.corporationTitles.row] if 'corporationTitles' in info else []
+        char.roles = [i.roleName for i in info.corporationRoles.row] if 'corporationRoles' in info else []
         
         char.save()
         
@@ -184,13 +176,15 @@ class EVECredential(Document):
         else:
             implementation = self.pull_minimal
         
-        if 'row' not in result.key.rowset:
+        if not result.characters.row:
             log.error("No characters returned for key %d?", self.key)
             return
         
-        for char in result.key.rowset.row if isinstance(result.key.rowset.row, list) else [result.key.rowset.row]:
-            if '@corporationName' not in char: continue
-            char = Bunch({k.replace('@', ''): int(v) if v.isdigit() else v for k, v in char.iteritems()})
+        for char in result.characters.row:
+            if 'corporationName' not in char:
+                log.error("corporationName missing for key %d", self.key)
+                continue
+            
             implementation(char)
         
         self.modified = datetime.utcnow()

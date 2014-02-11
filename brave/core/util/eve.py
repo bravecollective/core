@@ -16,7 +16,7 @@ As a few examples:
     key.rowset.row = key.rowset.row if isinstance(key.rowset.row, list) else [key.rowset.row]
     
     # Once we're sure, list all the characters this key gives access to.
-    for row in key.rowset.row:
+    for row in key.characters:
         row.characterID  # or Name
         row.corporationID  # or Name
     
@@ -32,26 +32,87 @@ As a few examples:
 
 """
 
+from __future__ import print_function
+
 import requests
 
 from hashlib import sha256
 from datetime import datetime
-from xmltodict import parse as parse_xml
+from relaxml import xml
 from marrow.util.bunch import Bunch
+from marrow.util.convert import boolean, number, array
 from marrow.templating.serialize.bencode import EnhancedBencode
 from mongoengine import Document, IntField, StringField, ListField, DateTimeField, DictField, BooleanField, MapField
+from brave.api.client import bunchify as bunchify_lite
 
 
-class XMLBunch(Bunch):
-    def __getattr__(self, name):
-        if name not in self:
-            if '@' + name not in self:
-                self[name]
-            
-            name = '@' + name
+log = __import__('logging').getLogger(__name__)
+
+
+def bunchify(data, name=None):
+    if isinstance(data, Bunch):
+        return data
+    
+    if isinstance(data, list):
+        if name == 'rowset':  # we unpack these into a dictionary based on name
+            return Bunch({i['name']: bunchify(i, 'rowset') for i in data})
         
-        return super(XMLBunch, self).__getattr__(name)
-
+        return [bunchify(i) for i in data]
+    
+    if isinstance(data, dict):
+        data = data.copy()
+        
+        if name == 'row' and 'row' in data:
+            # Special case of CCP's silly key:value text.
+            pass
+        
+        if name and name in data and not data.get(name, '').strip():
+            data.pop(name)
+        
+        if name == 'rowset' and 'name' in data:
+            data.pop('name')
+        
+        if len(data) == 1 and isinstance(data.values()[0], dict):
+            return bunchify(data.values()[0], data.keys()[0])
+        
+        result = Bunch({
+                k: bunchify(
+                        [v] if k in ('row', ) and not isinstance(v, list) else v,
+                        k
+                    ) for k, v in data.iteritems() if k != 'rowset'
+            })
+        
+        if 'rowset' in data:
+            rowset = bunchify(data['rowset'] if isinstance(data['rowset'], list) else [data['rowset']], 'rowset')
+            if len(rowset) == 1:
+                result.rowset = rowset
+            else:
+                log.info("populating rowset")
+                result.update(rowset)
+        
+        if name == 'rowset':  # rowsets always contain rows, even if there are no results
+            result.setdefault('row', [])
+        
+        return result
+    
+    if isinstance(data, str):
+        data = data.decode('utf-8')
+    
+    if isinstance(data, (str, unicode)):
+        try:
+            return number(data)
+        except ValueError:
+            pass
+        
+        try:
+            return boolean(data)
+        except ValueError:
+            pass
+        
+        if ',' in data and (name in ('key', 'columns') or ' ' not in data):
+            return array(data)
+    
+    return data
 
 
 class API(object):
@@ -138,15 +199,16 @@ class APICall(Document):
         payload_hash = sha256(EnhancedBencode().encode(payload)).hexdigest()
         
         # Examine the cache.
-        cache = CachedAPIValue.objects(
+        cv = CachedAPIValue.objects(
                 key = payload.get('keyID', None),
                 name = self.name,
                 arguments = payload_hash,
                 expires__gte = now
             ).first()
         
-        if cache:
-            return XMLBunch(cache.result)
+        if cv and cv.current:
+            log.info("Returning cached result of %s for key ID %d.", self.name, payload.get('keyID', -1))
+            return bunchify_lite(cv.result)
         
         # Actually perform the query if a cached version could not be found.
         response = requests.post(uri, data=payload or None)
@@ -158,18 +220,12 @@ class APICall(Document):
         if prefix.strip() != "<?xml version='1.0' encoding='UTF-8'?>":
             raise Exception("Data returned doesn't seem to be XML!")
         
-        data = XMLBunch(parse_xml(data.strip())).eveapi
-        result = data.result
+        data = xml(data)['eveapi']
+        result = bunchify(data['result'], 'result')
+        data = Bunch(data)
         
-        if 'rowset' in result and 'row' in result.rowset:
-            restruct = XMLBunch()
-            
-            for rowset in (XMLBunch(i) for i in (result.rowset if isinstance(result.rowset, list) else [result.rowset])):
-                restruct[rowset['@name']] = []
-                for row in (XMLBunch(i) for i in (rowset.row if isinstance(rowset.row, list) else [rowset.row])):
-                    restruct[rowset['@name']].append(row)
-            
-            result.rowset = restruct
+        if len(result) == 1:
+            result = getattr(result, result.keys()[0])
         
         # Upsert (update if exists, create if it doesn't) the cache value.
         CachedAPIValue.objects(
@@ -217,13 +273,16 @@ class CachedAPIValue(Document):
 
 
 
-def populate_calls():
+def populate_calls(force=False):
     """Automatically populate the character and corporation APIGroup and APICall instances."""
     
     # from adam.util.api import *
     # a = populate_calls()
     
     type_mapping = dict(Character='c', Corporation='o')
+    
+    if force:
+        APICall.drop_collection()
     
     # Just in case we are first bootstrapping the database.
     get_calls, created = APICall.objects.get_or_create(name="api.calllist", defaults=dict(
@@ -263,18 +322,15 @@ def populate_calls():
         # Status
         APICall('server.ServerStatus', 'm', "").save()
     
-    calls = get_calls()  # Yes, EVE API access is *that* easy.
-    #__import__('pudb').set_trace()
+    result = get_calls()  # Yes, EVE API access is *that* easy.
     
-    # This comprehension is an ugly hack to work around a data format change.
-    for row in [i for i in calls.rowset if i['@name'] == 'callGroups'][0]['row']:
-        APIGroup(int(row['@groupID']), row['@name'], row['@description']).save()
+    APIGroup.drop_collection()
+    for row in result.callGroups.row:
+        APIGroup(row.groupID, row.name, row.description).save()
     
-    for row in [i for i in calls.rowset if i['@name'] == 'calls'][0]['row']:
-        APICall(
-                row['@type'].lower()[:4] + '.' + row['@name'],
-                type_mapping[row['@type']],
-                row['@description'],
-                int(row['@accessMask']),
-                int(row['@groupID'])
-            ).save()
+    for row in result.calls:
+        APICall(row.type.lower()[:4] + '.' + row.name,
+            type_mapping[row.type],
+            row.description,
+            row.accessMask,
+            row.groupID).save()
