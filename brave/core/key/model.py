@@ -8,6 +8,7 @@ from marrow.util.bunch import Bunch
 
 from brave.core.util import strip_tags
 from brave.core.util.signal import update_modified_timestamp, trigger_api_validation
+from brave.core.util.eve import api
 
 
 log = __import__('logging').getLogger(__name__)
@@ -108,12 +109,11 @@ class EVECredential(Document):
     
     def pull_basic(self, info):
         """Populate character details using an authenticated eve.CharacterInfo call."""
-        from brave.core.util.eve import APICall
         
         log.info('pull_basic')
         
         try:
-            results = APICall.objects.get(name='eve.CharacterInfo')(self, characterID=info.characterID)
+            results = api.eve.CharacterInfo(self, characterID=info.characterID)
         except:
             log.exception("Unable to retrieve character information for: %d", info.characterID)
             return None, None, None
@@ -131,12 +131,11 @@ class EVECredential(Document):
     
     def pull_full(self, info):
         """Populate character details using a character.CharacterSheet call."""
-        from brave.core.util.eve import APICall
         
         log.info('pull_full')
         
         try:
-            info = APICall.objects.get(name='char.CharacterSheet')(self, characterID=info.characterID)
+            info = api.char.CharacterSheet(self, characterID=info.characterID)
         except:
             log.exception("Unable to retrieve character sheet for: %d", info.characterID)
             return None, None, None
@@ -158,15 +157,13 @@ class EVECredential(Document):
     def pull(self):
         """Pull all details available for this key."""
         
-        from brave.core.util.eve import APICall
-        
         if self.kind == 'Corporation':
             return self.pull_corp()
         
         try:
-            result = APICall.objects.get(name='account.APIKeyInfo')(self)  # cached
+            result = api.account.APIKeyInfo(self)  # cached
         except:
-            log.exception("Unable to call: account.APIKeyInfo(%d)", self.key)
+            log.exception("Unable to call: APIKeyInfo(%d)", self.key)
             return
         
         if self.mask & 8 == 8:  # character.CharacterSheet
