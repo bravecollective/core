@@ -121,9 +121,12 @@ class API(object):
     def __init__(self, root=None):
         self.root = root
     
-    def __getitem__(self, name):
+    def __getattr__(self, name):
         if self.root:
-            return APICall.objects.get(name=self.root + '.' + name)
+            try:
+                return APICall.objects.get(name=self.root + '.' + name)
+            except APICall.NotFound:
+                raise AttributeError("api object has no attribute '{0}'".format(self.root + '.' + name))
         
         return self.__class__(name)
 
