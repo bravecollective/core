@@ -61,9 +61,9 @@ def validate_key(identifier):
     
     result = APICall.objects.get(name='account.APIKeyInfo')(cred)
     
-    cred.mask = int(result.key['@accessMask'])
-    cred.kind = result.key['@type']
-    cred.expires = datetime.strptime(result.key['@expires'], '%Y-%m-%d %H:%M:%S') if result.key.get('@expires', None) else None
+    cred.mask = int(result['accessMask'])
+    cred.kind = result['type']
+    cred.expires = datetime.strptime(result['expires'], '%Y-%m-%d %H:%M:%S') if result.get('expires', None) else None
     cred.verified = cred.mask != 0
     cred.save()
     
