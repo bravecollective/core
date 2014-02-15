@@ -329,7 +329,7 @@ def populate_calls(force=False):
     for row in result.callGroups.row:
         APIGroup(row.groupID, row.name, row.description).save()
     
-    for row in result.calls:
+    for row in result.calls.row:
         APICall(row.type.lower()[:4] + '.' + row.name,
             type_mapping[row.type],
             row.description,
