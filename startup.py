@@ -40,3 +40,7 @@ paste.registry.restorer.restoration_begin(request_id)
 
 import web
 from web.core import http, Controller, request, response, cache, session
+
+
+from IPython import embed
+embed()
