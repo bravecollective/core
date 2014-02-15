@@ -26,6 +26,8 @@ class User(Document):
     active = BooleanField(db_field='a', default=False)
     confirmed = DateTimeField(db_field='c')
     admin = BooleanField(db_field='d', default=False)
+    
+    # TODO: Extract into a sub-document and re-name the DB fields.
     rotp = BooleanField(default=False)
     otp = ListField(StringField(max_length=12), default=list)
     
@@ -42,6 +44,10 @@ class User(Document):
     
     def __unicode__(self):
         return self.username
+
+    @property
+    def created(self):
+        return self.id.generation_time
 
     # Related Data Lookups
     
