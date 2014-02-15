@@ -1,5 +1,9 @@
 ## encoding: utf-8
 
+<%! from json import dumps %>
+
 <%def name="iso(date)">${date.strftime('%Y-%m-%dT%H:%M:%S%z') if date else ''}</%def>
 
 <%def name="pretty(date)">${date.strftime('%B %e, %G at %H:%M:%S') if date else 'Never'}</%def>
+
+<%def name="json(data)">${dumps(data)}</%def>
