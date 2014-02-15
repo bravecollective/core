@@ -87,6 +87,11 @@ class KeyList(HTTPMethod):
         
         try:
             record.save()
+            record.pull()
+            characters = []
+            for character in record.characters:
+                characters.append(dict(identifier = character.identifier, name = character.name))
+
             if request.is_xhr:
                 return 'json:', dict(
                         success = True,
@@ -94,6 +99,7 @@ class KeyList(HTTPMethod):
                         identifier = str(record.id),
                         key = record.key,
                         code = record.code,
+                        characters = characters
                     )
         
         except ValidationError:
