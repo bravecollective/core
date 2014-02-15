@@ -71,7 +71,7 @@ areas = [
 <div id="sidebar-nav" class="hidden-phone">
     <ul id="dashboard-menu">
 % for id, icon, label, url in areas:
-    % if area == id:
+    % if context.get('area', 'overview') == id:
         <li class="active">
             <div class="pointer">
                 <div class="arrow"></div>
