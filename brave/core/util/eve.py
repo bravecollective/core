@@ -209,7 +209,7 @@ class APICall(Document):
             log.info("Returning cached result of %s for key ID %d.", self.name, payload.get('keyID', -1))
             return bunchify_lite(cv.result)
         
-        log.info("Making query to %s for key ID %d.", self.name, payload['keyID'])
+        log.info("Making query to %s for key ID %d.", self.name, payload.get('keyID', -1))
         
         # Actually perform the query if a cached version could not be found.
         response = requests.post(uri, data=payload or None)
