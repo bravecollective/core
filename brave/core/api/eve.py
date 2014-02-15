@@ -26,24 +26,28 @@ class ProxyAPI(SignedController):
         
         anonymous = None if anonymous is None else boolean(anonymous)
         
+        log.info("service={0!r} group={1} endpoint={2} token={3} anonymous={4} data={5}".format(
+                request.service, group, endpoint, token, anonymous, kw
+            ))
+        
         # Prevent access to certain overly-broad API calls.
         if group == 'account' and endpoint != 'AccountStatus':
             return dict(success=False, reason='endpoint.restricted', message="Access restricted to endpoint: {0}.{1}".format(group, endpoint))
         
-        try:  # Get the appropraite grant.
+        try:  # Get the appropriate grant.
             token = ApplicationGrant.objects.get(id=token, application=request.service) if token else None
         except ApplicationGrant.DoesNotExist:
             return dict(success=False, reason='grant.invalid', message="Application grant invalid or expired.")
         
         try:  # Load the API endpoint.
-            call = getattr(getattr(api, group, None), endpoint, None)
+            call = getattr(getattr(api, group, None), endpoint)
         except AttributeError:
             return dict(success=False, reason='endpoint.invalid', message="Unknown API endpoint: {0}.{1}".format(group, endpoint))
         
         key = None
-        if anonymous is False or call.mask:
+        if anonymous is False or token or call.mask:
             # Check that this grant allows calls to this API endpoint.
-            if not token or token.mask & call.mask != call.mask:
+            if call.mask and (not token or token.mask & call.mask != call.mask):
                 return dict(success=False, reason='grant.unauthorized', message="Not authorized to call endpoint: {0}.{1}".format(group, endpoint))
             
             # Find an appropriate key to use for this request if one is required or anonymous=False.
