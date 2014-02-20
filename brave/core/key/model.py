@@ -57,7 +57,7 @@ class EVECredential(Document):
         alliance, created = EVEAlliance.objects.get_or_create(
                 identifier = info.allianceID,
                 defaults = dict(name=allianceName)
-            ) if 'allianceID' in info else (None, False)
+            ) if 'allianceID' in info and info.allianceID else (None, False)
         
         if alliance and not created and alliance.name != allianceName:
             alliance.name = allianceName
