@@ -29,7 +29,7 @@ setup(
                 'blinker',
                 'pyyaml',
                 'ecdsa',
-                'xmltodict',
+                'relaxml',
                 'ipython',
                 'scrypt',
                 'pudb',
