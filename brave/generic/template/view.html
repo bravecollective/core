@@ -1,0 +1,56 @@
+## encoding: utf-8
+
+<%inherit file="rita.template.master"/>
+
+<%block name="title">Page Test</%block>
+
+<%block name="header">
+    ${parent.header()}
+</%block>
+
+<%block name="scripts">
+    ${parent.scripts()}
+
+    <script type="text/javascript" charset="utf-8">
+        $(function(){
+        });
+    </script>
+</%block>
+
+<div class="box span12">
+    <div class="box-header">
+        <h2><i class="icon-font"></i><span class="break"></span>Typography</h2>
+    </div>
+
+    <div class="box-content">
+        <div class="page-header">
+            <h1>Typography <small style="display: inline-block;">Headings, paragraphs, lists, and other inline type elements.</small></h1>
+        </div>
+        
+        <div class="row-fluid">
+            <div class="span12">
+                <h3>Example blockquotes.</h3>
+
+                <div class="row-fluid">
+                    <div class="span6">
+                        <p>Default blockquotes are styledas such:</p>
+
+                        <blockquote>
+                            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante venenatis.</p>
+                            <small>Someone famous in <cite title="">Body of work</cite></small>
+                        </blockquote>
+                    </div>
+
+                    <div class="span6">
+                        <p>You can always float your blockquote to the right:</p>
+
+                        <blockquote class="pull-right">
+                            <p>Lorem ipsum dolor sit amet, consecteturadipiscing elit. Integerposuere erat aantevenenatis.</p>
+                            <small>Someone famous in <cite title="">Body of work</cite></small>
+                        </blockquote>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div><!--/span-->

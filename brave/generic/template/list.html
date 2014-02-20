@@ -1,0 +1,326 @@
+## encoding: utf-8
+
+<%inherit file="brave.core.template.master"/>
+<%namespace name="f" file="brave.core.template.filter"/>
+
+<%block name="title">${web.request.controller.__metadata__.get('plural', "{0} Objects".format(web.request.controller.__model__.__name__))}</%block>
+
+<%block name="header">
+    ${parent.header()}
+    
+    <style>
+        .hide { display: none; }
+        .ident a { font-weight: 600; font-size: 15px; }
+        td p { margin-bottom: 0; color: #444; font-size: 13px; }
+        td p a { color: black; }
+        
+        tbody tr:hover td { background-color: #f0f0f0; }
+        a[data-action] { color: #ccc; display: inline-block; margin-top: -2px; margin-bottom: -2px; padding: 2px 3px; text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5); }
+        tbody tr:hover a[data-action] { color: #0088cc; }
+        tbody tr:hover a[data-action]:hover { text-decoration: none; background: #0088cc !important; color: white; text-shadow: 0 -1px 1px rgba(0, 0, 0, 0.25); border-radius: 6px; }
+        tbody tr:hover a[data-action]:active, tbody tr:hover a[data-action]:selected { background: #005580 !important; }
+        
+        .col-created, .col-total, .col-state { text-align: right !important; }
+        .col-id a { font-family: monospace; }
+        
+        .table td.actions { text-align: right; }
+        .text-center { text-align: center !important; }
+        
+        .table td.ReferenceCountColumn, .table th.ReferenceCountColumn { text-align: right; }
+        
+        form.paging {
+        }
+        
+        form.paging input, form.paging button, form.paging .help-inline, form.paging .uneditable-input {
+            font-size: 12px;
+        }
+        
+        form.paging input {
+            -webkit-appearance: none;
+        }
+        
+        form.paging input, form.paging .uneditable-input {
+            height: 17px;
+        }
+        
+        form.paging button {
+            line-height: 17px;
+        }
+        
+        form.paging .break { margin-left: 5px; margin-right: 5px; }
+        form.paging input.limit, form.paging input.page { text-align: right; width: 25px; border-right-width: 0; box-shadow: none; padding: 4px 6px 4px 6px; font-weight: bold; padding-right: 0.5ex; line-height: 16px;  }
+        form.paging .uneditable-input { width: auto; border-left-width: 0; background-color: white; box-shadow: none; padding: 3px 6px 5px 0; }
+        
+        #filters input, #filters select { margin: 0; }
+
+        .search { width: 75px; transition: all 0.25s !important; -webkit-transition: all 0.25s !important; box-shadow: none !important; }
+        .search:active { width: 150px; }
+        .search:focus { width: 150px; }
+
+    </style>
+</%block>
+
+<%block name="post">
+    ${parent.post()}
+    
+    <script type="text/javascript" charset="utf-8">
+        $(function(){
+            function updatePagination() {
+                var data = $('tbody:not(.hide)'),
+                    page = parseInt(data.data('page')),
+                    pages = parseInt(data.data('pages')),
+                    count = parseInt(data.data('count')),
+                    paging = $('form.paging'),
+                    input = $('input.page', paging);
+                
+                input.val(page);
+                input.prevAll('button').prop('disabled', page == 1);
+                input.nextAll('button').prop('disabled', page == pages);
+                input.next().text('of ' + pages);
+                
+                $('.table a.action-update').attr({rel: 'modal', 'data-trigger': 'genericform'})
+            }
+            
+            updatePagination();
+            
+            function getPage(replace, first) {
+                if ( replace === undefined ) replace = false;
+                if ( first === undefined ) first = true;
+                
+                if ( replace && first ) {
+                    $('input.page').val('1');
+                }
+                
+                $('.icon-refresh').removeClass('hide').next().addClass('hide');
+                
+                // Check to see if we already have the page in question and just switch to it.
+                if ( !replace && $('tbody[data-page=' + $('input.page').val() + ']').length ) {
+                    $('tbody').addClass('hide');
+                    $('tbody[data-page=' + $('input.page').val() + ']').removeClass('hide');
+                    updatePagination();
+                    $('.icon-refresh').addClass('hide').next().removeClass('hide');
+                    return;
+                }
+                
+                var rdata = {
+                    p: $('input.page').val(),
+                    q: $('input.search').val(),
+                    l: $('input.limit').val()
+                }
+                
+                $('#filters input, #filters select').each(function(index, element) {
+                    var self = $(this),
+                        val = self.val();
+                    
+                    if ( val && val.length )
+                        rdata[self.attr('name')] = val;
+                });
+                
+                $.get(window.location, rdata, function(data){
+                    if ( replace ) {
+                        $('tbody').remove();
+                    } else {
+                        $('tbody').addClass('hide');
+                    }
+                    $('table').append(data);
+                    $('time.relative').timeago();
+                    updatePagination();
+                    $('.icon-refresh').addClass('hide').next().removeClass('hide');
+                });
+            }
+            
+            $('input.search, input.page, input.limit, #filters input, #filters select').keypress(function(e){
+                if ( e.keyCode != 13 ) return true;
+                
+                $(this).change().select();
+                return false;
+            });
+            
+            $('input.search, input.limit').changeDelay(function(){ getPage(true); }, {threshold: 0, initial: 500});
+            $('input.page').changeDelay(function() { getPage(); }, {highlight: true, initial: 375, minimum: 125});
+            $('.page-first').click(function(){ $('input.page').val(1); getPage(); })
+            $('.page-last').click(function(){ $('input.page').val($('tbody:not(.hide)').data('pages')); getPage(); })
+            $('.page-next').click(function(){ $('input.page').val($('tbody:not(.hide)').data('page') + 1); getPage(); })
+            $('.page-prev').click(function(){ $('input.page').val($('tbody:not(.hide)').data('page') - 1); getPage(); })
+            
+            $('table').on('change', '.record-selected', function(){
+                var self = $(this),
+                    selected = self.prop('checked'),
+                    url = self.parents('tr').data('url') + (selected ? 'select' : 'deselect');
+                
+                self.after('<i class="icon icon-spin icon-spinner icon-large"></i>');
+                self.hide();
+                
+                var xhr = $.post(url, {}, function(data){
+                    if ( data.success ) {
+                        self.siblings('i').remove();
+                        self.show();
+                        $.alert('success', "Success", data.message);
+                        $('.checkout-progress').load(window.location + 'progress', function(result){
+                            $('.checkout-progress', this).unwrap();
+                        });
+                        return;
+                    }
+                    
+                    $.alert('error', "Error", "There was an error selecting this record.");
+                    self.prop('checked', false);
+                });
+            });
+            
+            $('#filters input').changeDelay(function(){ getPage(true); }, {threshold: 2, initial: 500});
+            $('#filters select').change(function(){ getPage(true); });
+            
+            $('body').on('click', 'a[data-action]', function(e){
+                console.log("clicked action");
+                
+                var self = $(this),
+                    url = self.attr('href');
+                e.preventDefault();  // Prevent the click from registering.
+                
+                $('#modal').remove();  // Remove any existing modal content.
+                
+                $.ajax({url: url, success: function(data, status, jqXHR) {
+                    var type = jqXHR.getResponseHeader("content-type") || "";
+                    
+                    if ( type.indexOf('json') > -1 ) {
+                        // We need to perform some explicit action.
+                        if ( ! data.success ) {
+                            $.alert('error', data.title, data.message);
+                            return;
+                        }
+                        
+                        switch ( data.action ) {
+                            case 'confirm':
+                                confirm(data.title, data.message, data.label, function(){
+                                    $.post(url, data.verb ? {_verb: data.verb} : {}, function(result) {
+                                        if ( result.success ) {
+                                            $.alert('success', result.title, result.message);
+                                            getPage(true, false);
+                                            return;
+                                        }
+                                        
+                                        $.alert('error', result.title, result.message);
+                                    });
+                                });
+                                break;
+                            
+                            default:
+                                alert("Unknown action: " + data.action);
+                                break;
+                        }
+                        
+                        return;
+                    }
+                    
+                    // Construct the DOM for the dialog.
+                    $('<div></div>').html(data).children().attr('id', 'modal').addClass('modal hide fade').appendTo('body');
+        
+                    $('#modal').on('shown', function(){
+                        $(document).trigger('popup-genericform').trigger('action-' + self.data('action'));
+                    });
+        
+                    // Display the dialog.
+                    $('#modal').modal('show');
+                }});
+            });
+        });
+    </script>
+</%block>
+
+
+<div class="container-fluid">
+    <div id="pad-wrapper">
+        <div class="row-fluid header">
+            <form class="form-inline paging pull-right" style="overflow: visible;">
+                % if web.request.controller.__indexes__:
+                <input class="search search-query" type="search" name="s" placeholder="${_("Search")}">
+                % else:
+                <input type="hidden" class="search" name="s">
+                % endif
+                
+                <div class="input-append" style="margin-right: 6px;">
+                    <input id="pagination-limit" class="limit" type="text" name="l" value="${limit}" style="width: 20px;">
+                    <label for="pagination-limit" class="uneditable-input add-on"> ${_("/ page")}</label>
+                </div
+                ><div class="input-prepend input-append">
+                    <button class="btn page-first" type="button" disabled><i class="fa fa-angle-double-left"></i></button>
+                    <button class="btn page-prev" type="button" disabled><i class="fa fa-angle-left"></i></button>
+                    <input class="page" type="text" name="p" value="${page}">
+                    <span class="uneditable-input">${_("of {0}").format(pages)}</span>
+                    <button class="btn page-next" type="button" disabled><i class="fa fa-angle-right"></i></button>
+                    <button class="btn page-last" type="button" disabled><i class="fa fa-angle-double-right"></i></button>
+                </div>
+                % if web.request.controller.create.condition:
+                    <a href="create" rel="modal" data-trigger="genericform" class="btn btn-small create btn-success"><i class="fa fa-plus"></i></a>
+                % endif
+            </form>
+            
+            <h3>
+                % if 'icon' in web.request.controller.__metadata__:
+                <i class="fa fa-refresh fa-spin fa-fw hide"></i>
+                <i class="fa fa-lg fa-${web.request.controller.__metadata__['icon']} fa-fw"></i>
+                % endif
+                ${web.request.controller.__metadata__.get('plural', "{0} Objects".format(web.request.controller.__model__.__name__))}
+                % if 'subtitle' in web.request.controller.__metadata__:
+                <small>${web.request.controller.__metadata__['subtitle']}</small>
+                % endif
+            </h3>
+        </div>
+        <div class="row-fluid">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        % for column in (v for k, v in web.request.controller.__columns__.iteritems() if v.condition):
+                        <th class="col-${column.__name__} ${column.__class__.__name__} span${column.width}">${column.label}</th>
+                        % endfor
+                        <th class="actions"></th>
+                    </tr>
+                </thead>
+                ${rows()}
+            </table>
+        </div>
+    </div>
+</div>
+
+
+
+<%def name="row(record)">
+    <% web.request.record = record %>
+    <tr data-id="${record.id}" data-url="${web.url.compose(str(getattr(record, web.request.controller.__key__)))}/">
+        % for column in (v for k, v in web.request.controller.__columns__.iteritems() if v.condition):
+        <td class="col-${column.__name__} ${column.__class__.__name__}">${column.render(record)}</td>
+        % endfor
+        <td class="actions">
+            % for action in [v for k, v in web.request.controller.__actions__.iteritems() if v.instance and v.condition][::-1]:
+<a
+                    class="action-${action.__name__}"
+                    data-action="${action.__name__}"
+                    title="${action.title.format(record=record, model=record.__class__)}"
+                    href="${web.url.compose(str(getattr(record, web.request.controller.__key__)), action.__name__)}"
+                ><i class="fa fa-fw fa-${action.icon}"></i></a>\
+            % endfor
+        </td>
+    </tr>
+</%def>
+
+<%def name="rows()">
+    <tbody data-base="${web.url.complete(web.request.path)}" data-page="${page}" data-pages="${pages}" data-count="${count}">
+        % if count:
+            <%
+                _tmp = getattr(web.request, 'record', None)
+            %>
+            % for record in results:
+                ${row(record)}
+            % endfor
+            <%
+                web.request.record = _tmp
+            %>
+        % else:
+            <tr>
+                <th colspan="${len(controller._columns) + 1}" class="text-center" style="padding: 20px;">
+                    ${_('No records found.')}
+                </th>
+            </tr>
+        % endif
+    </tbody>
+</%def>

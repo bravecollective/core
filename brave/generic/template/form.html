@@ -1,0 +1,101 @@
+## encoding: utf-8
+
+<%inherit file="rita.template.master"/>
+<%namespace name="part" file="rita.template.component"/>
+
+<%block name="title">${'Create New' if not data else 'Modify'} ${controller._model.__name__} Record — ${controller._list_title|u}</%block>
+
+<%block name="header">
+    ${parent.header()}
+    
+    % for url in web.assets.assets('css.form'):
+        <link href="${url}" rel="stylesheet">
+    % endfor
+    
+    <style type="text/css" media="screen">
+        .box { margin-bottom: 0; }
+        .box-header { position: relative; }
+        .text-right { text-align: right !important; }
+        .text-center { text-align: center !important; }
+        .dl-horizontal dd { margin-bottom: 5px; }
+        .form-horizontal { padding-top: 10px; }
+        .form-horizontal .form-actions { padding-left: 190px; }
+        dd .btn { margin-right: 5px; }
+    </style>
+</%block>
+
+<%block name="scripts">
+    ${parent.scripts()}
+    
+    % for url in web.assets.assets('js.form'):
+        <script src="${url}"></script>
+    % endfor
+    
+    <script type="text/javascript" charset="utf-8">
+        $(function(){
+            $('a[data-toggle="tab"]').click(function (e) {
+                e.preventDefault();
+                $(this).tab('show');
+            });
+            
+            $('button.again').click(function(){
+                $('form').append('<input type="hidden" name="_again" value="True">'); 
+                $('form').submit();
+            });
+            $('form').submit(function(e){
+                var self = $(this);
+                $.post(self.attr('action'), self.serialize(), function(data){
+                    if ( data && data.success ) {
+                        window.location = data.location;
+                    }
+                });
+                e.preventDefault();
+                return false;
+            });
+        });
+    </script>
+</%block>
+
+
+<%
+
+if data:
+    caption = _('Modify Existing {0} Record')
+else:
+    caption = _('Create New {0} Record')
+
+%>
+
+<%part:box title="${caption.format(controller._model.__name__)}" icon="${controller._icon}">
+    ${form(data) if data else form()}
+</%part:box>
+
+<%def name="modal()" buffered="False">
+<%
+
+if data:
+    caption = _('Modify Existing {0} Record')
+else:
+    caption = _('Create New {0} Record')
+
+%>
+<div>
+    <style>
+        #modal .dl-horizontal dd { margin-bottom: 5px; }
+        #modal label { margin-bottom: 0; }
+        #modal .control-group:last-child { margin-bottom: 0; }
+        #modal form { margin-bottom: 0; }
+    </style>
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">×</button>
+        <h3>${caption.format(controller._model.__name__)}</h3>
+    </div>
+    <div class="modal-body">
+        ${form(data) if data else form()}
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal">${_("Close")}</button>
+        <button id="set-save" class="btn btn-primary">${_("Save")}</button>
+    </div>
+</div>
+</%def>

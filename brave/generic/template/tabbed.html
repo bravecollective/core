@@ -1,0 +1,38 @@
+## encoding: utf-8
+<%def name="modal()" buffered="False">
+<%
+
+if data:
+    caption = _('Modify {0}').format(controller._model.__name__)
+else:
+    caption = _('New {0}').format(controller._model.__name__)
+
+%>
+<div>
+    <style>
+        #modal .dl-horizontal dd { margin-bottom: 5px; }
+        #modal .modal-header { padding: 0; border-bottom-width: 0; }
+        #modal .modal-body { position: relative; }
+        #modal .modal-header .nav-tabs { margin: 0; padding: 9px 15px 0 15px; }
+        #modal .modal-header a.disabled { background-color: transparent !important; color: black !important; border-color: white white transparent !important; font-weight: bold; padding-left: 0; }
+        #modal label { margin-bottom: 0; }
+        #modal .control-group:last-child { margin-bottom: 0; }
+        #modal form { margin-bottom: 0; }
+        #modal form .tabs-below .nav-tabs { margin-bottom: 0; }
+    </style>
+    <div class="modal-header">
+        <ul class="nav nav-tabs">
+            <button type="button" class="close" data-dismiss="modal">×</button>
+            <li><a class="disabled">${caption}</a></li>
+            % for i, tab in enumerate(form.children):
+            <li${' class="active"' if i == 0 else ''}><a href="#${tab.name}-tab" data-toggle="tab">${tab.title}</a></li>
+            % endfor
+        </ul>
+    </div>
+    ${form(data) if data else form()}
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal">${_("Close")}</button>
+        <button id="set-save" class="btn btn-primary">${_("Save")}</button>
+    </div>
+</div>
+</%def>

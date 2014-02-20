@@ -15,6 +15,8 @@ from brave.core import util
 from brave.core.util.signal import StartupMixIn
 from brave.core.util.predicate import authorize, authenticated
 from brave.core.api.model import AuthenticationRequest
+from brave.core.account.manage import UsersController
+from brave.generic.controller import BaseAttribute
 
 
 log = __import__('logging').getLogger(__name__)
@@ -112,12 +114,17 @@ class AuthorizeHandler(HTTPMethod):
         return 'json:', dict(success=True, location=str(target))
 
 
+class ManagementController(BaseAttribute, Controller):
+    user = UsersController()
+
+
 class RootController(StartupMixIn, Controller):
     account = util.load('account')
     key = util.load('key')
     character = util.load('character')
     application = util.load('application')
     api = util.load('api')
+    manage = ManagementController()
     
     def __init__(self, *args, **kw):
         super(RootController, self).__init__(*args, **kw)
