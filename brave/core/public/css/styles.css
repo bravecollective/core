@@ -1,0 +1,23 @@
+/*
+
+BRAVE Collective Core Services
+Copyright (c) 2013-2014 Alice Bevan-McGregor.
+Modified BSD license, see: https://github.com/bravecollective/core#4-license
+
+*/
+
+/* Eliminate odd alignment issues from left-aligned form, the authentication form. */
+.navbar-inverse .navbar-form { margin-right: 0px; padding-right: 0px; padding-left: 0px; }
+.navbar-inverse { margin-bottom: 0; border-radius: 0; border-width: 0; }
+
+/*.form-inline.row-fluid > :first-child { padding-left: 0; }
+.form-inline.row-fluid > :last-child { padding-right: 0; }*/
+
+.character-banner { box-shadow: inset 0px 2px 8px black; background: url(/img/light-background.jpg) no-repeat top center; padding: 40px 0; -webkit-background-size: cover; -moz-background-size: cover; -o-background-size: cover; background-size: cover; filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='/img/light-background.jpg', sizingMethod='scale'); -ms-filter: "progid:DXImageTransform.Microsoft.AlphaImageLoader(src='/img/light-background.jpg', sizingMethod='scale')"; }
+
+.character-banner .portrait { width: 256px; height: 256px; background-color: white; border-radius: 15px; }
+.character-banner .portrait img { border-radius: 15px; box-shadow: inset 0px 3px 5px black; }
+
+.character-banner h2 { color: #eee; margin-top: 0; font-weight: 100; text-shadow: 0px 1px 3px black, 0px 1px 3px black, 0px 1px 3px black; }
+.character-banner h2 small { color: #ccc; font-weight: 100; }
+.character-banner .spacer { height: 10px; padding: 0; }

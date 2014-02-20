@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 from datetime import datetime, timedelta
 
 from web.core import Controller, HTTPMethod, config, session, request
-from web.auth import user
+from web.auth import user, anonymous
 from web.core.http import HTTPFound, HTTPNotFound
 from web.core.locale import set_lang, LanguageError
 from marrow.util.convert import boolean
@@ -126,9 +126,16 @@ class RootController(StartupMixIn, Controller):
         
         if boolean(config.get('debug', False)):
             self.dev = DeveloperTools()
-    
-    @authorize(authenticated)
+
+    @util.require(anonymous)
     def index(self):
+        """Anonymous welcome splash page."""
+        return 'brave.core.template.welcome', dict()
+    
+    @index.otherwise
+    def index(self):
+        """Authenticated forum dashboard."""
+        
         return 'brave.core.template.dashboard', dict()
     
     def lang(self, lang):

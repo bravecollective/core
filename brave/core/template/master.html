@@ -5,7 +5,10 @@
         <%block name="header">
         <meta charset="utf-8">
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="">
+        <meta name="author" content="">
 
         <title><%block name="title"/> — Brave Collective: Core Services</title>
 
@@ -15,39 +18,45 @@
         <link rel="apple-touch-icon-precomposed" href="/ico/apple-touch-icon-57-precomposed.png">
         <link rel="shortcut icon" href="/ico/favicon.png">
         
-        <link rel="stylesheet/less" href="/css/base.less">
-        <link href='//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
-        <link href='//fonts.googleapis.com/css?family=Lato:300,400,700,900,300italic,400italic,700italic,900italic' rel='stylesheet' type='text/css'>
+        <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css">
+        <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap-theme.min.css">
         <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+        <link href="/css/styles.css" rel="stylesheet">
+
         <%block name="styles"/>
 
         <script src="/js/vendor/less-1.4.0-beta.min.js"></script>
         <script src="//cdnjs.cloudflare.com/ajax/libs/modernizr/2.5.3/modernizr.min.js"></script>
         
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>
-            <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+            <script src="//oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="//oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
         <![endif]-->
         </%block>
     </head>
-    <body>
-        <%block name="pre">
-        <%include file="brave.core.template.navigation"/>
-        </%block>
-
-        <!-- main container -->
-        <div class="content">
-            ${self.body()}
+    <body<%block name="bodydata"/>>
+        <%block name="pre"/>
+        
+        <div id="wrap">
+            <%include file="brave.core.template.navigation"/>
+            
+            <%block name="content">
+            <div class="container">
+                ${self.body()}
+            </div>
+            </%block>
         </div>
 
         <%block name="post">
-        <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
-        <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.1/js/bootstrap.min.js"></script>
-        <!--<script src="/js/vendor/jquery-ui-1.10.2.custom.min.js"></script>-->
+        <script src="//code.jquery.com/jquery-1.10.2.min.js"></script>
+        <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
         <script src="/js/vendor/jquery.timeago.js" charset="utf-8"></script>
         <script src="/js/vendor/bootbox.js" charset="utf-8"></script>
         <script src="/js/vendor/jquery.cookie.js" charset="utf-8"></script>
         <script src="/js/changedelay.js"></script>
         <script src="/js/script.js"></script>
+        <%block name="scripts"/>
         </%block>
     </body>
 </html>

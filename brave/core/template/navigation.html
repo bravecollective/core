@@ -1,90 +1,49 @@
 ## encoding: utf-8
-<%!
-
-areas = [
-        # ID         Icon            Label             Destination
-        ('overview', 'home',         "Overview",       "/"),
-        ('keys',     'key',          "API Keys",       "/key/"),
-        ('apps',     'puzzle-piece', "Applications",   "/application/"),
-        ('chars',    'user',         "Characters",     "/character/"),
-        ('group',    'group',        "Groups",         "/group/"),
-        ('admin',    'dashboard',    "Maintenance",    "/admin/"),
-    ]
-
-%>
-<div class="navbar navbar-inverse">
-    <div class="navbar-inner">
-        <i class="brand fa fa-key"></i>
-        <h1 class="brand">
-             <a href="index.html">Brave<span class="hidden-phone"> Collective</span></a> <span class="app">Core Services</span>
-        </h1>
-
-        <ul class="nav pull-right">
-% if web.auth.authenticated:
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                    % if web.user.primary:
-                    <img src="//image.eveonline.com/Character/${web.user.primary.identifier}_32.jpg" style="vertical-align: middle; margin-top: -10px; margin-bottom: -5px; margin-right: 5px; border-radius: 6px; width: 24px; height: 24px; line-height: 24px;">
-                    <span class="hidden-phone"> ${web.user.primary.name}</span>
-                    % else:
-                    <i class="fa fa-user"></i><span class="hidden-phone"> ${web.user.username}</span>
-                    % endif
-                    <b class="caret"></b>
-                </a>
-                <ul class="dropdown-menu">
-                    <li><a href="/account/"><i class="fa fa-cog"></i> ${_("Profile")}</a></li>
-                    <li><a href="/account/settings"><i class="fa fa-cog"></i> ${_("Settings")}</a></li>
-                    <li class="divider"></li>
-                    <li><a href="/help"><i class="fa fa-question"></i> ${_("Help")}</a></li>
-                    <li class="divider"></li>
-                    <li><a href="/account/deauthenticate"><i class="fa fa-sign-out"></i> ${_("Sign Out")}</a></li>
-                </ul>
-            </li>
-% else:
-            <li>
-                <a href="/account/authenticate">
-                    <i class="fa fa-sign-in"></i><span class="hidden-phone"> ${_("Sign In")}</span>
-                </a>
-            </li>
-% endif
-        </ul>
-
-        <!-- shows same menu as sidebar but for mobile devices -->
-        <button type="button" class="btn btn-navbar visible-phone" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-        </button>
-        <div class="nav-collapse collapse visible-phone mobile-menu">
-            <ul class="nav">
-% for id, icon, label, url in areas:
-                <li \
-                    ${'class="active"' if context.get('area', 'overview') == id else ''} \
-                    ><a href="${url}"><i class="fa fa-${icon}"></i> ${label}</a></li>
-% endfor
-            </ul>
+<div class="navbar navbar-inverse" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/"><strong>Brave Collective</strong> <small>Core Services</small></a>
         </div>
-        <!-- end navbar for mobile devices -->
+        <div class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li${' class="active"' if context.get('area', 'overview') == 'overview' else ''}><a href="/">Home</a></li>
+                % if web.user:
+                <li${' class="active"' if context.get('area', 'overview') == 'apps' else ''}><a href="/p/">Applications</a></li>
+                <li${' class="active"' if context.get('area', 'overview') == 'keys' else ''}><a href="/p/">API Keys</a></li>
+                <li${' class="active"' if context.get('area', 'overview') == 'chars' else ''}><a href="/p/">Characters</a></li>
+                <li${' class="active"' if context.get('area', 'overview') == 'group' else ''}><a href="/p/">Groups</a></li>
+                % endif
+            </ul>
+        
+            % if web.user:
+            <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-user"></i> ${web.user.username} <i class="fa fa-caret-down"></i></a>
+                    <ul class="dropdown-menu">
+                        <li><i class="fa fa-fw fa-cog"></i> <a href="#">Preferences…</a></li>
+                        <li><i class="fa fa-fw fa-sign-out"></i> <a href="/goodbye">Sign Out</a></li>
+                    </ul>
+                </li>
+            </ul>
+            % else:
+            <form class="navbar-form navbar-right hidden-sm hidden-xs">
+                <div class="form-group">
+                    <label for="banner-username" class="sr-only">User name:</label>
+                    <input id="banner-username" type="text" class="form-control" placeholder="User Name / OTP" style="width: 150px;">
+                </div>
+                <div class="form-group">
+                    <label for="banner-password" class="sr-only">Password:</label>
+                    <input id="banner-password" type="password" class="form-control" placeholder="Password"  style="width: 150px;">
+                </div>
+                <button type="submit" class="btn btn-default"><i class="fa fa-lg fa-sign-in"></i> Sign In</button>
+            </form>
+            % endif
+        </div>
     </div>
-</div>
-
-<div id="sidebar-nav" class="hidden-phone">
-    <ul id="dashboard-menu">
-% for id, icon, label, url in areas:
-    % if context.get('area', 'overview') == id:
-        <li class="active">
-            <div class="pointer">
-                <div class="arrow"></div>
-                <div class="arrow_border"></div>
-            </div>
-    % else:
-        <li>
-    % endif
-            <a href="${url}">
-                <i class="fa fa-${icon} fa-2x fa-fw"></i>
-                <span>${label}</span>
-            </a>
-        </li>
-% endfor
-    </ul>
 </div>

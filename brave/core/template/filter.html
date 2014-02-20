@@ -7,3 +7,38 @@
 <%def name="pretty(date)">${date.strftime('%B %e, %G at %H:%M:%S') if date else 'Never'}</%def>
 
 <%def name="json(data)">${dumps(data)}</%def>
+
+<%def name="page(title, minor='')">
+<div class="page-header">
+    <h1>
+        ${title() if callable(title) else title}
+        % if minor:
+        <small>${minor}</small>
+        % endif
+    </h1>
+    ${caller.body()}
+</div>
+</%def>
+
+<%def name="box(title='', icon='', size='12', content_style='')">
+<div class="box span${size}">
+    % if title:
+    <div class="box-header">
+        <h2>
+            % if icon:
+            <i class="icon-${icon}"></i><span class="break"></span>
+            % endif
+            ${title}
+        </h2>
+        % if hasattr(caller, 'actions'):
+        <div style="position: absolute; top: 5px; right: 5px;">
+            ${caller.actions()}
+        </div>
+        % endif
+    </div>
+    % endif
+    <div class="box-content"${(' style="' + content_style + '"') if content_style else ''}>
+        ${caller.body()}
+    </div>
+</div>
+</%def>

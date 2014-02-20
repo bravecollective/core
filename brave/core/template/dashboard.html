@@ -27,6 +27,32 @@
     </script>
 </%block>
 
+
+<%block name="content">
+    <div class="character-banner">
+        <div class="container clearfix">
+            <div class="row-fluid">
+                <div class="col-sm-4 col-lg-3">
+                    <div class="portrait"><img src="https://image.eveonline.com/Character/432286394_256.jpg"></div>
+                </div>
+                <div class="col-xs-12 col-sm-4 col-lg-4">
+                    Donec id elit non mi porta gravida at eget metus. Aenean eu leo quam. Pellentesque ornare sem lacinia quam venenatis vestibulum. Nullam quis risus eget urna mollis ornare vel eu leo. Maecenas faucibus mollis interdum. Donec id elit non mi porta gravida at eget metus. Aenean eu leo quam. Pellentesque ornare sem lacinia quam venenatis vestibulum. Nullam quis risus eget urna mollis ornare vel eu leo. Maecenas faucibus mollis interdum. Donec id elit non mi porta gravida at eget metus. Aenean eu leo quam. Pellentesque ornare sem lacinia quam venenatis vestibulum. Nullam quis risus eget urna mollis ornare vel eu leo. Maecenas faucibus mollis interdum.
+                </div>
+                <div class="col-sm-4 col-lg-5" style="background-color: green;">
+                    oh noes
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    ${parent.content()}
+</%block>
+
+
+
+
+
+
 <div class="container-fluid">
     <div id="pad-wrapper" class="user-profile">
     % if web.user.primary:

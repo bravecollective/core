@@ -1,0 +1,67 @@
+## encoding: utf-8
+
+<%inherit file="brave.core.template.master"/>
+<%namespace name="f" file="brave.core.template.filter"/>
+
+<%block name="title">Welcome</%block>
+
+<%block name="content">
+    <div class="character-banner">
+        <div class="container clearfix">
+            <div class="row-fluid visible-sm visible-xs">
+                <h2 class="col-xs-12">Already have an account?</h2>
+            </div>
+            <form class="form-inline row-fluid visible-sm visible-xs clearfix" style="margin-bottom: 25px;">
+                <div class="form-group col-xs-12 col-sm-12 col-md-5">
+                    <label class="sr-only" for="signup-username">User Name:</label>
+                    <input type="text" class="form-control input-lg" id="signup-username" placeholder="User Name">
+                </div>
+                <div class="visible-sm col-sm-12 spacer"></div>
+                <div class="form-group col-xs-12 col-sm-7 col-md-4">
+                    <label class="sr-only" for="signup-password">Password:</label>
+                    <input type="password" class="form-control input-lg" id="signup-password" placeholder="Password">
+                </div>
+                <div class="form-group col-xs-12 col-sm-5 col-md-3">
+                    <button type="submit" class="form-control input-lg btn btn-lg btn-success" id="signup-button">Sign In</button>
+                </div>
+            </form>
+            <div class="row-fluid">
+                <h2 class="col-xs-12">Don’t have an account?</h2>
+            </div>
+            <form class="form-inline row-fluid">
+                <div class="form-group col-xs-12 col-sm-5 col-md-3">
+                    <label class="sr-only" for="signup-username">User Name:</label>
+                    <input type="text" class="form-control input-lg" id="signup-username" placeholder="User Name">
+                </div>
+                <div class="form-group col-xs-12 col-sm-7 col-md-3">
+                    <label class="sr-only" for="signup-email">E-Mail Address:</label>
+                    <input type="email" class="form-control input-lg" id="signup-email" placeholder="E-Mail Address">
+                </div>
+                <div class="visible-sm col-sm-12 spacer"></div>
+                <div class="form-group col-xs-12 col-sm-4 col-md-2">
+                    <label class="sr-only" for="signup-password">Password:</label>
+                    <input type="password" class="form-control input-lg" id="signup-password" placeholder="Password">
+                </div>
+                <div class="form-group col-xs-12 col-sm-4 col-md-2">
+                    <label class="sr-only" for="signup-password2">Password Again:</label>
+                    <input type="password" class="form-control input-lg" id="signup-password2" placeholder="Again">
+                </div>
+                <div class="form-group col-xs-12 col-sm-4 col-md-2">
+                    <button type="submit" class="form-control input-lg btn btn-lg btn-success" id="signup-button">Register</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    ${parent.content()}
+</%block>
+
+
+
+
+<%f:page title="${title}" minor="to the Brave Collective core service." />
+
+<div class="jumbotron">
+    <p>Here you can manage your EVE API keys, character selection, group membership, and third-party application registrations.  Before you do anything, of course, you will need an account.</p>
+</div>
+
