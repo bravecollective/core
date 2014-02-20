@@ -39,7 +39,9 @@ source bin/activate</code></pre>
 
 Now bootstrap the web framework:
 
-<pre><code>pip install WebCore</code></pre>
+<pre><code>
+pip install WebCore
+</code></pre>
 
 Additionally, there are some requirements you will need to manually install as Core Services require features present in as-yet unreleased packages.  You will need to perform the following steps:
 
@@ -53,7 +55,9 @@ Run the following to download the development version with Git, and _link_ it in
 <pre><code>
 git clone https://github.com/bravecollective/core.git
 cd core
-python setup.py develop)</code></pre>
+pip install relaxml
+python setup.py develop
+</code></pre>
 
 Once you have successfully compiled the Core Service, copy `development.ini` to `local.ini`, and make changes as appropriate.  Finally, bootstrap the EVE API system by running:
 
