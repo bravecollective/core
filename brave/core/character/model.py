@@ -30,7 +30,7 @@ class EVEEntity(Document):
     
     @classmethod
     def get(cls, query=None, **kw):
-        if query.isnumeric():
+        if query.isdigit():
             kw['identifier'] = query
         else:
             kw['name'] = query
