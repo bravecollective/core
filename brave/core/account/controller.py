@@ -7,7 +7,7 @@ from web.core.http import HTTPFound, HTTPSeeOther, HTTPForbidden
 from web.core.locale import _
 
 from brave.core.account.model import User
-from brave.core.account.form import authenticate as authenticate_form, register as register_form
+from brave.core.account.form import authenticate as authenticate_form, register as register_form, recover as recover_form
 from brave.core.account.authentication import lookup
 
 from yubico import yubico, yubico_exceptions
@@ -37,6 +37,24 @@ class Authenticate(HTTPMethod):
             return 'json:', dict(success=True, location=redirect or '/')
 
         raise HTTPFound(location=redirect or '/')
+
+class Recover(HTTPMethod):
+    def get(self, redirect=None):
+        if redirect is None:
+            referrer = request.referrer
+            redirect = '/' if not referrer or referrer.endswith(request.script_name) else referrer
+        form = recover_form(dict(redirect=redirect))
+        return "brave.core.account.template.recover", dict(form=form)
+
+    def post(self, **post):
+        try:
+            data = Bunch(recover_form.native(post)[0])
+        except Exception as e:
+            if config.get('debug', False):
+                raise
+            return 'json:', dict(success=False, message=_("Unable to parse data."), data=post, exc=str(e))
+        #TODO: SendRecoveryEmail
+        return 'json:', dict(success=True)
 
 
 class Register(HTTPMethod):
@@ -153,6 +171,7 @@ class AccountController(Controller):
     authenticate = Authenticate()
     register = Register()
     settings = Settings()
+    recover = Recover()
     
     def exists(self, **query):
         query.pop('ts', None)

@@ -34,6 +34,11 @@ def lookup(identifier):
     return user
 
 
+def lookup_email(email):
+    """get user by email address"""
+    user = User.objects(email=email).first()
+    return user
+
 def authentication_logger(fn):
     """Decorate the authentication handler to log attempts.
     
