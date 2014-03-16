@@ -10,13 +10,15 @@ Yubikey OTP token and (regardless of identifier) a password.  Actual password cr
 
 from __future__ import unicode_literals
 
+from random import SystemRandom
+import urllib
 from time import time, sleep
 from datetime import datetime
 from yubico import yubico, yubico_exceptions
 from marrow.util.convert import boolean
 from web.core import config, request
 
-from brave.core.account.model import User, LoginHistory
+from brave.core.account.model import User, LoginHistory, PasswordRecovery
 
 
 log = __import__('logging').getLogger(__name__)
@@ -112,3 +114,17 @@ def authenticate(identifier, password):
     
     return user.id, user
 
+def send_recover_email(user):
+    """Sends a recovery-link to the specified user objects' email address"""
+    # generate recovery key
+    recovery_key = SystemRandom().randint(0, (2<< 62)-1)
+
+    # send email - TODO
+    params = urllib.urlencode({'email': user.email,
+                               'recovery_key': str(recovery_key)})
+    url = format(u"http://127.0.0.1:8080/account/recover_password?" +
+                 str(params))
+    log.info(u"RecoverURL= "+url)
+
+    # store key in DB
+    PasswordRecovery(user, recovery_key).save()

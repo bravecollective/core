@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 from itertools import chain
 from datetime import datetime, timedelta
 from mongoengine import Document, StringField, EmailField, DateTimeField, BooleanField, ReferenceField, ListField
+from mongoengine.fields import LongField
 
 from brave.core.util.signal import update_modified_timestamp
 from brave.core.util.field import PasswordField, IPAddressField
@@ -69,7 +70,11 @@ class User(Document):
     @property
     def attempts(self):
         return LoginHistory.objects(user=self)
-    
+
+    @property
+    def recovery_keys(self):
+        return PasswordRecovery.objects(user=self)
+
     # Functions to manage YubiKey OTP
 
     def addOTP(self, yid):
@@ -129,3 +134,29 @@ class LoginHistory(Document):
                 self.user_id,
                 self.location
             )
+
+class PasswordRecovery(Document):
+    meta = dict(
+        collection = "PwdRecovery",
+        allow_inheritance = False,
+        indexes = [
+            'user',
+            # Automatically delete records as they expire.
+            dict(fields=['expires'], expireAfterSeconds=0)
+        ]
+    )
+
+    user = ReferenceField(User, required=True)
+    recovery_key = LongField(db_field='k', required=True)
+    expires = DateTimeField(db_field='e', default=lambda: datetime.utcnow() + timedelta(days=1))
+
+    @property
+    def created(self):
+        return self.id.generation_time
+
+    def __repr__(self):
+        return 'PasswordRecovery({0}, {1}, {2})'.format(
+            self.id.generation_time.isoformat(),
+            self.user_id,
+            self.recovery_key
+        )

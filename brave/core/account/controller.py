@@ -8,7 +8,7 @@ from web.core.locale import _
 
 from brave.core.account.model import User
 from brave.core.account.form import authenticate as authenticate_form, register as register_form, recover as recover_form
-from brave.core.account.authentication import lookup
+from brave.core.account.authentication import lookup, lookup_email, send_recover_email
 
 from yubico import yubico, yubico_exceptions
 from marrow.util.convert import boolean
@@ -54,6 +54,12 @@ class Recover(HTTPMethod):
                 raise
             return 'json:', dict(success=False, message=_("Unable to parse data."), data=post, exc=str(e))
         #TODO: SendRecoveryEmail
+        user = lookup_email(data.email)
+        if not user:
+            # FixMe: possibly do send success any way, to prevent email address confirmation
+            #   - would be necessary for register as well
+            return 'json:', dict(success=False, message=_("Unknown email."), data=post)
+        send_recover_email(user)
         return 'json:', dict(success=True)
 
 
