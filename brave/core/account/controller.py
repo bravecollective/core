@@ -84,9 +84,6 @@ class Recover(HTTPMethod):
             form = recover_form(dict(redirect=redirect))
             button_label = _("Recover")
         else:
-            #  recovery = self.__get_recovery(data.email, data.recovery_key)
-            #  if not recovery:
-            #      raise HTTPFound(location='/')  # Todo redirect to recover with error message
             form = reset_password_form(dict(email=data.email, recovery_key=data.recovery_key))
             button_label = _("Set Password")
 
@@ -126,7 +123,6 @@ class Recover(HTTPMethod):
             return 'json:', dict(success=False, message=_("Unable to parse data."), data=post, exc=str(e))
         recovery = self.__get_recovery(data.email, data.recovery_key)
         if not recovery:
-            # Todo define redirect URL
             return 'json:', dict(success=False, message=_("Sorry that recovery link has already expired"),
                                  location="/account/recover")
         passwd_ok, error_msg = _check_password(data.password, data.pass2)
@@ -202,7 +198,6 @@ class Settings(HTTPMethod):
 
             if isinstance(data.old, unicode):
                 data.old = data.old.encode('utf-8')
-                #print(data.old)
 
             if not User.password.check(user.password, data.old):
                 return 'json:', dict(success=False, message=_("Old password incorrect."), data=data)
