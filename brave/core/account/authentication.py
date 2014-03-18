@@ -16,10 +16,14 @@ from time import time, sleep
 from datetime import datetime
 from yubico import yubico, yubico_exceptions
 from marrow.util.convert import boolean
+from marrow.mailer import Message, Mailer
 from web.core import config, request
+from web.core.templating import render
+from web.core.locale import _
 
 from brave.core.account.model import User, LoginHistory, PasswordRecovery
 
+import brave.core.util as util
 
 log = __import__('logging').getLogger(__name__)
 
@@ -114,17 +118,41 @@ def authenticate(identifier, password):
     
     return user.id, user
 
+
+_CONFIG_MAIL_PREFIX="mail."
+_CONFIG_MAIL_PREFIX_LEN=len(_CONFIG_MAIL_PREFIX)
+_CONFIG_MAIL_MESSAGE_PREFIX="mail.message."
+_CONFIG_MAIL_MESSAGE_PREFIX_LEN=len(_CONFIG_MAIL_MESSAGE_PREFIX)
 def send_recover_email(user):
     """Sends a recovery-link to the specified user objects' email address"""
     # generate recovery key
     recovery_key = SystemRandom().randint(0, (2<< 62)-1)
 
-    # send email - TODO
+    # send email
     params = urllib.urlencode({'email': user.email,
                                'recovery_key': str(recovery_key)})
-    url = format(u"http://127.0.0.1:8080/account/recover?" +
-                 str(params))
-    log.info(u"RecoverURL= "+url)
+
+    mailer = util.mail
+
+    message = Message(to=user.email, subject=_("Password Recovery - Brave Collective Core Services"))
+
+    #get all mail message settings
+    mail_message_settings_flat = {key[_CONFIG_MAIL_MESSAGE_PREFIX_LEN:]: value
+        for key, value in config.iteritems() if key.startswith(_CONFIG_MAIL_MESSAGE_PREFIX)}
+
+    #apply them to the message
+    for key, value in mail_message_settings_flat.iteritems():
+        setattr(message, key, value)
+
+    #explicitley get the text contend for the mail
+    mime, content = render("brave/core/account/template/mail/lost.txt", dict(params=params))
+    message.plain = content
+
+    #explicitley get the html contend for the mail
+    mime, content = render("brave/core/account/template/mail/lost.html", dict(params=params))
+    message.rich = content
+
+    mailer.send(message)
 
     # store key in DB
     PasswordRecovery(user, recovery_key).save()
