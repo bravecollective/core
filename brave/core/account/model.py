@@ -148,7 +148,7 @@ class PasswordRecovery(Document):
 
     user = ReferenceField(User, required=True)
     recovery_key = LongField(db_field='k', required=True)
-    expires = DateTimeField(db_field='e', default=lambda: datetime.utcnow() + timedelta(days=1))
+    expires = DateTimeField(db_field='e', default=lambda: datetime.utcnow() + timedelta(minutes=15))
 
     @property
     def created(self):

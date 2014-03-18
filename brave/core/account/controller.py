@@ -6,8 +6,9 @@ from web.core import Controller, HTTPMethod, request, config
 from web.core.http import HTTPFound, HTTPSeeOther, HTTPForbidden
 from web.core.locale import _
 
-from brave.core.account.model import User
-from brave.core.account.form import authenticate as authenticate_form, register as register_form, recover as recover_form
+from brave.core.account.model import User, PasswordRecovery
+from brave.core.account.form import authenticate as authenticate_form, register as register_form, \
+    recover as recover_form, reset_password as reset_password_form
 from brave.core.account.authentication import lookup, lookup_email, send_recover_email
 
 from yubico import yubico, yubico_exceptions
@@ -15,6 +16,24 @@ from marrow.util.convert import boolean
 
 
 log = __import__('logging').getLogger(__name__)
+
+
+def _check_password(passwd1, passwd2):
+    """checks the passed passwords for equality and length
+    (could be extended to add minimal length, complexity, ...)
+
+    Returns a Tuple, the first value is a Boolean that is True,
+    if the password is ok, the second value is the error message,
+    should it not be ok
+    """
+    #check for empty password
+    if not passwd1:
+        return False, _("Please enter a password")
+    if passwd1 != passwd2:
+        return False, _("New passwords do not match.")
+    if len(passwd2) > 100:
+        return False, _("Password over 100 character limit")
+    return True, None
 
 
 class Authenticate(HTTPMethod):
@@ -38,29 +57,93 @@ class Authenticate(HTTPMethod):
 
         raise HTTPFound(location=redirect or '/')
 
+
 class Recover(HTTPMethod):
-    def get(self, redirect=None):
+    @staticmethod
+    def __get_recovery(email, recovery_key):
+        if not email:
+            return None
+        user = lookup_email(email)
+        if not user:
+            return None
+        recovery = PasswordRecovery.objects(user=user, recovery_key=recovery_key).first()
+        return recovery
+
+    def get(self, redirect=None, **get):
         if redirect is None:
             referrer = request.referrer
             redirect = '/' if not referrer or referrer.endswith(request.script_name) else referrer
-        form = recover_form(dict(redirect=redirect))
-        return "brave.core.account.template.recover", dict(form=form)
+        try:
+            data = Bunch(reset_password_form.native(get)[0])
+        except Exception as e:
+            if config.get('debug', False):
+                raise
+            raise HTTPFound(location='/') # Todo redirect to recover with error message
+
+        if not data.recovery_key:  # no key passed, so show email entry
+            form = recover_form(dict(redirect=redirect))
+            button_label = _("Recover")
+        else:
+            #  recovery = self.__get_recovery(data.email, data.recovery_key)
+            #  if not recovery:
+            #      raise HTTPFound(location='/')  # Todo redirect to recover with error message
+            form = reset_password_form(dict(email=data.email, recovery_key=data.recovery_key))
+            button_label = _("Set Password")
+
+        return "brave.core.account.template.recover", dict(form=form, button_label=str(button_label))
 
     def post(self, **post):
+        recovery_key = post.get("recovery_key")
+        if recovery_key is None:
+            return self.__post_email(**post)
+        else:
+            return self.__post_recovery(**post)
+
+    def __post_email(self, **post):
         try:
             data = Bunch(recover_form.native(post)[0])
         except Exception as e:
             if config.get('debug', False):
                 raise
             return 'json:', dict(success=False, message=_("Unable to parse data."), data=post, exc=str(e))
-        #TODO: SendRecoveryEmail
+
         user = lookup_email(data.email)
         if not user:
             # FixMe: possibly do send success any way, to prevent email address confirmation
             #   - would be necessary for register as well
             return 'json:', dict(success=False, message=_("Unknown email."), data=post)
         send_recover_email(user)
-        return 'json:', dict(success=True)
+        return 'json:', dict(success=True,
+                             message=_("Recovery e-mail sent - "
+                                       "please follow the instructions in that mail to restore your password"))
+
+    def __post_recovery(self, **post):
+        try:
+            data = Bunch(reset_password_form.native(post)[0])
+        except Exception as e:
+            if config.get('debug', False):
+                raise
+            return 'json:', dict(success=False, message=_("Unable to parse data."), data=post, exc=str(e))
+        recovery = self.__get_recovery(data.email, data.recovery_key)
+        if not recovery:
+            # Todo define redirect URL
+            return 'json:', dict(success=False, message=_("Sorry that recovery link has already expired"),
+                                 location="/account/recover")
+        passwd_ok, error_msg = _check_password(data.password, data.pass2)
+        if not passwd_ok:
+            return 'json:', dict(success=False, message=error_msg)
+
+        #set new password
+        user = recovery.user
+        user.password = data.password
+        user.save()
+
+        #remove recovery key
+        recovery.delete()
+
+        authenticate(user.username, data.password)
+
+        return 'json:', dict(success=True, message=_("Password changed, forwarding ..."), location="/")
 
 
 class Register(HTTPMethod):
@@ -112,11 +195,10 @@ class Settings(HTTPMethod):
         user = User.objects(**query).first()
 
         if data.form == "changepassword":
-            if data.passwd != data.passwd1:
-                return 'json:', dict(success=False, message=_("New passwords do not match."), data=data)
+            passwd_ok, error_msg = _check_password(data.password, data.pass2)
 
-            if len(data.passwd) > 100:
-                return 'json:', dict(success=False, message=_("Password over 100 charactor limit"), data=data)
+            if not passwd_ok:
+                return 'json:', dict(success=False, message=error_msg, data=data)
 
             if isinstance(data.old, unicode):
                 data.old = data.old.encode('utf-8')

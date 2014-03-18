@@ -122,7 +122,7 @@ def send_recover_email(user):
     # send email - TODO
     params = urllib.urlencode({'email': user.email,
                                'recovery_key': str(recovery_key)})
-    url = format(u"http://127.0.0.1:8080/account/recover_password?" +
+    url = format(u"http://127.0.0.1:8080/account/recover?" +
                  str(params))
     log.info(u"RecoverURL= "+url)
 

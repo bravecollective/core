@@ -26,13 +26,21 @@
 
     <script type="text/javascript" charset="utf-8">
         $(function(){
-            function show_alert(msg, style) {
-                $('#recover-form, .authentication .span6').animate({opacity: 1}, 250);
+            function show_alert(msg, style, location) {
+                //encode msg
+                var msg_enc = $( '<div>' ).text(msg).html();
+
+                if (location) {
+                    $('#recover-form, .authentication .span6').animate({opacity: 1}, 3000,
+                        function () { window.location = location });
+                } else {
+                    $('#recover-form, .authentication .span6').animate({opacity: 1}, 250);
+                }
                 $('#submit').removeClass('disabled').attr('disabled', false);
                 $('#email-field').focus();
                 $('#email-field').after(
                     '<div class="alert ' + style+ '">' +
-                        '<strong>'+msg+'</strong>' +
+                        '<strong id="alertMsgLabel">' + msg + '</strong>' +
                     '</div>'
                 );
             }
@@ -62,16 +70,16 @@
                     // Something went wrong.
                     console.log(jqXHR, textStatus, errorThrown);
                     $('.overlay.wait').fadeOut(125, function() {
-                            show_alert('${_("Error sending data, please try again later...")}', "alert-error");
+                            show_alert('${_("Error sending data, please try again later...")}', "alert-error", "");
                         }
                     );
                 }).done(function(data, textStatus, jqXHR){
                     // Determine if we were successful or not and show appropriate message
                     $('.overlay.wait').fadeOut(125, function(){
                         if ( data.success ) {
-                            show_alert('${_("Recovery e-mail sent - please follow the instructions in that mail to restore your password")}', "alert-success");
+                            show_alert(data.message, "alert-success", data.location);
                         } else {
-                            show_alert('${_("TODO add nice error message")}', "alert-error");
+                            show_alert(data.message, "alert-error", data.location);
                             /*$('.overlay.fail').fadeIn(250, function(){
                                 $('.overlay.fail').fadeOut(250);
                                 $('#email-field').focus();
@@ -106,7 +114,7 @@
             <a href="/account/authenticate">${_("I already have an account.")}</a><br><a href="#">${_("Terms of Service")}</a>
         </div>
         <div class="span6" style="text-align: right;">
-            <button class="btn-glow primary" id="submit">${_("Recover")}</button>
+            <button class="btn-glow primary" id="submit">${button_label}</button>
         </div>
         <div class="clearfix"></div>
     </div>
