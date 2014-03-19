@@ -11,12 +11,10 @@ Yubikey OTP token and (regardless of identifier) a password.  Actual password cr
 from __future__ import unicode_literals
 
 from random import SystemRandom
-import urllib
 from time import time, sleep
 from datetime import datetime
-from yubico import yubico, yubico_exceptions
+from yubico import yubico
 from marrow.util.convert import boolean
-from marrow.mailer import Message, Mailer
 from web.core import config, request
 from web.core.templating import render
 from web.core.locale import _
@@ -131,15 +129,7 @@ def send_recover_email(user):
     # send email
     params = {'email': user.email, 'recovery_key': str(recovery_key)}
     mailer = util.mail
-    message = Message(to=user.email, subject=_("Password Recovery - Brave Collective Core Services"))
-
-    #get all mail message settings
-    mail_message_settings_flat = {key[_CONFIG_MAIL_MESSAGE_PREFIX_LEN:]: value
-        for key, value in config.iteritems() if key.startswith(_CONFIG_MAIL_MESSAGE_PREFIX)}
-
-    #apply them to the message
-    for key, value in mail_message_settings_flat.iteritems():
-        setattr(message, key, value)
+    message = mailer.new(to=user.email, subject=_("Password Recovery - Brave Collective Core Services"))
 
     #explicitley get the text contend for the mail
     mime, content = render("brave/core/account/template/mail/lost.txt", dict(params=params))

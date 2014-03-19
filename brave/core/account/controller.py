@@ -9,9 +9,9 @@ from web.core.locale import _
 from brave.core.account.model import User, PasswordRecovery
 from brave.core.account.form import authenticate as authenticate_form, register as register_form, \
     recover as recover_form, reset_password as reset_password_form
-from brave.core.account.authentication import lookup, lookup_email, send_recover_email
+from brave.core.account.authentication import lookup_email, send_recover_email
 
-from yubico import yubico, yubico_exceptions
+from yubico import yubico
 from marrow.util.convert import boolean
 
 
