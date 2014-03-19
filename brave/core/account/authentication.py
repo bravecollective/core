@@ -129,11 +129,8 @@ def send_recover_email(user):
     recovery_key = SystemRandom().randint(0, (2<< 62)-1)
 
     # send email
-    params = urllib.urlencode({'email': user.email,
-                               'recovery_key': str(recovery_key)})
-
+    params = {'email': user.email, 'recovery_key': str(recovery_key)}
     mailer = util.mail
-
     message = Message(to=user.email, subject=_("Password Recovery - Brave Collective Core Services"))
 
     #get all mail message settings
