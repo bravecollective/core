@@ -27,6 +27,9 @@ class Authenticate(HTTPMethod):
         return 'brave.core.account.template.signin', dict(form=form)
 
     def post(self, identity, password, remember=False, redirect=None):
+        #Ensures that the provided identity is lowercase if it's an email or username, but leaves it alone if it's an OTP
+        if('@' in identity or len(identity) != 44): 
+            identity = identity.lower()
         if not authenticate(identity, password):
             if request.is_xhr:
                 return 'json:', dict(success=False, message=_("Invalid user name or password."))
@@ -59,11 +62,12 @@ class Register(HTTPMethod):
         if not data.username or not data.email or not data.password or data.password != data.pass2:
             return 'json:', dict(success=False, message=_("Missing data or passwords do not match."), data=data)
         
-        user = User(data.username, data.email, active=True)
+        #Ensures that the provided username and email are lowercase
+        user = User(data.username.lower(), data.email.lower(), active=True)
         user.password = data.password
         user.save()
         
-        authenticate(data.username, data.password)
+        authenticate(data.username.lower(), data.password)
         
         return 'json:', dict(success=True, location="/")
 
