@@ -50,10 +50,9 @@ Additionally, there are some requirements you will need to manually install as C
 Installing the current development version of the Core Service requires "Git":git, a distributed source code management system.  Compilation additionally requires the Python development headers and the OpenSSL development headers.  In Debian/Ubuntu, these are found in packages `python-dev` and `libssl-dev`.
 Run the following to download the development version with Git, and _link_ it into your Python runtime:
 
-<pre><code>
-git clone https://github.com/bravecollective/core.git
+<pre><code>git clone https://github.com/bravecollective/core.git
 cd core
-python setup.py develop)</code></pre>
+python setup.py develop</code></pre>
 
 Once you have successfully compiled the Core Service, copy `development.ini` to `local.ini`, and make changes as appropriate.  Finally, bootstrap the EVE API system by running:
 
