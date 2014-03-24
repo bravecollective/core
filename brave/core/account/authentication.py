@@ -67,11 +67,11 @@ def authenticate(identifier, password):
     
     # Build the MongoEngine query to find 
     if '@' in identifier:
-        query[b'email'] = identifier
+        query[b'email'] = identifier.lower() #Ensure that email addresses are taken as lowercase regardless of what the user provides.
     elif len(identifier) == 44:
         query[b'otp'] = identifier[:12]
     else:
-        query[b'username'] = identifier
+        query[b'username'] = identifier.lower() #Ensure that the username is lowercase regardless of what the user provides
     
     user = User.objects(**query).first()
     

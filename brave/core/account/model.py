@@ -20,7 +20,7 @@ class User(Document):
     
     # Field Definitions
     
-    username = StringField(db_field='u', required=True, unique=True, regex=r'[a-zA-Z][a-zA-Z0-9_.-]+')
+    username = StringField(db_field='u', required=True, unique=True, regex=r'[a-z][a-z0-9_.-]+')
     email = EmailField(db_field='e', required=True, unique=True)
     password = PasswordField(db_field='p')
     active = BooleanField(db_field='a', default=False)
