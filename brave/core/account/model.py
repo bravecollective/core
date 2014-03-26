@@ -22,7 +22,7 @@ class User(Document):
     # Field Definitions
     
     username = StringField(db_field='u', required=True, unique=True, regex=r'[a-z][a-z0-9_.-]+')
-    email = EmailField(db_field='e', required=True, unique=True)
+    email = EmailField(db_field='e', required=True, unique=True, regex=r'[^A-Z]+')  # disallow uppercase characters
     password = PasswordField(db_field='p')
     active = BooleanField(db_field='a', default=False)
     confirmed = DateTimeField(db_field='c')

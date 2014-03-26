@@ -40,7 +40,7 @@ def lookup(identifier):
 
 def lookup_email(email):
     """get user by email address"""
-    user = User.objects(email=email).first()
+    user = User.objects(email=email.lower()).first()
     return user
 
 def authentication_logger(fn):
