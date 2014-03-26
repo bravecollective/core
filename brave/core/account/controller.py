@@ -147,6 +147,28 @@ class Settings(HTTPMethod):
             
             user.rotp = rotp
             user.save()
+			
+        #Handle the user attempting to delete their account
+        elif data.form == "deleteaccount":
+            if isinstance(data.passwd, unicode):
+                data.passwd = data.passwd.encode('utf-8')
+             
+            #Make the user enter their username so they know what they're doing.
+            if not user.username == data.username.lower():
+                return 'json:', dict(success=False, message=_("Username incorrect."), data=data)
+        
+            #Check whether the user's supplied password is correct
+            if not User.password.check(user.password, data.passwd):
+                return 'json:', dict(success=False, message=_("Password incorrect."), data=data)
+                
+            #Make them type "delete" exactly
+            if not data.confirm == "delete":
+                return 'json:', dict(success=False, message=_("Delete was either misspelled or not lowercase."), data=data)
+            
+            user.delete()
+            #Redirect user to the header of the server instead of the settings page
+            return 'json:', dict(success=True, location="/")
+			
         else:
             return 'json:', dict(success=False, message=_("Form does not exist."), location="/")
         
