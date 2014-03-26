@@ -117,10 +117,6 @@ def authenticate(identifier, password):
     return user.id, user
 
 
-_CONFIG_MAIL_PREFIX="mail."
-_CONFIG_MAIL_PREFIX_LEN=len(_CONFIG_MAIL_PREFIX)
-_CONFIG_MAIL_MESSAGE_PREFIX="mail.message."
-_CONFIG_MAIL_MESSAGE_PREFIX_LEN=len(_CONFIG_MAIL_MESSAGE_PREFIX)
 def send_recover_email(user):
     """Sends a recovery-link to the specified user objects' email address"""
     # generate recovery key
