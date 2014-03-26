@@ -13,6 +13,7 @@ from brave.core.account.authentication import lookup
 from yubico import yubico, yubico_exceptions
 from marrow.util.convert import boolean
 
+import re
 
 log = __import__('logging').getLogger(__name__)
 
@@ -61,6 +62,12 @@ class Register(HTTPMethod):
         
         if not data.username or not data.email or not data.password or data.password != data.pass2:
             return 'json:', dict(success=False, message=_("Missing data or passwords do not match."), data=data)
+        
+        #Make sure that the provided email address is a valid form for an email address
+        #TODO: Support IDNs and make RFC 822 compliant
+        emailSearch = re.search('[a-zA-Z0-9\.\+]+@[a-zA-Z0-9\.\+]+\.[a-zA-Z0-9]+', data.email)
+        if emailSearch == None:
+            return 'json:', dict(success=False, message=_("Invalid email address provided."), data=data)
         
         #Ensures that the provided username and email are lowercase
         user = User(data.username.lower(), data.email.lower(), active=True)
