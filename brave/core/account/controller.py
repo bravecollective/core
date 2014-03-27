@@ -68,6 +68,13 @@ class Register(HTTPMethod):
         emailSearch = re.search('[a-zA-Z0-9\.\+]+@[a-zA-Z0-9\.\+]+\.[a-zA-Z0-9]+', data.email)
         if emailSearch == None:
             return 'json:', dict(success=False, message=_("Invalid email address provided."), data=data)
+         
+        #Prevents Mongodb validation check from hanging thread, plus all tlds are at least 2 characters.
+        tldSearch = re.findall('\.[a-zA-Z0-9]+', data.email)
+        tld = tldSearch.pop()
+        #tld includes the leading '.'
+        if len(tld) < 3:
+            return 'json:', dict(success=False, message=_("Invalid email address provided."), data=data)
         
         #Ensures that the provided username and email are lowercase
         user = User(data.username.lower(), data.email.lower(), active=True)
