@@ -35,7 +35,7 @@
                     return;
                 }
 
-                $.getJSON('/account/exists?ts=' + (+ new Date()), {username: self.val()}, function(data){
+                $.getJSON('/account/exists?ts=' + (+ new Date()), {username: self.val().toLowerCase()}, function(data){
                     if ( !data.available ) {
                         self.addClass('error');
                         self.popover({
@@ -60,7 +60,7 @@
                     return;
                 }
 
-                $.getJSON('/account/exists?ts=' + (+ new Date()), {email: self.val()}, function(data){
+                $.getJSON('/account/exists?ts=' + (+ new Date()), {email: self.val().toLowerCase()}, function(data){
                     if ( !data.available ) {
                         self.addClass('error');
                         self.popover({
