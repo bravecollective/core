@@ -165,8 +165,11 @@ class Settings(HTTPMethod):
             if not data.confirm == "delete":
                 return 'json:', dict(success=False, message=_("Delete was either misspelled or not lowercase."), data=data)
             
+            #Delete the user account and then deauthenticate the browser session
             user.delete()
-            #Redirect user to the header of the server instead of the settings page
+            deauthenticate()
+            
+            #Redirect user to the root of the server instead of the settings page
             return 'json:', dict(success=True, location="/")
 			
         else:
