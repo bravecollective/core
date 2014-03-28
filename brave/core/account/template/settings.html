@@ -112,7 +112,7 @@
                     {
                         $('#modal form .alert').remove();
                         error = false;
-			            if ( $('#new-pass').val().length >= 100 ) {
+                        if ( $('#new-pass').val().length >= 100 ) {
                             $('#new-pass').addClass('error');
                             $('#new-pass').focus()
                             $('#modal form input[name="passwd"]').after(
@@ -138,6 +138,99 @@
                             $('#modal form input[name="old"]').after(
                                 '<div class="alert alert-error">' +
                                     '<strong>Old password required</strong>' +
+                                '</div>'
+                            );
+                            error = true
+                        }
+                        
+                        if (error == true)
+                            return error   
+                        
+                        $('.overlay.wait').fadeIn(250);
+                        $.post('/account/settings', $('#modal form').serialize(), function(data)
+                        {
+                            console.log(data);
+                            $('.overlay.wait').fadeOut(125, function(){
+                                if (data.success) {
+                                   $('.overlay.success').fadeIn(250, function(){ window.location = data.location; });                                
+                                } else {
+                                    $('.overlay.fail').fadeIn(250, function(){
+                                        $('.overlay.fail').fadeOut(250);
+                                    });
+                                }
+                            });
+
+                        });
+                    }
+                );
+                
+            });
+            
+            $('.deleteacct').on('click', function()
+            {
+                confirm(
+                    "Delete Account",
+                    '<p>' +
+                        'Fill in the form below to delete your account. <b>THIS IS PERMANENT AND IRREVERSIBLE.</b> You may lose access to any ' +
+                        'applications which rely on this account, and data in other BRAVE applications may be lost as well. Make sure to type ' +
+                        '<b>delete</b> exactly as shown.' +
+                    '</p>' +
+                    '<p>' +
+                        '<form>' +
+                            '<input id="id" name="id" type="hidden" class="input-block-level" value="${web.user.username}" required>'
+                                +
+                            '<input id="form" name="form" type="hidden" class="input-block-level" value="deleteaccount" required>' 
+                                +
+                            '<input id="username" name="username" type="text" class="input-block-level" placeholder="Username" autocomplete="off" required>'
+                                +
+                            '<input id="passwd" name="passwd" type="password" class="input-block-level" placeholder="Password" maxlength="100" autocomplete="off" required>' 
+                                +
+                            '<input id="confirm" name="confirm" type="text" class="input-block-level" placeholder="Type delete here" maxlength="100" autocomplete="off" required>' 
+                                +
+                        '</form>' +
+                    '</p>',
+                    {
+                        label: "Delete Account",
+                        kind: 'btn-danger'
+                    },
+                    function()
+                    {
+                        $('#modal form .alert').remove();
+                        error = false;
+                        if ( $('#passwd').val().length >= 100 ) {
+                            $('#passwd').addClass('error');
+                            $('#passwd').focus()
+                            $('#modal form input[name="passwd"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>Passwords must not be longer than 100 characters</strong>' +
+                                '</div>'
+                            );
+                            error = true
+                        }
+                        if ($('#passwd').val().length <= 0) {
+                            $('#passwd').addClass('error');
+                            $('#modal form input[name="passwd"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>Password required</strong>' +
+                                '</div>'
+                            );
+                            error = true
+                        }
+                        if ($('#username').val().length <= 0) {
+                            $('#username').addClass('error');
+                            $('#modal form input[name="username"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>Username required</strong>' +
+                                '</div>'
+                            );
+                            error = true
+                        }
+                        if ( $('#confirm').val() !=  'delete') {
+                            $('#confirm').addClass('error');
+                            $('#confirm').focus()
+                            $('#modal form input[name="confirm"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>You must type in "delete" (no quotes) exactly as shown.</strong>' +
                                 '</div>'
                             );
                             error = true
@@ -326,5 +419,6 @@
             <a class="btn change"><i class="fa fa-cog"></i> Change Password</a><br /><br />
             <a class="btn configureotp"><i class="fa fa-cog"></i> Configure OTP</a><br /><br />
             <a class="btn addotp"><i class="fa fa-cog"></i> Add OTP</a><br /><br />
+            <a class="btn deleteacct"><i class="fa fa-times"></i> Delete Account</a><br /><br />
     </div>
 </div>
