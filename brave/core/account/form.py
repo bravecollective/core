@@ -34,3 +34,16 @@ register = Form('register', action='/account/register', method='post', children=
         PasswordField('password', class_="span12 poor", placeholder=L_("Password"),maxlength="100"),
         PasswordField('pass2', class_="span12 poor", placeholder=L_("Verify Password"),maxlength="100"),
     ])
+
+recover = Form('recover', action='/account/recover', method='post', children=[
+        EmailField('email', autocapitalize="off", autocorrect="off", spellcheck="false", class_="span12", placeholder=L_("E-Mail Address")),
+        HiddenField('redirect'),
+    ])
+
+reset_password = Form('recover', action='/account/recover', method='post', children=[
+        PasswordField('password', autofocus=True, class_="span12 poor", placeholder=L_("Password"),maxlength="100"),
+        PasswordField('pass2', class_="span12 poor", placeholder=L_("Verify Password"),maxlength="100"),
+        HiddenField('recovery_key'),
+        HiddenField('email'),
+        HiddenField('redirect'),
+    ])

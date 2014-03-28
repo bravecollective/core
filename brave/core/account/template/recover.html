@@ -2,7 +2,7 @@
 
 <%inherit file="brave.core.template.light"/>
 
-<%block name="title">${_("Sign In")}</%block>
+<%block name="title">${_("Sign Up")}</%block>
 
 <%block name="header">
     ${parent.header()}
@@ -15,26 +15,52 @@
         .overlay.fail { color: #b00; }
         .overlay.success { color: #0b0; }
     </style>
+
 </%block>
 
 <%block name="post">
     ${parent.post()}
 
+    <script src="/js/changedelay.js" charset="utf-8"></script>
+    <script src="/js/vendor/zxcvbn.js" charset="utf-8"></script>
+
     <script type="text/javascript" charset="utf-8">
         $(function(){
-            function process_signin() {
-                if ( ! $('#password-field').val() ) {
-                    $('#password-field').focus();
+            function show_alert(msg, style, location) {
+                //encode msg
+                var msg_enc = $( '<div>' ).text(msg).html();
+
+                if (location) {
+                    $('#recover-form, .authentication .span6').animate({opacity: 1}, 3000,
+                        function () { window.location = location });
+                } else {
+                    $('#recover-form, .authentication .span6').animate({opacity: 1}, 250);
+                }
+                $('#submit').removeClass('disabled').attr('disabled', false);
+                $('#email-field').focus();
+                $('#email-field').after(
+                    '<div class="alert ' + style+ '">' +
+                        '<strong id="alertMsgLabel">' + msg + '</strong>' +
+                    '</div>'
+                );
+            }
+
+            function process_recover() {
+                if ( ! $('#email-field').val() ) {
+                    $('#email-field').focus();
                     return false;
                 }
 
-                var form = $('#authenticate-form')
+                var form = $('#recover-form')
 
                 // Ensure the input fields are not focused.
                 $('input', form).blur();
 
+                //remove all existing alerts
+                $('#recover-form .alert').remove();
+
                 // Fade to the progress spinner.
-                $('#authenticate-form, .authentication .span6').animate({opacity: 0.25}, 250);
+                $('#recover-form, .authentication .span6').animate({opacity: 0.25}, 250);
                 $('#submit').addClass('disabled').attr('disabled', true);
                 $('.overlay.wait').fadeIn(250);
 
@@ -43,17 +69,23 @@
                 receipt.fail(function(jqXHR, textStatus, errorThrown){
                     // Something went wrong.
                     console.log(jqXHR, textStatus, errorThrown);
+                    $('.overlay.wait').fadeOut(125, function() {
+                            show_alert('${_("Error sending data, please try again later...")}', "alert-error", "");
+                        }
+                    );
                 }).done(function(data, textStatus, jqXHR){
-                    // Determine if we were successful or not and fade the appropriate icon.
+                    // Determine if we were successful or not and show appropriate message
                     $('.overlay.wait').fadeOut(125, function(){
                         if ( data.success ) {
-                            $('.overlay.success').fadeIn(250, function(){ window.location = data.location; });
+                            show_alert(data.message, "alert-success", data.location);
                         } else {
-                            $('.overlay.fail').fadeIn(250, function(){
+                            show_alert(data.message, "alert-error", data.location);
+                            /*$('.overlay.fail').fadeIn(250, function(){
                                 $('.overlay.fail').fadeOut(250);
+                                $('#email-field').focus();
                                 $('#authenticate-form, .authentication .span6').animate({opacity: 1}, 250);
                                 $('#submit').removeClass('disabled').attr('disabled', false);
-                            });
+                            }); TODO - remove ?? */
                         }
                     });
                 });
@@ -61,15 +93,16 @@
                 return false;
             }
 
-            $('#submit').click(process_signin);
-            $('#authenticate-form').submit(process_signin);
+            $('#submit').click(process_recover);
+            $('#authenticate-form').submit(process_recover);
         });
     </script>
+
 </%block>
 
 <div class="span4 box">
     <div class="content-wrap authentication">
-        <h6>${_("Authentication")}</h6>
+        <h6>${_("Recover password")}</h6>
 
         ${form}
 
@@ -78,10 +111,10 @@
         <div class="overlay fa-4x result success"><i class="fa fa-check fa-4x"></i></div>
 
         <div class="span6" style="margin: 0; text-align: left;">
-            <a href="/account/recover">${_("Password Recovery")}</a><br><a href="/account/register">${_("Create Account")}</a>
+            <a href="/account/authenticate">${_("I already have an account.")}</a><br><a href="#">${_("Terms of Service")}</a>
         </div>
         <div class="span6" style="text-align: right;">
-            <button class="btn-glow primary" id="submit">${_("Sign In")}</button>
+            <button class="btn-glow primary" id="submit">${button_label}</button>
         </div>
         <div class="clearfix"></div>
     </div>

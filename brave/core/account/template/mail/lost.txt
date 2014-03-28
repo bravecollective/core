@@ -1,0 +1,6 @@
+We're sorry to hear you're having trouble signing into the Brave Collective core services site.
+You can use the following link to reset your password:
+
+    ${web.url.complete('/account/recover', params)}
+
+Note that this link will only work once, and only work for 15 minutes!
