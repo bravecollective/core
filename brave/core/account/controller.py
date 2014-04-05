@@ -286,7 +286,30 @@ class Settings(HTTPMethod):
             
             #Redirect user to the root of the server instead of the settings page
             return 'json:', dict(success=True, location="/")
-			
+            
+        #Handle the user attempting to change the email address on associated with their account
+        elif data.form == "changeemail":
+            if isinstance(data.passwd, unicode):
+                data.passwd = data.passwd.encode('utf-8')
+        
+            #Check whether the user's supplied password is correct
+            if not User.password.check(user.password, data.passwd):
+                return 'json:', dict(success=False, message=_("Password incorrect."), data=data)
+
+            #Check that the two provided email addresses match
+            if not data.newEmail.lower() == data.newEmailConfirm.lower():
+                return 'json:', dict(success=False, message=_("Provided email addresses do not match."), data=data)
+            
+            #Make sure that the provided email address is a valid form for an email address
+            #TODO: Support IDNs and make RFC 822 compliant
+            emailSearch = re.search('[a-zA-Z0-9\.\+]+@[a-zA-Z0-9\.\+]+\.[a-zA-Z0-9]+', data.newEmail)
+            if emailSearch == None:
+                return 'json:', dict(success=False, message=_("Invalid email address provided."), data=data)
+            
+            #Change the email address in the database
+            user.email = data.newEmail.lower()
+            user.save()
+            
         else:
             return 'json:', dict(success=False, message=_("Form does not exist."), location="/")
         
