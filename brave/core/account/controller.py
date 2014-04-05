@@ -287,7 +287,7 @@ class Settings(HTTPMethod):
             #Redirect user to the root of the server instead of the settings page
             return 'json:', dict(success=True, location="/")
             
-        #Handle the user attempting to change the email address on associated with their account
+        #Handle the user attempting to change the email address associated with their account
         elif data.form == "changeemail":
             if isinstance(data.passwd, unicode):
                 data.passwd = data.passwd.encode('utf-8')
