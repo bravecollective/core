@@ -103,7 +103,7 @@ class EVECredential(Document):
         char.name = info.characterName if 'characterName' in info else info.name
         char.corporation = corporation
         
-        if alliance: char.alliance = alliance
+        char.alliance = alliance
         
         return char.save(), corporation, alliance
     
