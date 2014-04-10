@@ -166,6 +166,96 @@
                 
             });
             
+            $('.changeemail').on('click', function()
+            {
+                confirm(
+                    "Change Email Address",
+                    '<p>' +
+                        'Fill in the form below to change the account email address' +
+                    '</p>' +
+                    '<p>' +
+                        '<form>' +
+                            '<input id="id" name="id" type="hidden" class="input-block-level" value="${web.user.username}" required>'
+                                +
+                            '<input id="form" name="form" type="hidden" class="input-block-level" value="changeemail" required>' 
+                                +
+                            '<input id="newEmail" name="newEmail" type="text" class="input-block-level" placeholder="New Email Address" autocomplete="off" required>'
+                                +
+                            '<input id="newEmailConfirm" name="newEmailConfirm" type="text" class="input-block-level" placeholder="Confirm New Email Address" autocomplete="off" required>' 
+                                +
+                            '<input id="passwd" name="passwd" type="password" class="input-block-level" placeholder="Password" maxlength="100" autocomplete="off" required>' 
+                                +
+                        '</form>' +
+                    '</p>',
+                    {
+                        label: "Change",
+                        kind: 'btn-success'
+                    },
+                    function()
+                    {
+                        $('#modal form .alert').remove();
+                        error = false;
+                        if ( $('#newEmailConfirm').val().toLowerCase() !=  $('#newEmail').val().toLowerCase()) {
+                            $('#newEmailConfirm').addClass('error');
+                            $('#newEmailConfirm').focus()
+                            $('#modal form input[name="newEmail"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>Email Addresses must match</strong>' +
+                                '</div>'
+                            );
+                            error = true
+                        } 
+                        if ($('#passwd').val().length <= 0) {
+                            $('#passwd').addClass('error');
+                            $('#modal form input[name="passwd"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>Password required</strong>' +
+                                '</div>'
+                            );
+                            error = true
+                        }
+                        if ($('#newEmail').val().length <= 0) {
+                            $('#newEmail').addClass('error');
+                            $('#modal form input[name="newEmail"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>Email address required</strong>' +
+                                '</div>'
+                            );
+                            error = true
+                        }
+                        if ($('#newEmailConfirm').val().length <= 0) {
+                            $('#newEmailConfirm').addClass('error');
+                            $('#modal form input[name="newEmailConfirm"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>Email address required</strong>' +
+                                '</div>'
+                            );
+                            error = true
+                        }
+                        
+                        if (error == true)
+                            return error   
+                        
+                        $('.overlay.wait').fadeIn(250);
+                        $.post('/account/settings', $('#modal form').serialize(), function(data)
+                        {
+                            console.log(data);
+                            $('.overlay.wait').fadeOut(125, function(){
+                                if (data.success) {
+                                   $('.overlay.success').fadeIn(250, function(){ window.location = data.location; });                                
+                                } else {
+                                    $('.overlay.fail').fadeIn(250, function(){
+                                        $('.overlay.fail').fadeOut(250);
+                                    });
+                                }
+                            });
+
+                        });
+                    }
+                );
+                
+            });
+            
             $('.deleteacct').on('click', function()
             {
                 confirm(
@@ -417,6 +507,7 @@
             <h3>Settings</h3>
         </div>
             <a class="btn change"><i class="fa fa-cog"></i> Change Password</a><br /><br />
+            <a class="btn changeemail"><i class="fa fa-cog"></i> Change Email Address</a><br /><br />
             <a class="btn configureotp"><i class="fa fa-cog"></i> Configure OTP</a><br /><br />
             <a class="btn addotp"><i class="fa fa-cog"></i> Add OTP</a><br /><br />
             <a class="btn deleteacct"><i class="fa fa-times"></i> Delete Account</a><br /><br />
