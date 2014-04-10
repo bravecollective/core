@@ -21,12 +21,22 @@
     ${parent.post()}
 
     <script src="/js/changedelay.js" charset="utf-8"></script>
+    <script src="/js/validation.js" charset="utf-8"></script>
     <script src="/js/vendor/zxcvbn.js" charset="utf-8"></script>
 
     <script type="text/javascript" charset="utf-8">
         $(function(){
-            // Handle checking of available usernames.
-            $('#username-field').changeDelay(function(){
+            //Handle checking of available usernames.
+            $('#username-field').validated()
+            
+            //Remove popovers if the field is empty.
+            $('#username-field').on('initialChangeDelay',function(){
+                var self = $(this);
+                if( !self.val() || self.val().length === 0 )
+                    self.popover('destroy');
+            });
+            
+            $('#username-field').on('validation',function(){
                 var self = $(this);
 
                 if ( self.val() === '' || self.val().length < 4 ) {
@@ -34,22 +44,66 @@
                     self.removeClass('error');
                     return;
                 }
-
-                $.getJSON('/account/exists?ts=' + (+ new Date()), {username: self.val().toLowerCase()}, function(data){
-                    if ( !data.available ) {
-                        self.addClass('error');
+                
+                //Error will be assigned by .validate() if there is something wrong with the input
+                if(self.hasClass('error'))
+                {
+                    //Necessary to allow for new popups to supersede old ones
+                    self.popover('destroy');
+                    
+                    //This indicates that the input does not match the necessary regular expression
+                    if(self.hasClass('regex'))
+                    {
                         self.popover({
-                                placement: 'top',
-                                trigger: 'focus',
-                                content: "The user name you have entered is already in use.  Please choose another.",
-                                container: '#register-form'
-                            }).popover('show');
-                    } else {
-                        self.removeClass('error');
-                        self.popover('destroy');
+                        placement: 'top',
+                        trigger: 'focus',
+                        content: 'The username entered contains invalid characters. Please use only alphanumeric characters, spaces, -, _, or .',
+                        container: '#register-form'
+                        }).popover('show');
                     }
-                });
+                    
+                    //The username is currently in use.
+                    if(self.hasClass('validation'))
+                    {
+                        self.popover({
+                        placement: 'top',
+                        trigger: 'focus',
+                        content: 'The user name you have entered is already in use.  Please choose another.',
+                        container: '#register-form'
+                        }).popover('show');
+                    }
+                    
+                    //An 'uncaught' error has occured.
+                    self.popover({
+                        placement: 'top',
+                        trigger: 'focus',
+                        content: "An unexpected error has occured.",
+                        container: '#register-form'
+                    }).popover('show');
+                }
+                else
+                {
+                    self.popover('destroy');
+                }
+            
+
+           //     $.getJSON('/account/exists?ts=' + (+ new Date()), {username: self.val().toLowerCase()}, function(data){
+            //        if ( !data.available ) {
+            //            self.addClass('error');
+            //            self.popover({
+           //                     placement: 'top',
+              //                  trigger: 'focus',
+            //                    content: "The user name you have entered is already in use.  Please choose another.",
+             //                   container: '#register-form'
+            //                }).popover('show');
+           //         } else {
+           //             self.removeClass('error');
+            //            self.popover('destroy');
+           //         }
+           //     });
             });
+            
+            
 
             $('#email-field').changeDelay(function(){
                 var self = $(this);

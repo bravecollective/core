@@ -262,7 +262,7 @@ class Settings(HTTPMethod):
             
             user.rotp = rotp
             user.save()
-			
+            
         #Handle the user attempting to delete their account
         elif data.form == "deleteaccount":
             if isinstance(data.passwd, unicode):
@@ -328,7 +328,7 @@ class AccountController(Controller):
         if set(query.keys()) - {'username', 'email'}:
             raise HTTPForbidden()
         
-        count = User.objects.filter(**{str(k): v for k, v in query.items()}).count()
+        count = User.objects.filter(**{str(k): v.lower() for k, v in query.items()}).count()
         return 'json:', dict(available=not bool(count), query={str(k): v for k, v in query.items()})
     
     def deauthenticate(self):

@@ -29,7 +29,7 @@ authenticate = Form('authenticate', action='/account/authenticate', method='post
     ])
 
 register = Form('register', action='/account/register', method='post', children=[
-        TextField('username', autofocus=True, autocapitalize="off", autocorrect="off", spellcheck="false", class_="span12", placeholder=L_("User Name")),
+        TextField('username', autofocus=True, autocapitalize="off", autocorrect="off", spellcheck="false", class_="span12", placeholder=L_("User Name"), required="true", pattern="[a-zA-Z0-9 _\-\.]+", datavalidate="/account/exists", datavalidatekey="username", datavalidatecheck="available"),
         EmailField('email', autocapitalize="off", autocorrect="off", spellcheck="false", class_="span12", placeholder=L_("E-Mail Address")),
         PasswordField('password', class_="span12 poor", placeholder=L_("Password"),maxlength="100"),
         PasswordField('pass2', class_="span12 poor", placeholder=L_("Verify Password"),maxlength="100"),
