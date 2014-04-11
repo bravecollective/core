@@ -36,6 +36,8 @@
                     self.popover('destroy');
             });
             
+            //Executes at end of validation after every change
+            //Handles errors detected during validation
             $('#username-field').on('validation',function(){
                 var self = $(this);
 

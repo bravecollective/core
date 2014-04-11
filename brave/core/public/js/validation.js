@@ -16,18 +16,18 @@ $.fn.validated = function(callback){
             var value = self.val();
             
             // Clear old validation state.
-            self.removeClass('success error regex validation');
-            group.removeClass('success error regex validation');
+            self.removeClass('success error regex validation callback required');
+            group.removeClass('success error regex validation callback required');
 //            self.nextAll('.help-inline,.help').remove();
             
-            function err(msg) {
+            function err(msg, type) {
                 self.addClass('error');
                 group.addClass('error');
                 
-                if(msg === "Invalid regex.")
-                    self.addClass('regex');
-                if(msg === "Invalid validation.")
-                    self.addClass('validation');
+                self.addClass(type);
+                group.addClass(type);
+                
+                self.attr("errMsg", msg);
                 
                 self.trigger('validation');
 //                self.parent().append('<span class="help-inline">' + msg + '</span>');
@@ -38,26 +38,26 @@ $.fn.validated = function(callback){
             
             // Ensure a required field has data.
             if ( settings.required && ( !value || value.length === 0 ) )
-                return err("Required.")
+                return err("Required.", "required");
             
             if ( settings.regex ) {
                 var regex = new RegExp('^' + settings.regex + '$');
                 if ( !regex.test(value) )
-                    return err("Invalid regex.");
+                    return err("Invalid regex.", "regex");
             }
             
             if ( callback ) {
                 var result = callback(value);
-                if ( result ) return err(result);
+                if ( result ) return err(result, "callback");
             }
             
             if ( settings.url ) {
                 var data = {};
                 data[settings.key || 'value'] = value;
                 
-                $.getJSON(settings.url, data, function(data){
+                $.getJSON(settings.url + '?ts=' + (+ new Date()), data, function(data){
                     if ( !data[settings.check || 'success'] )
-                        return err(data.message || "Invalid validation.");
+                        return err(data.message || "Invalid validation.", "validation");
                     
                     self.addClass('success');
                     group.addClass('success');

@@ -330,6 +330,15 @@ class AccountController(Controller):
         
         count = User.objects.filter(**{str(k): v.lower() for k, v in query.items()}).count()
         return 'json:', dict(available=not bool(count), query={str(k): v for k, v in query.items()})
+        
+    def entropy(self, **query):
+        query.pop('ts', None)
+        
+        if set(query.keys()) - {'password'}:
+            raise HTTPForbidden()
+        
+        
+        return 'json:', dict(available=not bool(count), query={str(k): v for k, v in query.items()})
     
     def deauthenticate(self):
         deauthenticate()
