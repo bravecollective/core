@@ -87,28 +87,13 @@
                 {
                     self.popover('destroy');
                 }
-            
-
-           //     $.getJSON('/account/exists?ts=' + (+ new Date()), {username: self.val().toLowerCase()}, function(data){
-            //        if ( !data.available ) {
-            //            self.addClass('error');
-            //            self.popover({
-           //                     placement: 'top',
-              //                  trigger: 'focus',
-            //                    content: "The user name you have entered is already in use.  Please choose another.",
-             //                   container: '#register-form'
-            //                }).popover('show');
-           //         } else {
-           //             self.removeClass('error');
-            //            self.popover('destroy');
-           //         }
-           //     });
             });
             
+            $('#password-field').validated();
             
-
-            $('#email-field').changeDelay(function(){
-                var self = $(this);
+            $('#password-field').on('validation', function(){
+				
+				var self = $(this);
 
                 if ( self.val() === '' || self.val().length < 4 ) {
                     self.popover('destroy');
@@ -116,42 +101,54 @@
                     return;
                 }
 
-                $.getJSON('/account/exists?ts=' + (+ new Date()), {email: self.val().toLowerCase()}, function(data){
-                    if ( !data.available ) {
-                        self.addClass('error');
+				//Error will be assigned by .validate() if there is something wrong with the input
+                if(self.hasClass('error'))
+                {
+                    //Necessary to allow for new popups to supersede old ones
+                    self.popover('destroy');
+                    
+                    //This indicates that the input does not match the necessary regular expression
+                    if(self.hasClass('regex'))
+                    {
                         self.popover({
-                                placement: 'top',
-                                trigger: 'focus',
-                                content: "An account already exists with this e-mail address.  Please choose another.",
-                                container: '#register-form'
-                            }).popover('show');
-                    } else {
-                        self.popover('destroy');
-                        self.removeClass('error');
+                        placement: 'top',
+                        trigger: 'focus',
+                        content: 'The password entered contains invalid characters. Please only use non-whitespace ASCII characters.',
+                        container: '#register-form'
+                        }).popover('show');
                     }
-                });
-            });
-
-            $('#password-field').changeDelay(function(){
-                var self = $(this),
-                    result = zxcvbn(self.val(), [$('#username-field').val()]),
-                    other = $('#pass2-field');
-
-                self.removeClass('poor ok excellent');
-                other.val('').change();
-
-                if ( result.score < 2 ) {
-                    self.addClass('poor');
-                } else if ( result.score < 3 ) {
-                    self.addClass('ok');
-                } else {
-                    self.addClass('excellent');
+                    
+                    //The password is not strong enough.
+                    if(self.hasClass('validation'))
+                    {
+                        self.popover({
+                        placement: 'top',
+                        trigger: 'focus',
+                        content: 'The password you chose is not complicated enough. Please add more characters, and use lowercase, uppercase, and special characters.',
+                        container: '#register-form'
+                        }).popover('show');
+                    }
+                    
+                    //An 'uncaught' error has occured.
+                    self.popover({
+                        placement: 'top',
+                        trigger: 'focus',
+                        content: "An unexpected error has occured.",
+                        container: '#register-form'
+                    }).popover('show');
+                }
+                else
+                {
+                    self.popover('destroy');
                 }
             });
 
             //using changeDelay was slow to update the user about the limit.
             $('#password-field').on('input',function(){
                 var self = $(this);
+                
+                //Delete the contents of the 'confirm password' field when the user modifies the primary password field
+                $('#pass2-field').val('').change();
 
                 if ( $('#password-field').val().length >= 100 ) {
                     self.popover({
@@ -166,14 +163,23 @@
                 }
             });
 
+			//Doesn't need full verification: contents receive validation as part of password-field's check
+			//Therefore, just check if it matches and handle accordingly
             $('#pass2-field').changeDelay(function(){
                 var self = $(this),
                     other = $('#password-field');
 
                 if ( self.val() != other.val() ) {
-                    self.removeClass('excellent').addClass('poor');
+                    self.removeClass('excellent').addClass('poor error');
+                    self.popover({
+                                placement: 'top',
+                                trigger: 'focus',
+                                content: "The 2 entered passwords must match.",
+                                container: '#register-form'
+                            }).popover('show');
                 } else {
-                    self.removeClass('poor').addClass('excellent');
+                    self.removeClass('poor error').addClass('excellent');
+                    self.popover('destroy');
                 }
             });
             
