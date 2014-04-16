@@ -180,6 +180,10 @@ class Register(HTTPMethod):
         if len(tld) < 3:
             return 'json:', dict(success=False, message=_("Invalid email address provided."), data=data)
         
+        #If the password has a score of less than 3, reject it
+        if(zxcvbn.password_strength(password).get("score") <= 2):
+            return 'json:', dict(success=False, message=_("Password provided is too weak. please add more characters, or include lowercase, uppercase, and special characters."), data=data)
+        
         #Ensures that the provided username and email are lowercase
         user = User(data.username.lower(), data.email.lower(), active=True)
         user.password = data.password
@@ -333,7 +337,7 @@ class AccountController(Controller):
         return 'json:', dict(available=not bool(count), query={str(k): v for k, v in query.items()})
         
     def entropy(self, **query):
-		#Remove the timestamp
+        #Remove the timestamp
         query.pop('ts', None)
         
         #Make sure the user provides only a password
@@ -345,7 +349,7 @@ class AccountController(Controller):
         
         #If the password has a score of greater than 2, allow it
         if(zxcvbn.password_strength(password).get("score") > 2):
-			strong = True
+            strong = True
         
         return 'json:', dict(approved=strong, query={str(k): v for k, v in query.items()})
     

@@ -24,6 +24,18 @@
     <script src="/js/validation.js" charset="utf-8"></script>
 
     <script type="text/javascript" charset="utf-8">
+        //Function to streamline popovers.
+        $.fn.popoverT = function(msg){
+            var self = $(this);
+            
+            self.popover({
+                placement: 'top',
+                trigger: 'focus',
+                content: msg,
+                container: '#register-form'
+                }).popover('show');
+        }
+    
         $(function(){
             //Handle checking of available usernames.
             $('#username-field').validated()
@@ -42,43 +54,23 @@
                     //This indicates that the input does not match the necessary regular expression
                     if(self.hasClass('regex'))
                     {
-                        self.popover({
-                        placement: 'top',
-                        trigger: 'focus',
-                        content: 'The username entered contains invalid characters. Please use only alphanumeric characters, spaces, -, _, or .',
-                        container: '#register-form'
-                        }).popover('show');
+                        self.popoverT('The username entered contains invalid characters. Please use only alphanumeric characters, spaces, -, _, or .');
                     }
                     
                     //The username is currently in use.
                     if(self.hasClass('validation'))
                     {
-                        self.popover({
-                        placement: 'top',
-                        trigger: 'focus',
-                        content: 'The user name you have entered is already in use.  Please choose another.',
-                        container: '#register-form'
-                        }).popover('show');
+                        self.popoverT('The user name you have entered is already in use.  Please choose another.');
                     }
                     
                     //The username is missing (and the user has already typed something)
                     if(self.hasClass('required'))
                     {
-                        self.popover({
-                        placement: 'top',
-                        trigger: 'focus',
-                        content: 'A username is required to register for this service.',
-                        container: '#register-form'
-                        }).popover('show');
+                        self.popoverT('A username is required to register for this service.');
                     }
                     
                     //An 'uncaught' error has occured.
-                    self.popover({
-                        placement: 'top',
-                        trigger: 'focus',
-                        content: "An unexpected error has occured.",
-                        container: '#register-form'
-                    }).popover('show');
+                    self.popoverT("An unexpected error has occured.");
                 }
                 else
                 {
@@ -101,43 +93,23 @@
                     //This indicates that the input does not match the necessary regular expression
                     if(self.hasClass('regex'))
                     {
-                        self.popover({
-                        placement: 'top',
-                        trigger: 'focus',
-                        content: 'The password entered contains invalid characters. Please only use non-whitespace ASCII characters.',
-                        container: '#register-form'
-                        }).popover('show');
+                        self.popoverT('The password entered contains invalid characters. Please only use non-whitespace ASCII characters.');
                     }
                     
                     //The password is not strong enough.
                     if(self.hasClass('validation'))
                     {
-                        self.popover({
-                        placement: 'top',
-                        trigger: 'focus',
-                        content: 'The password you chose is not complicated enough. Please add more characters, and use lowercase, uppercase, and special characters.',
-                        container: '#register-form'
-                        }).popover('show');
+                        self.popoverT('The password you chose is not complicated enough. Please add more characters, and use lowercase, uppercase, and special characters.');
                     }
                     
                     //The password is missing (and the user has already typed something)
                     if(self.hasClass('required'))
                     {
-                        self.popover({
-                        placement: 'top',
-                        trigger: 'focus',
-                        content: 'A password is required to register for this service.',
-                        container: '#register-form'
-                        }).popover('show');
+                        self.popoverT('A password is required to register for this service.');
                     }
                     
                     //An 'uncaught' error has occured.
-                    self.popover({
-                        placement: 'top',
-                        trigger: 'focus',
-                        content: "An unexpected error has occured.",
-                        container: '#register-form'
-                    }).popover('show');
+                    self.popoverT("An unexpected error has occured.");
                 }
                 else
                 {
@@ -153,12 +125,7 @@
                 $('#pass2-field').val('').change();
 
                 if ( $('#password-field').val().length >= 100 ) {
-                    self.popover({
-                                placement: 'top',
-                                trigger: 'focus',
-                                content: "The password may not be greater then 100 characters.",
-                                container: '#register-form'
-                            }).popover('show');
+                    self.popoverT("The password may not be greater then 100 characters.");
                 }
                 else {
                     self.popover('destroy');
@@ -173,12 +140,7 @@
 
                 if ( self.val() != other.val() ) {
                     self.removeClass('excellent').addClass('poor error');
-                    self.popover({
-                                placement: 'top',
-                                trigger: 'focus',
-                                content: "The 2 entered passwords must match.",
-                                container: '#register-form'
-                            }).popover('show');
+                    self.popoverT("The 2 entered passwords must match.");
                 } else {
                     self.removeClass('poor error').addClass('excellent');
                     self.popover('destroy');
@@ -200,21 +162,11 @@
                     //The email address is missing (and the user has already typed something)
                     if(self.hasClass('required'))
                     {
-                        self.popover({
-                        placement: 'top',
-                        trigger: 'focus',
-                        content: 'An email address is required to register for this service.',
-                        container: '#register-form'
-                        }).popover('show');
+                        self.popoverT('An email address is required to register for this service.');
                     }
                     
                     //An 'uncaught' error has occured.
-                    self.popover({
-                        placement: 'top',
-                        trigger: 'focus',
-                        content: "An unexpected error has occured.",
-                        container: '#register-form'
-                    }).popover('show');
+                    self.popoverT('An unexpected error has occured.');
                 }
                 else
                 {
