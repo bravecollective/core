@@ -45,7 +45,8 @@ Additionally, there are some requirements you will need to manually install as C
 
 <pre><code>(git clone https://github.com/marrow/marrow.templating.git; cd marrow.templating; python setup.py develop)
 (git clone https://github.com/marrow/marrow.tags.git; cd marrow.tags; python setup.py develop)
-(git clone https://github.com/bravecollective/api.git; cd api; python setup.py develop)</code></pre>
+(git clone https://github.com/bravecollective/api.git; cd api; python setup.py develop)
+(git clone https://github.com/dropbox/python-zxcvbn.git; cd python-zxcvbn; python setup.py install)</code></pre>
 
 Installing the current development version of the Core Service requires "Git":git, a distributed source code management system.  Compilation additionally requires the Python development headers and the OpenSSL development headers.  In Debian/Ubuntu, these are found in packages `python-dev` and `libssl-dev`.
 Run the following to download the development version with Git, and _link_ it into your Python runtime:
