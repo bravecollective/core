@@ -22,30 +22,16 @@
 
     <script src="/js/changedelay.js" charset="utf-8"></script>
     <script src="/js/validation.js" charset="utf-8"></script>
-    <script src="/js/vendor/zxcvbn.js" charset="utf-8"></script>
 
     <script type="text/javascript" charset="utf-8">
         $(function(){
             //Handle checking of available usernames.
             $('#username-field').validated()
             
-            //Remove popovers if the field is empty.
-            $('#username-field').on('initialChangeDelay',function(){
-                var self = $(this);
-                if( !self.val() || self.val().length === 0 )
-                    self.popover('destroy');
-            });
-            
             //Executes at end of validation after every change
             //Handles errors detected during validation
             $('#username-field').on('validation',function(){
                 var self = $(this);
-
-                if ( self.val() === '' || self.val().length < 4 ) {
-                    self.popover('destroy');
-                    self.removeClass('error');
-                    return;
-                }
                 
                 //Error will be assigned by .validate() if there is something wrong with the input
                 if(self.hasClass('error'))
@@ -75,6 +61,17 @@
                         }).popover('show');
                     }
                     
+                    //The username is missing (and the user has already typed something)
+                    if(self.hasClass('required'))
+                    {
+                        self.popover({
+                        placement: 'top',
+                        trigger: 'focus',
+                        content: 'A username is required to register for this service.',
+                        container: '#register-form'
+                        }).popover('show');
+                    }
+                    
                     //An 'uncaught' error has occured.
                     self.popover({
                         placement: 'top',
@@ -92,16 +89,10 @@
             $('#password-field').validated();
             
             $('#password-field').on('validation', function(){
-				
-				var self = $(this);
+                
+                var self = $(this);
 
-                if ( self.val() === '' || self.val().length < 4 ) {
-                    self.popover('destroy');
-                    self.removeClass('error');
-                    return;
-                }
-
-				//Error will be assigned by .validate() if there is something wrong with the input
+                //Error will be assigned by .validate() if there is something wrong with the input
                 if(self.hasClass('error'))
                 {
                     //Necessary to allow for new popups to supersede old ones
@@ -125,6 +116,17 @@
                         placement: 'top',
                         trigger: 'focus',
                         content: 'The password you chose is not complicated enough. Please add more characters, and use lowercase, uppercase, and special characters.',
+                        container: '#register-form'
+                        }).popover('show');
+                    }
+                    
+                    //The password is missing (and the user has already typed something)
+                    if(self.hasClass('required'))
+                    {
+                        self.popover({
+                        placement: 'top',
+                        trigger: 'focus',
+                        content: 'A password is required to register for this service.',
                         container: '#register-form'
                         }).popover('show');
                     }
@@ -163,8 +165,8 @@
                 }
             });
 
-			//Doesn't need full verification: contents receive validation as part of password-field's check
-			//Therefore, just check if it matches and handle accordingly
+            //Doesn't need full verification: contents receive validation as part of password-field's check
+            //Therefore, just check if it matches and handle accordingly
             $('#pass2-field').changeDelay(function(){
                 var self = $(this),
                     other = $('#password-field');
@@ -179,6 +181,43 @@
                             }).popover('show');
                 } else {
                     self.removeClass('poor error').addClass('excellent');
+                    self.popover('destroy');
+                }
+            });
+            
+            $('#email-field').validated();
+            
+            $('#email-field').on('validation', function(){
+                
+                var self = $(this);
+                
+                //Error will be assigned by .validate() if there is something wrong with the input
+                if(self.hasClass('error'))
+                {
+                    //Necessary to allow for new popups to supersede old ones
+                    self.popover('destroy');
+                    
+                    //The email address is missing (and the user has already typed something)
+                    if(self.hasClass('required'))
+                    {
+                        self.popover({
+                        placement: 'top',
+                        trigger: 'focus',
+                        content: 'An email address is required to register for this service.',
+                        container: '#register-form'
+                        }).popover('show');
+                    }
+                    
+                    //An 'uncaught' error has occured.
+                    self.popover({
+                        placement: 'top',
+                        trigger: 'focus',
+                        content: "An unexpected error has occured.",
+                        container: '#register-form'
+                    }).popover('show');
+                }
+                else
+                {
                     self.popover('destroy');
                 }
             });

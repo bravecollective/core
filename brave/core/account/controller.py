@@ -14,6 +14,7 @@ from brave.core.account.authentication import lookup_email, send_recover_email
 from yubico import yubico
 from marrow.util.convert import boolean
 
+import zxcvbn
 import re
 
 log = __import__('logging').getLogger(__name__)
@@ -332,13 +333,21 @@ class AccountController(Controller):
         return 'json:', dict(available=not bool(count), query={str(k): v for k, v in query.items()})
         
     def entropy(self, **query):
+		#Remove the timestamp
         query.pop('ts', None)
         
+        #Make sure the user provides only a password
         if set(query.keys()) - {'password'}:
             raise HTTPForbidden()
         
+        password = query.get("password");
+        strong = False;
         
-        return 'json:', dict(available=not bool(count), query={str(k): v for k, v in query.items()})
+        #If the password has a score of greater than 2, allow it
+        if(zxcvbn.password_strength(password).get("score") > 2):
+			strong = True
+        
+        return 'json:', dict(approved=strong, query={str(k): v for k, v in query.items()})
     
     def deauthenticate(self):
         deauthenticate()

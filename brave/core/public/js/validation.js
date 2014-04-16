@@ -33,12 +33,12 @@ $.fn.validated = function(callback){
 //                self.parent().append('<span class="help-inline">' + msg + '</span>');
             }
             
-            // Exit early if the value isn't actually different.
-            if ( value === original ) return;
-            
             // Ensure a required field has data.
             if ( settings.required && ( !value || value.length === 0 ) )
                 return err("Required.", "required");
+            
+            // Exit early if the value isn't actually different.
+            if ( value === original ) return;
             
             if ( settings.regex ) {
                 var regex = new RegExp('^' + settings.regex + '$');
