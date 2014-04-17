@@ -1,6 +1,7 @@
 # encoding: utf-8
 
 from marrow.util.bunch import Bunch
+from marrow.mailer.validator import EmailValidator
 from web.auth import authenticate, deauthenticate
 from web.core import Controller, HTTPMethod, request, config
 from web.core.http import HTTPFound, HTTPSeeOther, HTTPForbidden
@@ -166,18 +167,12 @@ class Register(HTTPMethod):
         
         if not data.username or not data.email or not data.password or data.password != data.pass2:
             return 'json:', dict(success=False, message=_("Missing data or passwords do not match."), data=data)
-        
+
         #Make sure that the provided email address is a valid form for an email address
-        #TODO: Support IDNs and make RFC 822 compliant
-        emailSearch = re.search('[a-zA-Z0-9\.\+]+@[a-zA-Z0-9\.\+]+\.[a-zA-Z0-9]+', data.email)
-        if emailSearch == None:
-            return 'json:', dict(success=False, message=_("Invalid email address provided."), data=data)
-         
-        #Prevents Mongodb validation check from hanging thread, plus all tlds are at least 2 characters.
-        tldSearch = re.findall('\.[a-zA-Z0-9]+', data.email)
-        tld = tldSearch.pop()
-        #tld includes the leading '.'
-        if len(tld) < 3:
+        v = EmailValidator()
+        email = data.email
+        email, err = v.validate(email)
+        if err:
             return 'json:', dict(success=False, message=_("Invalid email address provided."), data=data)
         
         #If the password has a score of less than 3, reject it
@@ -306,9 +301,10 @@ class Settings(HTTPMethod):
                 return 'json:', dict(success=False, message=_("Provided email addresses do not match."), data=data)
             
             #Make sure that the provided email address is a valid form for an email address
-            #TODO: Support IDNs and make RFC 822 compliant
-            emailSearch = re.search('[a-zA-Z0-9\.\+]+@[a-zA-Z0-9\.\+]+\.[a-zA-Z0-9]+', data.newEmail)
-            if emailSearch == None:
+            v = EmailValidator()
+            email = data.email
+            email, err = v.validate(email)
+            if err:
                 return 'json:', dict(success=False, message=_("Invalid email address provided."), data=data)
             
             #Change the email address in the database
