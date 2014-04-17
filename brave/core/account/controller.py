@@ -181,7 +181,7 @@ class Register(HTTPMethod):
             return 'json:', dict(success=False, message=_("Invalid email address provided."), data=data)
         
         #If the password has a score of less than 3, reject it
-        if(zxcvbn.password_strength(password).get("score") <= 2):
+        if(zxcvbn.password_strength(data.password).get("score") <= 2):
             return 'json:', dict(success=False, message=_("Password provided is too weak. please add more characters, or include lowercase, uppercase, and special characters."), data=data)
         
         #Ensures that the provided username and email are lowercase
