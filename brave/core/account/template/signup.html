@@ -159,6 +159,12 @@
                     //Necessary to allow for new popups to supersede old ones
                     self.popover('destroy');
                     
+                    //The email address is currently in use.
+                    if(self.hasClass('validation'))
+                    {
+                        self.popoverT('The email address you have entered is already in use.  Please choose another.');
+                    }
+                    
                     //The email address is missing (and the user has already typed something)
                     if(self.hasClass('required'))
                     {

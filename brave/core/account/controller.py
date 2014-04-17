@@ -6,6 +6,7 @@ from web.auth import authenticate, deauthenticate
 from web.core import Controller, HTTPMethod, request, config
 from web.core.http import HTTPFound, HTTPSeeOther, HTTPForbidden
 from web.core.locale import _
+from mongoengine import ValidationError, NotUniqueError
 
 from brave.core.account.model import User, PasswordRecovery
 from brave.core.account.form import authenticate as authenticate_form, register as register_form, \
@@ -182,7 +183,12 @@ class Register(HTTPMethod):
         #Ensures that the provided username and email are lowercase
         user = User(data.username.lower(), data.email.lower(), active=True)
         user.password = data.password
-        user.save()
+        try:
+            user.save()
+        except ValidationError:
+            return 'json:', dict(success=False, message=_("Invalid email address provided."), data=data)
+        except NotUniqueError:
+            return 'json:', dict(success=False, message=_("Either the username or email address provided is already taken."), data=data)
         
         authenticate(data.username.lower(), data.password)
         
@@ -302,14 +308,24 @@ class Settings(HTTPMethod):
             
             #Make sure that the provided email address is a valid form for an email address
             v = EmailValidator()
-            email = data.email
+            email = data.newEmail
             email, err = v.validate(email)
             if err:
                 return 'json:', dict(success=False, message=_("Invalid email address provided."), data=data)
-            
-            #Change the email address in the database
+                
+            #Make sure that the new email address is not already taken
+            count = User.objects.filter(**{"email": data.newEmail.lower()}).count()
+            if not count == 0:
+                return 'json:', dict(success=False, message=_("The email address provided is already taken."), data=data)
+       
+            #Change the email address in the database and catch any email validation exceptions that mongo throws
             user.email = data.newEmail.lower()
-            user.save()
+            try:
+                user.save()
+            except ValidationError:
+                return 'json:', dict(success=False, message=_("Invalid email address provided."), data=data)
+            except NotUniqueError:
+                return 'json:', dict(success=False, message=_("The email address provided is already taken."), data=data)
             
         else:
             return 'json:', dict(success=False, message=_("Form does not exist."), location="/")
