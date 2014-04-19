@@ -83,7 +83,9 @@ class KeyList(HTTPMethod):
         try:
             data.key = int(data.key)
             if data.key <= KEY_RESET_FLOOR:
-                return 'json:', dict(success=False, message=_("Key ID must be above minimum reset floor."), field='key')
+                return 'json:', dict(success=False, 
+                                     message=_("The key given (%d) must be above minimum reset floor value of %d. Please reset your EVE API Key." % (data.key, KEY_RESET_FLOOR)), 
+                                     field='key')
                 
         except ValueError:
             return 'json:', dict(success=False, message=_("Key ID must be a number."), field='key')
