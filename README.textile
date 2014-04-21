@@ -86,6 +86,8 @@ This will start a development server and present the URL you need to access.  (G
 
 h2(#license). %4.% License
 
+Brave Collective Core Services has been released under the MIT Open Source license. 
+
 h3(#license-mit). %4.1.% The MIT License
 
 Copyright (C) 2013-2014 Alice Bevan-McGregor and contributors.
