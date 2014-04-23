@@ -215,7 +215,7 @@ class Settings(HTTPMethod):
         user = User.objects(**query).first()
 
         if data.form == "changepassword":
-            passwd_ok, error_msg = _check_password(data.password, data.pass2)
+            passwd_ok, error_msg = _check_password(data.passwd, data.passwd1)
 
             if not passwd_ok:
                 return 'json:', dict(success=False, message=error_msg, data=data)
