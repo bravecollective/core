@@ -4,7 +4,7 @@ import sys, os
 from setuptools import setup, find_packages
 
 setup(
-        name = "Brave Core Services",
+        name = "brave.core",
         version = "0.1",
         description = "EVE Online authentication, authorization, and API proxy service.",
         author = "Alice Bevan-McGregor",
@@ -20,6 +20,7 @@ setup(
         tests_require = ['nose', 'webtest', 'coverage'],
         test_suite = 'nose.collector',
         
+        # keep in sync with requirements.txt (sadness).
         dependency_links = [
             'https://github.com/marrow/marrow.tags/archive/develop.zip#egg=marrow.tags',
             'https://github.com/marrow/marrow.templating/archive/develop.zip#egg=marrow.templating',
