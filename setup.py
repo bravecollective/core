@@ -48,6 +48,7 @@ setup(
                 'marrow.mailer',
                 'yubico',
                 'futures',
+                'zxcvbn',
             ],
         
     )
