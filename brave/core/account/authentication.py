@@ -128,11 +128,11 @@ def send_recover_email(user):
     message = mailer.new(to=user.email, subject=_("Password Recovery - Brave Collective Core Services"))
 
     #explicitley get the text contend for the mail
-    mime, content = render("brave/core/account/template/mail/lost.txt", dict(params=params))
+    mime, content = render("brave.core.account.template.mail/lost.txt", dict(params=params))
     message.plain = content
 
     #explicitley get the html contend for the mail
-    mime, content = render("brave/core/account/template/mail/lost.html", dict(params=params))
+    mime, content = render("brave.core.account.template.mail/lost.html", dict(params=params))
     message.rich = content
 
     mailer.send(message)
