@@ -37,23 +37,12 @@ Once you have this, enter and activate the virtual environment:
 <pre><code>cd brave
 source bin/activate</code></pre>
 
-Now bootstrap the web framework:
-
-<pre><code>pip install WebCore</code></pre>
-
-Additionally, there are some requirements you will need to manually install as Core Services require features present in as-yet unreleased packages.  You will need to perform the following steps:
-
-<pre><code>(git clone https://github.com/marrow/marrow.templating.git; cd marrow.templating; python setup.py develop)
-(git clone https://github.com/marrow/marrow.tags.git; cd marrow.tags; python setup.py develop)
-(git clone https://github.com/bravecollective/api.git; cd api; python setup.py develop)
-(git clone https://github.com/dropbox/python-zxcvbn.git; cd python-zxcvbn; python setup.py install)</code></pre>
-
 Installing the current development version of the Core Service requires "Git":git, a distributed source code management system.  Compilation additionally requires the Python development headers and the OpenSSL development headers.  In Debian/Ubuntu, these are found in packages `python-dev` and `libssl-dev`.
 Run the following to download the development version with Git, and _link_ it into your Python runtime:
 
 <pre><code>git clone https://github.com/bravecollective/core.git
 cd core
-python setup.py develop</code></pre>
+pip install -r requirements.txt -e .</code></pre>
 
 Once you have successfully compiled the Core Service, copy `development.ini` to `local.ini`, and make changes as appropriate.  Finally, bootstrap the EVE API system by running:
 
