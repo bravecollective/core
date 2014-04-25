@@ -77,9 +77,9 @@ class CoreAPI(SignedController):
         
         # Deny localhost/127.0.0.1 loopbacks and 192.* and 10.* unless in development mode.
         
-        if not boolean(config.get('debug', False)) and success.host in ('localhost', '127.0.0.1') or \
+        if not boolean(config.get('debug', False)) and (success.host in ('localhost', '127.0.0.1') or \
                 success.host.startswith('192.168.') or \
-                success.host.startswith('10.'):
+                success.host.startswith('10.')):
             response.status_int = 400
             return dict(
                     status = 'error',
