@@ -101,7 +101,7 @@ class CoreAPI(SignedController):
             return dict(
                     status = 'error',
                     code = 'blacklist',
-                    message = "You have been blacklisted.  To dispute, contact hostmaster@bravecollective.net"
+                    message = "You have been blacklisted.  To dispute, contact hostmaster@braveineve.com"
                 )
         
         # TODO: Check DNS.  Yes, really.
