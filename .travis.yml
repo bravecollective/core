@@ -4,9 +4,6 @@ python:
 services:
   - mongodb
 install:
-  - pip install git+https://github.com/marrow/marrow.templating.git@develop#egg=marrow.templating
-  - pip install git+https://github.com/marrow/marrow.tags.git@develop#egg=marrow.tags
-  - pip install nose coverage webtest
-  - pip install . --use-mirrors
+  - pip install -r requirements.txt . --use-mirrors
 script: python setup.py test
 

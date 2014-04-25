@@ -1,0 +1,155 @@
+## encoding: utf-8
+
+<%inherit file="brave.core.template.master"/>
+
+<%block name="title">EVE Characters</%block>
+
+<%block name="header">
+    ${parent.header()}
+    
+    <style>
+        .modal-body form { margin-bottom: 0; }
+        .modal-body form input.input-block-level:last-child { margin-bottom: 0; }
+        table.table { table-layout: fixed; width: 100%; }
+        span.ellipsis { display: inline-block; width: 100%; overflow: hidden !important; white-space: nowrap !important; text-overflow: ellipsis !important; word-break: break-all !important; word-wrap: break-word !important; }
+        td.alliance { position: relative; }
+        .makedefault.fa-star-o { color: rgb(153, 153, 153); }
+        .makedefault.fa-star, .makedefault.fa-star-o:hover { color: rgb(58, 135, 173); }
+    </style>
+</%block>
+
+<%block name="post">
+    ${parent.post()}
+    
+    <script src="/js/vendor/jquery.timeago.js" charset="utf-8"></script>
+    <script src="/js/vendor/bootbox.js" charset="utf-8"></script>
+    
+    <script type="text/javascript" charset="utf-8">
+        $(function()
+        {
+            function ISODateString(d)
+            {
+                function pad(n){ return n < 10 ? '0' + n : n }
+
+                return d.getUTCFullYear()+'-'
+                    + pad(d.getUTCMonth()+1)+'-'
+                    + pad(d.getUTCDate())+'T'
+                    + pad(d.getUTCHours())+':'
+                    + pad(d.getUTCMinutes())+':'
+                    + pad(d.getUTCSeconds())+'Z';
+            }
+
+            $('time').timeago();
+            $('tr:first-child').addClass('first');
+            
+            $(document).on('click', '.makedefault.fa-star-o', function() {
+                var row = $(this).parents('tr'),
+                    icon = $(this);
+                $.ajax('/character/' + row.data('id'),
+                        { type: 'PUT' }).done(function(result){
+                            if ( ! result.success ) return;  // TODO: Error display.
+                            $('.makedefault.fa-star').removeClass('fa-star').addClass('fa-star-o');
+                            icon.removeClass('fa-star-o').addClass('fa-star');
+                        });
+            });
+            
+            function confirm(title, content, success, callback)
+            {
+                if ( ! success.hasOwnProperty('label') )
+                    success = {label: success, kind: 'btn-primary'};
+
+                var modal = $(
+                '<div id="modal" class="modal hide fade">' +
+                    '<div class="modal-header">' +
+                        '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>' +
+                        '<h3>' + title + '</h3>' +
+                    '</div>' +
+                    '<div class="modal-body">' + content + '</div>' +
+                    '<div class="modal-footer">' +
+                        '<a href="#" class="btn" data-dismiss="modal">Cancel</a>' +
+                        '<a href="#" class="success btn ' + success.kind + '">' + success.label + '</a>' +
+                    '</div>' +
+                '</div>').appendTo('body');
+
+                $('#modal .btn.success').on('click', function(e)
+                {
+                    if ( callback() )
+                        return;
+
+                    e.preventDefault();
+                    $('#modal').modal('hide')
+                });
+
+                $('#modal').on('hidden', function()
+                {
+                    $('#modal').remove();
+                }).modal();
+            }
+        });
+    </script>
+</%block>
+
+<div class="container-fluid">
+    % if web.user.admin:
+    <div id="tabs-wrapper">
+        <div class="row-fluid">
+            <a class="span3 tab${' active' if not admin else ''}" href="/key/">
+                Your Characters
+            </a>
+            <a class="span3 tab${' active' if admin else ''}" href="/key/?admin=true">
+                All Characters
+            </a>
+        </div>
+    </div>
+    % endif
+
+    <div id="pad-wrapper">
+        <div class="row-fluid header">
+            <h3>EVE Online Characters</h3>
+        </div>
+        
+        <div class="row-fluid table">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th class="span3 sortable name">Name</th>
+                        <th class="span4 sortable corporation"><span class="line"></span>Corporation</th>
+                        <th class="span4 sortable alliance"><span class="line"></span>Alliance</th>
+                        <th class="span1 sortable actions"><span class="line"></span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    % for record in records:
+                    <tr data-id="${record.id}">
+                        <td class="name">
+                            <span class="ellipsis">
+                            <img src="//image.eveonline.com/Character/${record.identifier}_32.jpg" style="vertical-align: -55%; margin-right: 5px; border-radius: 6px; width: 32px; height: 32px;">
+                            <strong>${record.name}</strong>
+                            </span>
+                        </td>
+                        <td class="corporation">
+                            <span class="ellipsis">
+                            <img src="//image.eveonline.com/Corporation/${record.corporation.identifier}_32.png" style="vertical-align: -55%; margin-right: 5px; width: 32px; height: 32px;">
+                            ${record.corporation.name}
+                            </span>
+                        </td>
+                        <td class="alliance">
+                            % if record.alliance:
+                            <span class="ellipsis">
+                            <img src="//image.eveonline.com/Alliance/${record.alliance.identifier}_32.png" style="vertical-align: -55%; margin-right: 5px; width: 32px; height: 32px;">
+                            ${record.alliance.name}
+                            </span>
+                            % else:
+                            <em>None</em>
+                            % endif
+                        </td>
+                        <td class="actions">
+                            <i class="makedefault fa fa-star${'' if web.user.primary and record.id == web.user.primary.id else '-o'} fa-2x"></i>
+                        </td>
+                    </tr>
+                    % endfor
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

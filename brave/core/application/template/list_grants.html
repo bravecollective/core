@@ -1,0 +1,106 @@
+## encoding: utf-8
+
+<%inherit file="brave.core.template.master"/>
+<%namespace name="f" file="brave.core.template.filter"/>
+
+<%block name="title">Authorized Applications</%block>
+
+<%block name="header">
+    ${parent.header()}
+    
+    <style>
+        .tc { text-align: center !important; }
+    </style>
+</%block>
+
+<%block name="post">
+    ${parent.post()}
+    
+    <script src="/js/vendor/jquery.timeago.js" charset="utf-8"></script>
+    <script src="/js/vendor/bootbox.js" charset="utf-8"></script>
+    
+    <script type="text/javascript" charset="utf-8">
+        $(function()
+        {
+            
+            $(document).on('click', '.delete', function()
+            {
+                var row = $(this).parents('tr');
+
+                confirm(
+                    "Are you really, <em>really</em> sure?",
+                    "By removing authorization you may lose access to the service and it may remove information it has associated with your character.<br/>" +
+                        "It may even make pandas cry. Please, think of the high-altitude melting pandas.",
+                    {
+                        label: "Revoke Authorization",
+                        kind: 'btn-danger'
+                    },
+                    function()
+                    {
+                        $.ajax('/application/' + row.attr('data-id'),
+                        {
+                            type: 'DELETE'
+                        }).
+                        done(function()
+                        {
+                            row.remove();
+                        });
+                    }
+                );
+            });
+            
+        });
+    </script>
+</%block>
+
+<div class="container-fluid">
+    <div id="tabs-wrapper">
+        <div class="row-fluid">
+            <a class="span3 tab active" href="/application/">Authorized</a>
+            <a class="span3 tab" href="/application/browse/">Available</a>
+            <a class="span3 tab" href="/application/manage/">Manage</a>
+        </div>
+    </div>
+
+    <div id="pad-wrapper">
+        <div class="row-fluid header">
+            <h3>Authorized Applications</h3>
+        </div>
+        
+        <div class="row-fluid table">
+            % if not records.count():
+                <p class="subtext" style="text-transform: uppercase;"><strong>You have not authorized any applications!  <a href="/application/browse/">Find some now.</a></strong></p>
+            % else:
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th class="span5 sortable name">Name</th>
+                        <th class="span3 sortable character hidden-tablet hidden-phone"><span class="line"></span>Character</th>
+                        <th class="span3 sortable date"><span class="line"></span>Authorized</th>
+                        <th class="span1 actions"><span class="line"></span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    % for record in records:
+                    <tr data-id="${record.id}">
+                        <td class="name">
+                            <a href="${record.application.site}"><strong>${record.application.name}</strong></a> <i class="fa fa-external-link muted"></i><br>
+                            <span class="subtext">${record.application.description}</span>
+                        </td>
+                        <td class="character hidden-tablet hidden-phone">
+                            <img src="//image.eveonline.com/Character/${record.character.identifier}_32.jpg" style="vertical-align: middle; margin-right: 5px; border-radius: 3px; width: 24px; height: 24px;" title="${record.character.name}"> ${record.character.name}
+                        </td>
+                        <td class="date">
+                            <time class="relative" datetime="${record.id.generation_time |n,f.iso}">${record.id.generation_time |n,f.pretty}</time>
+                        </td>
+                        <td class="actions">
+                            <button class="btn btn-danger btn-small delete" title="Revoke application permissions." rel="tooltip" data-placement="left"><i class="fa fa-times"></i></button>
+                        </td>
+                    </tr>
+                    % endfor
+                </tbody>
+            </table>
+            % endif
+        </div>
+    </div>
+</div>

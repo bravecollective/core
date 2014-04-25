@@ -4,9 +4,9 @@ import sys, os
 from setuptools import setup, find_packages
 
 setup(
-        name = "ADAM",
+        name = "brave.core",
         version = "0.1",
-        description = "An EVE-authenticated collection of utilities, like a wiki.",
+        description = "EVE Online authentication, authorization, and API proxy service.",
         author = "Alice Bevan-McGregor",
         author_email = "alice@gothcandy.com",
         license = "MIT",
@@ -15,21 +15,24 @@ setup(
         include_package_data = True,
         zip_safe = False,
         paster_plugins = ['PasteScript', 'WebCore'],
-        namespace_packages = ['adam'],
+        namespace_packages = ['brave'],
         
         tests_require = ['nose', 'webtest', 'coverage'],
         test_suite = 'nose.collector',
         
         install_requires = [
+                'requests==1.1.0',
+                'marrow.tags',
+                'marrow.templating',
+                'brave.api',
                 'WebCore>=1.1.2',
                 'MongoEngine>=0.7.999',
                 'Mako>=0.4.1',
                 'beaker>=1.5',
-                'requests==1.1.0',
                 'blinker',
                 'pyyaml',
                 'ecdsa',
-                'xmltodict',
+                'relaxml',
                 'ipython',
                 'scrypt',
                 'pudb',
@@ -38,6 +41,7 @@ setup(
                 'marrow.mailer',
                 'yubico',
                 'futures',
+                'zxcvbn',
             ],
         
     )

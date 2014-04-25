@@ -1,0 +1,33 @@
+## encoding: utf-8
+
+<%inherit file="brave.core.template.master"/>
+
+<%block name="title">${app} — Application Details</%block>
+
+<%block name="header">
+    ${parent.header()}
+</%block>
+
+<%block name="post">
+    ${parent.post()}
+
+    <script type="text/javascript" charset="utf-8">
+        $(function(){
+        });
+    </script>
+</%block>
+
+<div class="container-fluid">
+    <div id="pad-wrapper">
+        <div class="header">
+            <h3>${app}</h3>
+            <p>Your server public key is:</p>
+            <pre><code>HEX
+
+${key}</code></pre>
+            <pre><code>PEM
+
+${pem}</code></pre>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,51 @@
+## encoding: utf-8
+<!DOCTYPE html>
+<html lang="en" class="login-bg">
+    <head>
+        <%block name="header">
+        <meta charset="utf-8">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <title><%block name="title"/> — Brave Collective: Core Services</title>
+
+        <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/ico/apple-touch-icon-144-precomposed.png">
+        <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/ico/apple-touch-icon-114-precomposed.png">
+        <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/ico/apple-touch-icon-72-precomposed.png">
+        <link rel="apple-touch-icon-precomposed" href="/ico/apple-touch-icon-57-precomposed.png">
+        <link rel="shortcut icon" href="/ico/favicon.png">
+
+        <link rel="stylesheet/less" href="/css/base-light.less">
+        <link href='//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+        <link href='//fonts.googleapis.com/css?family=Lato:300,400,700,900,300italic,400italic,700italic,900italic' rel='stylesheet' type='text/css'>
+        <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+        <%block name="styles"/>
+
+        <script src="/js/vendor/less-1.4.0-beta.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/modernizr/2.5.3/modernizr.min.js"></script>
+
+        <!--[if lt IE 9]>
+            <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+        </%block>
+    </head>
+    <body>
+        <%block name="pre"/>
+
+        <section class="row-fluid login-wrapper">
+            <header>
+                <i class="fa fa-key fa-4x"></i>
+                <h1>Brave<span> Collective</span></h1>
+                <h2>Core Services</h2>
+            </header>
+
+            ${self.body()}
+        </section>
+
+        <%block name="post">
+        <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.1/js/bootstrap.min.js"></script>
+        <script src="/js/vendor/jquery-ui-1.10.2.custom.min.js"></script>
+        </%block>
+    </body>
+</html>

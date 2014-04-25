@@ -1,0 +1,251 @@
+## encoding: utf-8
+
+<%inherit file="brave.core.template.light"/>
+
+<%block name="title">${_("Sign Up")}</%block>
+
+<%block name="header">
+    ${parent.header()}
+
+    <style>
+        input[type=submit] { float: right; border: 0 none; height: 0; width: 0; padding: 0; margin: 0; overflow: hidden; }
+        .content-wrap.authentication { position: relative; }
+        .overlay { position: absolute; top: 15px; left: 0; right: 0; text-align: center; display: none; }
+        .overlay.result { text-shadow: 0 1px 4px rgba(0,0,0,0.75); }
+        .overlay.fail { color: #b00; }
+        .overlay.success { color: #0b0; }
+    </style>
+</%block>
+
+<%block name="post">
+    ${parent.post()}
+
+    <script src="/js/changedelay.js" charset="utf-8"></script>
+    <script src="/js/validation.js" charset="utf-8"></script>
+
+    <script type="text/javascript" charset="utf-8">
+        //Function to streamline popovers.
+        $.fn.popoverT = function(msg){
+            var self = $(this);
+            
+            self.popover({
+                placement: 'top',
+                trigger: 'focus',
+                content: msg,
+                container: '#register-form'
+                }).popover('show');
+        }
+    
+        $(function(){
+            //Handle checking of available usernames.
+            $('#username-field').validated()
+            
+            //Executes at end of validation after every change
+            //Handles errors detected during validation
+            $('#username-field').on('validation',function(){
+                var self = $(this);
+                
+                //Error will be assigned by .validate() if there is something wrong with the input
+                if(self.hasClass('error'))
+                {
+                    //Necessary to allow for new popups to supersede old ones
+                    self.popover('destroy');
+                    
+                    //This indicates that the input does not match the necessary regular expression
+                    if(self.hasClass('regex'))
+                    {
+                        self.popoverT('The username entered contains invalid characters. Please use only alphanumeric characters, spaces, -, _, or .');
+                    }
+                    
+                    //The username is currently in use.
+                    if(self.hasClass('validation'))
+                    {
+                        self.popoverT('The user name you have entered is already in use.  Please choose another.');
+                    }
+                    
+                    //The username is missing (and the user has already typed something)
+                    if(self.hasClass('required'))
+                    {
+                        self.popoverT('A username is required to register for this service.');
+                    }
+                    
+                    //An 'uncaught' error has occured.
+                    self.popoverT("An unexpected error has occured.");
+                }
+                else
+                {
+                    self.popover('destroy');
+                }
+            });
+            
+            $('#password-field').validated();
+            
+            $('#password-field').on('validation', function(){
+                
+                var self = $(this);
+
+                //Error will be assigned by .validate() if there is something wrong with the input
+                if(self.hasClass('error'))
+                {
+                    //Necessary to allow for new popups to supersede old ones
+                    self.popover('destroy');
+                    
+                    //This indicates that the input does not match the necessary regular expression
+                    if(self.hasClass('regex'))
+                    {
+                        self.popoverT('The password entered contains invalid characters. Please only use non-whitespace ASCII characters.');
+                    }
+                    
+                    //The password is not strong enough.
+                    if(self.hasClass('validation'))
+                    {
+                        self.popoverT('The password you chose is not complicated enough. Please add more characters, and use lowercase, uppercase, and special characters.');
+                    }
+                    
+                    //The password is missing (and the user has already typed something)
+                    if(self.hasClass('required'))
+                    {
+                        self.popoverT('A password is required to register for this service.');
+                    }
+                    
+                    //An 'uncaught' error has occured.
+                    self.popoverT("An unexpected error has occured.");
+                }
+                else
+                {
+                    self.popover('destroy');
+                }
+            });
+
+            //using changeDelay was slow to update the user about the limit.
+            $('#password-field').on('input',function(){
+                var self = $(this);
+                
+                //Delete the contents of the 'confirm password' field when the user modifies the primary password field
+                $('#pass2-field').val('').change();
+
+                if ( $('#password-field').val().length >= 100 ) {
+                    self.popoverT("The password may not be greater then 100 characters.");
+                }
+                else {
+                    self.popover('destroy');
+                }
+            });
+
+            //Doesn't need full verification: contents receive validation as part of password-field's check
+            //Therefore, just check if it matches and handle accordingly
+            $('#pass2-field').changeDelay(function(){
+                var self = $(this),
+                    other = $('#password-field');
+
+                if ( self.val() != other.val() ) {
+                    self.removeClass('excellent').addClass('poor error');
+                    self.popoverT("The 2 entered passwords must match.");
+                } else {
+                    self.removeClass('poor error').addClass('excellent');
+                    self.popover('destroy');
+                }
+            });
+            
+            $('#email-field').validated();
+            
+            $('#email-field').on('validation', function(){
+                
+                var self = $(this);
+                
+                //Error will be assigned by .validate() if there is something wrong with the input
+                if(self.hasClass('error'))
+                {
+                    //Necessary to allow for new popups to supersede old ones
+                    self.popover('destroy');
+                    
+                    //The email address is currently in use.
+                    if(self.hasClass('validation'))
+                    {
+                        self.popoverT('The email address you have entered is already in use.  Please choose another.');
+                    }
+                    
+                    //The email address is missing (and the user has already typed something)
+                    if(self.hasClass('required'))
+                    {
+                        self.popoverT('An email address is required to register for this service.');
+                    }
+                    
+                    //An 'uncaught' error has occured.
+                    self.popoverT('An unexpected error has occured.');
+                }
+                else
+                {
+                    self.popover('destroy');
+                }
+            });
+            
+            function process_signup() {
+                if ( $('#pass2-field').hasClass('poor') ) {
+                    $('#pass2-field').focus();
+                    return false;
+                }
+                
+                if ( $('field').hasClass('error') ) {
+                    $('field.error:first').focus();
+                    return false;
+                }
+            
+                var form = $('#register-form');
+            
+                // Ensure the input fields are not focused.
+                $('input', form).blur();
+            
+                // Fade to the progress spinner.
+                $('#register-form, .authentication .span6').animate({opacity: 0.25}, 250);
+                $('#submit').addClass('disabled').attr('disabled', true);
+                $('.overlay.wait').fadeIn(250);
+            
+                // Submit XHR request.
+                var receipt = $.post(form.attr('action') + '?ts=' + (+ new Date()), form.serialize());
+                receipt.fail(function(jqXHR, textStatus, errorThrown){
+                    // Something went wrong.
+                    console.log(jqXHR, textStatus, errorThrown);
+                }).done(function(data, textStatus, jqXHR){
+                    // Determine if we were successful or not and fade the appropriate icon.
+                    $('.overlay.wait').fadeOut(125, function(){
+                        if ( data.success ) {
+                            $('.overlay.success').fadeIn(250, function(){ window.location = data.location; });
+                        } else {
+                            $('.overlay.fail').fadeIn(250, function(){
+                                $('.overlay.fail').fadeOut(250);
+                                $('#register-form, .authentication .span6').animate({opacity: 1}, 250);
+                                $('#submit').removeClass('disabled').attr('disabled', false);
+                            });
+                        }
+                    });
+                });
+            
+                return false;
+            }
+            
+            $('#submit').click(process_signup);
+            $('#register-form').submit(process_signup);
+        });
+    </script>
+</%block>
+
+<div class="span4 box">
+    <div class="content-wrap authentication">
+        <h6>${_("Create Account")}</h6>
+
+        ${form}
+
+        <div class="overlay fa-4x wait"><i class="fa fa-spinner fa-spin fa-4x"></i></div>
+        <div class="overlay fa-4x result fail"><i class="fa fa-times fa-4x"></i></div>
+        <div class="overlay fa-4x result success"><i class="fa fa-check fa-4x"></i></div>
+
+        <div class="span6" style="margin: 0; text-align: left;">
+            <a href="/account/authenticate">${_("I already have an account.")}</a><br><a href="#">${_("Terms of Service")}</a>
+        </div>
+        <div class="span6" style="text-align: right;">
+            <button class="btn-glow primary" id="submit">${_("Sign Up")}</button>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+</div>

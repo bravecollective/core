@@ -2,7 +2,7 @@ h1(#title). Brave Collective Core Services
 
 bq(subtitle). An EVE online authentication and mediated API access application.
 
-bq(byline). (C) 2013, Alice Bevan-McGregor and contributors.
+bq(byline). (C) 2013-2014, Alice Bevan-McGregor and contributors.
 
 bq(byline). "https://github.com/bravecollective/core":github-project
 
@@ -28,27 +28,26 @@ Development takes place on "GitHub":github in the "core":github-project project.
 
 You will require an installed and running "MongoDB":mongodb installation.  Installation and configuration of MongoDB is beyond the scope of this documentation.
 
-You will require a current "WebCore":http://www.web-core.org/ installation.  The following will create a new Python virtual environment folder called "brave" in your current working directory, then activate the virtual environment.
+You will require a working and up-to-date "virtualenv":https://pypi.python.org/pypi/virtualenv installation.  The first step is always to create an environment:
 
-<pre><code>curl get.web-core.org | python - brave
-cd brave
-. bin/activate</code></pre>
+<pre><code>virtualenv brave</code></pre>
 
-Additionally, there are two requirements you will need to manually install as Core Services require features present in as-yet unreleased packages.  You will need to perform the following steps:
+Once you have this, enter and activate the virtual environment:
 
-<pre><code>(git clone git@github.com:marrow/marrow.templating.git; cd marrow.templating; python setup.py develop)
-(git clone git@github.com:marrow/marrow.tags.git; cd marrow.tags; python setup.py develop)</code></pre>
+<pre><code>cd brave
+source bin/activate</code></pre>
 
 Installing the current development version of the Core Service requires "Git":git, a distributed source code management system.  Compilation additionally requires the Python development headers and the OpenSSL development headers.  In Debian/Ubuntu, these are found in packages `python-dev` and `libssl-dev`.
 Run the following to download the development version with Git, and _link_ it into your Python runtime:
 
 <pre><code>git clone https://github.com/bravecollective/core.git
-(cd core; python setup.py develop)</code></pre>
+cd core
+pip install -r requirements.txt -e .</code></pre>
 
-Once you have successfully compiled the Core Service, copy `core/development.ini` to `core/local.ini`, and make changes as appropriate.  Finally, bootstrap the EVE API system by running:
+Once you have successfully compiled the Core Service, copy `development.ini` to `local.ini`, and make changes as appropriate.  Finally, bootstrap the EVE API system by running:
 
-<pre><code>paster shell local.ini # or development.ini if you didn't customize
-from adam.api import populate_calls
+<pre><code>paster shell local.ini # or don't mention an INI if you didn't customize
+from brave.core.util.eve import populate_calls
 populate_calls()</code></pre>
 
 You can upgrade to the latest version at any time:
@@ -76,12 +75,11 @@ This will start a development server and present the URL you need to access.  (G
 
 h2(#license). %4.% License
 
-Brave Collective Core Services has been released under the MIT Open Source license.  All contributors agree to transfer ownership of their code to Alice Bevan-McGregor for release under this license.  (This is to mitigate issues in the future.)
-
+Brave Collective Core Services has been released under the MIT Open Source license. 
 
 h3(#license-mit). %4.1.% The MIT License
 
-Copyright (C) 2013 Alice Bevan-McGregor and contributors.
+Copyright (C) 2013-2014 Alice Bevan-McGregor and contributors.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 

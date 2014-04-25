@@ -1,0 +1,515 @@
+## encoding: utf-8
+
+<%inherit file="brave.core.template.master"/>
+
+<%block name="title">Settings</%block>
+
+<%block name="header">
+    ${parent.header()}
+
+    <style>
+        input[type=submit] { float: right; border: 0 none; height: 0; width: 0; padding: 0; margin: 0; overflow: hidden; }
+        .content-wrap.authentication { position: relative; }
+        .overlay { position: absolute; top: 15px; left: 0; right: 0; text-align: center; display: none; }
+        .overlay.result { text-shadow: 0 1px 4px rgba(0,0,0,0.75); }
+        .overlay.fail { color: #b00; }
+        .overlay.success { color: #0b0; }
+    </style>
+</%block>
+
+<%block name="post">
+    ${parent.post()}
+
+    <script src="/js/changedelay.js" charset="utf-8"></script>
+    <script src="/js/vendor/zxcvbn.js" charset="utf-8"></script>
+
+    <script type="text/javascript" charset="utf-8">
+
+        $(function()
+        {
+
+            function confirm(title, content, success, callback)
+            {
+                if ( ! success.hasOwnProperty('label') )
+                    success = {label: success, kind: 'btn-primary'};
+
+                var modal = $(
+                '<div id="modal" class="modal hide fade">' +
+                    '<div class="modal-header">' +
+                        '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>' +
+                        '<h3>' + title + '</h3>' +
+                    '</div>' +
+                    '<div class="modal-body">' + content + '</div>' +
+                    '<div class="modal-footer">' +
+                        '<a href="#" class="btn" data-dismiss="modal">Cancel</a>' +
+                        '<a href="#" class="success btn ' + success.kind + '">' + success.label + '</a>' +
+                    '</div>' +
+                '</div>').appendTo('body');
+
+                $('#modal .btn.success').on('click', function(e)
+                {
+                    if ( callback() )
+                        return;
+
+                    e.preventDefault();
+                    $('#modal').modal('hide')
+                });
+
+                $('#modal').on('hidden', function()
+                {
+                    $('#modal').remove();
+                }).modal();
+            }
+
+            $(document).on('click', '.delete', function()
+            {
+                var username = $(this).attr('data-otpusername');
+                var yid = $(this).attr('data-otp');
+
+                $('#modal').modal('hide');
+                $('.overlay.wait').fadeIn(250);
+                $.post('/account/settings', {form: 'removeotp', 'id': username, otp: yid} , function(data)
+                {
+                    console.log(data);
+                    $('.overlay.wait').fadeOut(125, function(){
+                        if (data.success) {
+                           $('.overlay.success').fadeIn(250, function(){window.location = data.location;});
+                        } else {
+                            $('.overlay.fail').fadeIn(250, function(){
+                                $('.overlay.fail').fadeOut(250);
+                            });
+                        }
+                    });
+                });
+            });
+
+            $('.change').on('click', function()
+            {
+                confirm(
+                    "Change Password",
+                    '<p>' +
+                        'Fill in the form below to change the account password' +
+                    '</p>' +
+                    '<p>' +
+                        '<form>' +
+                            '<input id="id" name="id" type="hidden" class="input-block-level" value="${web.user.username}" required>'
+                                +
+                            '<input id="form" name="form" type="hidden" class="input-block-level" value="changepassword" required>' 
+                                +
+                            '<input id="old" name="old" type="password" class="input-block-level" placeholder="Old Password" maxlength="100" autocomplete="off" required>' 
+                                +
+                            '<input id="new-pass" name="passwd" type="password" class="input-block-level" placeholder="New Password" maxlength="100" autocomplete="off" required>'
+                                +
+                            '<input id="new-pass-confirm" name="passwd1" type="password" class="input-block-level" placeholder="Confirm New Password" maxlength="100" autocomplete="off" required>' 
+                                +
+                        '</form>' +
+                    '</p>',
+                    {
+                        label: "Change",
+                        kind: 'btn-success'
+                    },
+                    function()
+                    {
+                        $('#modal form .alert').remove();
+                        error = false;
+                        if ( $('#new-pass').val().length >= 100 ) {
+                            $('#new-pass').addClass('error');
+                            $('#new-pass').focus()
+                            $('#modal form input[name="passwd"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>Passwords must not be longer than 100 characters</strong>' +
+                                '</div>'
+                            );
+                            error = true
+                        }
+
+                        if ( $('#new-pass-confirm').val() !=  $('#new-pass').val()) {
+                            $('#new-pass-confirm').addClass('error');
+                            $('#new-pass-confirm').focus()
+                            $('#modal form input[name="passwd"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>Passwords must match</strong>' +
+                                '</div>'
+                            );
+                            error = true
+                        } 
+                        if ($('#old').val().length <= 0) {
+                            $('#old').addClass('error');
+                            $('#modal form input[name="old"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>Old password required</strong>' +
+                                '</div>'
+                            );
+                            error = true
+                        }
+                        
+                        if (error == true)
+                            return error   
+                        
+                        $('.overlay.wait').fadeIn(250);
+                        $.post('/account/settings', $('#modal form').serialize(), function(data)
+                        {
+                            console.log(data);
+                            $('.overlay.wait').fadeOut(125, function(){
+                                if (data.success) {
+                                   $('.overlay.success').fadeIn(250, function(){ window.location = data.location; });                                
+                                } else {
+                                    $('.overlay.fail').fadeIn(250, function(){
+                                        $('.overlay.fail').fadeOut(250);
+                                    });
+                                }
+                            });
+
+                        });
+                    }
+                );
+                
+            });
+            
+            $('.changeemail').on('click', function()
+            {
+                confirm(
+                    "Change Email Address",
+                    '<p>' +
+                        'Fill in the form below to change the account email address' +
+                    '</p>' +
+                    '<p>' +
+                        '<form>' +
+                            '<input id="id" name="id" type="hidden" class="input-block-level" value="${web.user.username}" required>'
+                                +
+                            '<input id="form" name="form" type="hidden" class="input-block-level" value="changeemail" required>' 
+                                +
+                            '<input id="newEmail" name="newEmail" type="text" class="input-block-level" placeholder="New Email Address" autocomplete="off" required>'
+                                +
+                            '<input id="newEmailConfirm" name="newEmailConfirm" type="text" class="input-block-level" placeholder="Confirm New Email Address" autocomplete="off" required>' 
+                                +
+                            '<input id="passwd" name="passwd" type="password" class="input-block-level" placeholder="Password" maxlength="100" autocomplete="off" required>' 
+                                +
+                        '</form>' +
+                    '</p>',
+                    {
+                        label: "Change",
+                        kind: 'btn-success'
+                    },
+                    function()
+                    {
+                        $('#modal form .alert').remove();
+                        error = false;
+                        if ( $('#newEmailConfirm').val().toLowerCase() !=  $('#newEmail').val().toLowerCase()) {
+                            $('#newEmailConfirm').addClass('error');
+                            $('#newEmailConfirm').focus()
+                            $('#modal form input[name="newEmail"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>Email Addresses must match</strong>' +
+                                '</div>'
+                            );
+                            error = true
+                        } 
+                        if ($('#passwd').val().length <= 0) {
+                            $('#passwd').addClass('error');
+                            $('#modal form input[name="passwd"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>Password required</strong>' +
+                                '</div>'
+                            );
+                            error = true
+                        }
+                        if ($('#newEmail').val().length <= 0) {
+                            $('#newEmail').addClass('error');
+                            $('#modal form input[name="newEmail"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>Email address required</strong>' +
+                                '</div>'
+                            );
+                            error = true
+                        }
+                        if ($('#newEmailConfirm').val().length <= 0) {
+                            $('#newEmailConfirm').addClass('error');
+                            $('#modal form input[name="newEmailConfirm"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>Email address required</strong>' +
+                                '</div>'
+                            );
+                            error = true
+                        }
+                        
+                        if (error == true)
+                            return error   
+                        
+                        $('.overlay.wait').fadeIn(250);
+                        $.post('/account/settings', $('#modal form').serialize(), function(data)
+                        {
+                            console.log(data);
+                            $('.overlay.wait').fadeOut(125, function(){
+                                if (data.success) {
+                                   $('.overlay.success').fadeIn(250, function(){ window.location = data.location; });                                
+                                } else {
+                                    $('.overlay.fail').fadeIn(250, function(){
+                                        $('.overlay.fail').fadeOut(250);
+                                    });
+                                }
+                            });
+
+                        });
+                    }
+                );
+                
+            });
+            
+            $('.deleteacct').on('click', function()
+            {
+                confirm(
+                    "Delete Account",
+                    '<p>' +
+                        'Fill in the form below to delete your account. <b>THIS IS PERMANENT AND IRREVERSIBLE.</b> You may lose access to any ' +
+                        'applications which rely on this account, and data in other BRAVE applications may be lost as well. Make sure to type ' +
+                        '<b>delete</b> exactly as shown.' +
+                    '</p>' +
+                    '<p>' +
+                        '<form>' +
+                            '<input id="id" name="id" type="hidden" class="input-block-level" value="${web.user.username}" required>'
+                                +
+                            '<input id="form" name="form" type="hidden" class="input-block-level" value="deleteaccount" required>' 
+                                +
+                            '<input id="username" name="username" type="text" class="input-block-level" placeholder="Username" autocomplete="off" required>'
+                                +
+                            '<input id="passwd" name="passwd" type="password" class="input-block-level" placeholder="Password" maxlength="100" autocomplete="off" required>' 
+                                +
+                            '<input id="confirm" name="confirm" type="text" class="input-block-level" placeholder="Type delete here" maxlength="100" autocomplete="off" required>' 
+                                +
+                        '</form>' +
+                    '</p>',
+                    {
+                        label: "Delete Account",
+                        kind: 'btn-danger'
+                    },
+                    function()
+                    {
+                        $('#modal form .alert').remove();
+                        error = false;
+                        if ( $('#passwd').val().length >= 100 ) {
+                            $('#passwd').addClass('error');
+                            $('#passwd').focus()
+                            $('#modal form input[name="passwd"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>Passwords must not be longer than 100 characters</strong>' +
+                                '</div>'
+                            );
+                            error = true
+                        }
+                        if ($('#passwd').val().length <= 0) {
+                            $('#passwd').addClass('error');
+                            $('#modal form input[name="passwd"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>Password required</strong>' +
+                                '</div>'
+                            );
+                            error = true
+                        }
+                        if ($('#username').val().length <= 0) {
+                            $('#username').addClass('error');
+                            $('#modal form input[name="username"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>Username required</strong>' +
+                                '</div>'
+                            );
+                            error = true
+                        }
+                        if ( $('#confirm').val() !=  'delete') {
+                            $('#confirm').addClass('error');
+                            $('#confirm').focus()
+                            $('#modal form input[name="confirm"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>You must type in "delete" (no quotes) exactly as shown.</strong>' +
+                                '</div>'
+                            );
+                            error = true
+                        }
+                        
+                        if (error == true)
+                            return error   
+                        
+                        $('.overlay.wait').fadeIn(250);
+                        $.post('/account/settings', $('#modal form').serialize(), function(data)
+                        {
+                            console.log(data);
+                            $('.overlay.wait').fadeOut(125, function(){
+                                if (data.success) {
+                                   $('.overlay.success').fadeIn(250, function(){ window.location = data.location; });                                
+                                } else {
+                                    $('.overlay.fail').fadeIn(250, function(){
+                                        $('.overlay.fail').fadeOut(250);
+                                    });
+                                }
+                            });
+
+                        });
+                    }
+                );
+                
+            });
+
+            $('.configureotp').on('click', function()
+            {
+                confirm(
+                    "Configure OTP",
+                    '<p>' +
+                        '<form>' +
+                            '<input id="id" name="id" type="hidden" class="input-block-level" value="${web.user.username}" required>'
+                                +
+                            '<input id="form" name="form" type="hidden" class="input-block-level" value="configureotp" required>'
+                                +
+                            '<input id="password" name="password" type="password" class="input-block-level" placeholder="Current Password" maxlength="100" autocomplete="off" required>' 
+                                +
+                            '<label><input type="checkbox" id="rotp" name="rotp"'
+                                %if web.user.rotp:
+                                +
+                                ' checked'
+                                %endif 
+                                +
+                                '> Require OTP on sign in</label>'
+                                +
+                        '</form>' +
+                        '<table class="table table-hover">' +
+                            '<thead>' +
+                                '<tr>' +
+                                    '<th>YubiKey ID</th>' +
+                                    '<th style="width: 16px;"></th>' +
+                                '</tr>' +
+                            '</thead>' +
+                            '<tbody>'
+
+                        %for otp in web.user.otp:
+                            +
+                            '<tr id="otp-${otp}">' +
+                                '<td>${otp}</td>' +
+                                '<td>' +
+                                    '<button data-otpusername="${web.user.username}" data-otp="${otp}" class="btn btn-danger btn-small delete"><i class="fa fa-times"></i></button>' +
+                                '</td>' +
+                            '</tr>'
+                        %endfor
+                        +
+                            '</tbody>' +
+                        '</table>' +
+                    '</p>',
+                    {
+                        label: "Save",
+                        kind: 'btn-success'
+                    },
+                    function()
+                    {
+                        $('#modal form .alert').remove();
+                        error = false;
+                        if ($('#password').val().length <= 0) {
+                            $('#password').addClass('error');
+                            $('#modal form input[name="password"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>Current password required</strong>' +
+                                '</div>'
+                            );
+                            error = true
+                        }
+                        
+                        if (error == true)
+                            return error   
+                        
+                        $('.overlay.wait').fadeIn(250);
+                        $.post('/account/settings', $('#modal form').serialize(), function(data)
+                        {
+                            console.log(data);
+                            $('.overlay.wait').fadeOut(125, function(){
+                                if (data.success) {
+                                   $('.overlay.success').fadeIn(250, function(){ window.location = data.location; });                                
+                                } else {
+                                    $('.overlay.fail').fadeIn(250, function(){
+                                        $('.overlay.fail').fadeOut(250);
+                                    });
+                                }
+                            });
+
+                        });
+                    }
+                );
+                
+            });
+
+            $('.addotp').on('click', function()
+            {
+                confirm(
+                    "Add OTP",
+                    '<p>' +
+                        'Fill in the form below to add an YubiKey' +
+                    '</p>' +
+                    '<p>' +
+                        '<form>' +
+                            '<input id="id" name="id" type="hidden" class="input-block-level" value="${web.user.username}" required>'
+                                +
+                            '<input id="form" name="form" type="hidden" class="input-block-level" value="addotp" required>'
+                                +
+                            '<input id="password" name="password" type="password" class="input-block-level" placeholder="Current Password" maxlength="100" autocomplete="off" required>'
+                                +
+                            '<input id="otp" name="otp" type="text" class="input-block-level" placeholder="OTP" maxlength="44" autocomplete="off" required>'
+                                +
+                        '</form>' +
+                    '</p>',
+                    {
+                        label: "Save",
+                        kind: 'btn-success'
+                    },
+                    function()
+                    {
+                        $('#modal form .alert').remove();
+                        error = false;
+                        if ($('#password').val().length <= 0) {
+                            $('#password').addClass('error');
+                            $('#modal form input[name="password"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>Current password required</strong>' +
+                                '</div>'
+                            );
+                            error = true
+                        }
+                        
+                        if (error == true)
+                            return error   
+                        
+                        $('.overlay.wait').fadeIn(250);
+                        $.post('/account/settings', $('#modal form').serialize(), function(data)
+                        {
+                            console.log(data);
+                            $('.overlay.wait').fadeOut(125, function(){
+                                if (data.success) {
+                                   $('.overlay.success').fadeIn(250, function(){ window.location = data.location; });                                
+                                } else {
+                                    $('.overlay.fail').fadeIn(250, function(){
+                                        $('.overlay.fail').fadeOut(250);
+                                    });
+                                }
+                            });
+
+                        });
+                    }
+                );
+                
+            });
+        });
+    </script>
+</%block>
+
+<div class="container-fluid">
+    <div id="pad-wrapper">
+
+        <div class="overlay fa-4x wait"><i class="fa fa-spinner fa-spin fa-4x"></i></div>
+        <div class="overlay fa-4x result fail"><i class="fa fa-times fa-4x"></i></div>
+        <div class="overlay fa-4x result success"><i class="fa fa-check fa-4x"></i></div>
+
+        <div class="header">
+            <h3>Settings</h3>
+        </div>
+            <a class="btn change"><i class="fa fa-cog"></i> Change Password</a><br /><br />
+            <a class="btn changeemail"><i class="fa fa-cog"></i> Change Email Address</a><br /><br />
+            <a class="btn configureotp"><i class="fa fa-cog"></i> Configure OTP</a><br /><br />
+            <a class="btn addotp"><i class="fa fa-cog"></i> Add OTP</a><br /><br />
+            <a class="btn deleteacct"><i class="fa fa-times"></i> Delete Account</a><br /><br />
+    </div>
+</div>
