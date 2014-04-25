@@ -1,9 +1,12 @@
 from __future__ import print_function, unicode_literals
 
+from brave.core.scripts import script_init
+if __name__ == "__main__":
+    script_init()
+
 from mongoengine.errors import OperationError, ValidationError
 
 from brave.core.account.model import User
-from brave.core.util.script_init import script_init
 
 def ensure_lowercase(u, field):
     if u[field] != u[field].lower():
