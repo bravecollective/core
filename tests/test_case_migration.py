@@ -31,6 +31,7 @@ class CaseMigrationTest(unittest.TestCase):
         self.check_user(id, "user", "user@example.com")
 
     def test_username_collision(self):
+        # check that colliding username is not modified
         id1 = User(username="user", email="user1@example.com").save().id
         id2 = User(username="UsEr", email="user2@example.com").save(validate=False).id
 
@@ -38,10 +39,11 @@ class CaseMigrationTest(unittest.TestCase):
 
         self.assertEqual(len(User.objects), 2)
         self.check_user(id1, "user", "user1@example.com")
-        self.check_user(id2, "UsEr", "user2@example.com") # colliding user not modified
+        self.check_user(id2, "UsEr", "user2@example.com")
         self.assertEqual(len(failures), 1)
 
     def test_email_collision(self):
+        # check that colliding email is not modified
         id1 = User(username="user1", email="user@example.com").save().id
         id2 = User(username="user2", email="USER@example.com").save(validate=False).id
 
@@ -49,5 +51,16 @@ class CaseMigrationTest(unittest.TestCase):
 
         self.assertEqual(len(User.objects), 2)
         self.check_user(id1, "user1", "user@example.com")
-        self.check_user(id2, "user2", "USER@example.com") # colliding user not modified
+        self.check_user(id2, "user2", "USER@example.com")
+        self.assertEqual(len(failures), 1)
+
+    def test_partial_collision(self):
+        # check that with a colliding username, email is still migrated
+        id1 = User(username="user", email="user1@example.com").save().id
+        id2 = User(username="USER", email="USER2@EXAMPLE.COM").save(validate=False).id
+
+        failures = case_migration.migrate()
+        self.assertEqual(len(User.objects), 2)
+        self.check_user(id1, "user", "user1@example.com")
+        self.check_user(id2, "USER", "user2@example.com")
         self.assertEqual(len(failures), 1)
