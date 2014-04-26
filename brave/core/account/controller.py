@@ -50,10 +50,15 @@ class Authenticate(HTTPMethod):
         return 'brave.core.account.template.signin', dict(form=form)
 
     def post(self, identity, password, remember=False, redirect=None):
-        #Ensures that the provided identity is lowercase if it's an email or username, but leaves it alone if it's an OTP
-        if('@' in identity or len(identity) != 44): 
-            identity = identity.lower()
-        if not authenticate(identity, password):
+        # First try with the original input
+        success = authenticate(identity, password)
+
+        if not success:
+            # Try lowercase if it's an email or username, but not if it's an OTP
+            if '@' in identity or len(identity) != 44:
+                success = authenticate(identity.lower(), password)
+
+        if not success:
             if request.is_xhr:
                 return 'json:', dict(success=False, message=_("Invalid user name or password."))
 
@@ -71,6 +76,8 @@ class Recover(HTTPMethod):
         if not email:
             return None
         user = lookup_email(email)
+        if not user:
+            user = lookup_email(email.lower())
         if not user:
             return None
         recovery = PasswordRecovery.objects(user=user, recovery_key=recovery_key).first()
@@ -112,6 +119,8 @@ class Recover(HTTPMethod):
             return 'json:', dict(success=False, message=_("Unable to parse data."), data=post, exc=str(e))
 
         user = lookup_email(data.email)
+        if not user:
+            user = lookup_email(data.email.lower())
         if not user:
             # FixMe: possibly do send success any way, to prevent email address confirmation
             #   - would be necessary for register as well
@@ -190,7 +199,7 @@ class Register(HTTPMethod):
         except NotUniqueError:
             return 'json:', dict(success=False, message=_("Either the username or email address provided is already taken."), data=data)
         
-        authenticate(data.username.lower(), data.password)
+        authenticate(user.username, data.password)
         
         return 'json:', dict(success=True, location="/")
 
