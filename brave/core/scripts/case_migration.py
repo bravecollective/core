@@ -1,8 +1,8 @@
 from __future__ import print_function, unicode_literals
 
-from brave.core.scripts import script_init
+from brave.core import core_loadapp
 if __name__ == "__main__":
-    script_init()
+    core_loadapp()
 
 from mongoengine.errors import OperationError, ValidationError
 
@@ -31,7 +31,6 @@ def migrate():
     return failures
 
 def main():
-    script_init()
     migrate()
 
 if __name__ == "__main__":
