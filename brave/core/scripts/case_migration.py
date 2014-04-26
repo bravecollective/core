@@ -1,8 +1,10 @@
 from __future__ import print_function, unicode_literals
 
+import sys
+
 from brave.core import core_loadapp
 if __name__ == "__main__":
-    core_loadapp()
+    core_loadapp("config:"+sys.argv[1] if len(sys.argv) > 1 else None)
 
 from mongoengine.errors import OperationError, ValidationError
 
