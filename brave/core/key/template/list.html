@@ -140,6 +140,9 @@
     <tr data-id="${record.id}">
         <td class="key-id"><i class="fa fa-fw fa-${'check' if record.verified else 'times'}"></i> ${record.key}</td>
         <td class="key-code"><span class="ellipsis">${record.code}</span></td>
+        % if record.violation == "Character":
+        <td class="security-violation">Character Security Violation. Join Brave IT Team in game for assistance.</td>
+        % endif
         <td class="characters hidden-tablet hidden-phone">
             % for char in record.characters:
             <img src="http://image.eveonline.com/Character/${char.identifier}_32.jpg" style="vertical-align: middle; margin-right: 5px; border-radius: 3px; width: 24px; height: 24px;" title="${char.name}">
@@ -185,6 +188,7 @@
                 <thead>
                     <tr>
                         <th class="span2 sortable key-id">${_("Key ID")}</th>
+                        <th class="span2 sortable security-violation">${_("Security Violation")}</th>
                         <th class="span3 sortable key-code"><span class="line"></span>${_("Verification Code")}</th>
                         <th class="span2 sortable characters hidden-tablet hidden-phone"><span class="line"></span>${_("Characters")}</th>
                         <th class="span3 sortable key-date hidden-phone"><span class="line"></span>${_("Added")}</th>
@@ -195,6 +199,9 @@
                     % for record in records:
                     <tr data-id="${record.id}">
                         <td class="key-id"><i class="fa fa-fw fa-${'check' if record.verified else 'times'}"></i> ${record.key}</td>
+                        % if record.violation == "Character":
+                        <td class="security-violation">Character Security Violation. Join Brave IT Team in game for assistance.</td>
+                        % endif
                         <td class="key-code"><span class="ellipsis">${record.code}</span></td>
                         <td class="characters hidden-tablet hidden-phone">
                             % for char in record.characters:

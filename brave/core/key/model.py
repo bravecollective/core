@@ -34,6 +34,7 @@ class EVECredential(Document):
     verified = BooleanField(db_field='v', default=False)
     expires = DateTimeField(db_field='e')
     owner = ReferenceField('User', db_field='o', reverse_delete_rule='CASCADE')
+    violation = StringField(db_field='s')
     
     modified = DateTimeField(db_field='m', default=datetime.utcnow)
     
@@ -87,7 +88,14 @@ class EVECredential(Document):
         from brave.core.character.model import EVECharacter
         
         corporation, alliance = self.get_membership(info)
-        
+
+        #Prevent trying to add characters that other Core accounts already own.
+        if not EVECharacter.objects(identifier = info.characterID).first().owner == self.owner:
+            log.warning("Security violation detected. Multiple accounts trying to register character %s, ID %d. Actual owner is %s. User adding this character is %s.",
+                 EVECharacter.objects(identifier = info.characterID).first().name, info.characterID, EVECharacter.objects(identifier = info.characterID).first().owner, self.owner)
+            self.violation = "Character"
+            return None, None, None
+
         try:
             char, created = EVECharacter.objects.get_or_create(
                     owner = self.owner,
@@ -177,12 +185,18 @@ class EVECredential(Document):
             log.error("No characters returned for key %d?", self.key)
             return
         
+        allCharsOK = True
+
         for char in result.characters.row:
             if 'corporationName' not in char:
                 log.error("corporationName missing for key %d", self.key)
                 continue
             
-            implementation(char)
+            if implementation(char) == (None, None, None):
+                allCharsOK = False
         
+        if allCharsOK:
+            self.violation = "False"
+
         self.modified = datetime.utcnow()
         self.save()
