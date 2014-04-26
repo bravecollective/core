@@ -72,6 +72,20 @@ Make a copy of @development.ini@ called @local.ini@, update all relevant directi
 This will start a development server and present the URL you need to access.  (Generally "http://127.0.0.1:8080":http://127.0.0.1:8080.)  If you wish the server to automatically restart in the event of a change to one of the source files (templates and statically served content are exempt) add the @--reload@ switch.
 
 
+h2(#admin). %4.% Common admin tasks
+
+There will be UI for these, but in the meantime, here are some hints for doing admin tasks from the paster shell. Do apply common-sense checking along your way to make sure you're touching the right objects.
+
+h3(). %4.1% Adding a user to a group
+
+<pre><code>from brave.core.account.model import User
+from brave.core.group.model import Group
+u = User.objects(username=USERNAME_HERE)[0]
+g = Group.objects(title=GROUP_TITLE_HERE)[0]
+g.rules[APPROPRIATE_INDEX].ids.append(u.primary.identifier)
+g.save()
+</code></pre>
+
 
 h2(#license). %4.% License
 
