@@ -78,8 +78,7 @@ There will be UI for these, but in the meantime, here are some hints for doing a
 
 h3(). %4.1% Adding a user to a group
 
-<pre><code>
-from brave.core.account.model import User
+<pre><code>from brave.core.account.model import User
 from brave.core.group.model import Group
 u = User.objects(username=USERNAME_HERE)[0]
 g = Group.objects(title=GROUP_TITLE_HERE)[0]
