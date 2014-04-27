@@ -1,0 +1,92 @@
+## encoding: utf-8
+
+<%inherit file="brave.core.template.master"/>
+
+<%block name="title">Groups</%block>
+
+<%block name="post">
+    ${parent.post()}
+
+    <script type="text/javascript" charset="utf-8">
+        $(function() {
+            $('#new-group-create').click(function() {
+                var form = $(this).parents(".modal-content").find("form");
+                var id = form.find('input[name=id]').val();
+                var title = form.find('input[name=title]').val();
+                $.post('/group/create', {
+                        id: id,
+                        title: title,
+                    }, function(data) {
+                        if (data.success) {
+                            window.location = "/group/" + data.id;
+                        } else {
+                            alert(data.message);
+                        }
+                    }
+                );
+            });
+        });
+    </script>
+</%block>
+
+<div class="modal fade" id="new-group">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Create group</h4>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <table class="table">
+                        <tr>
+                            <td>ID</td>
+                            <td><input name="id" type="text" pattern="^[a-zA-Z0-9]+$" required /></td>
+                            <td>A brief, unique string. No spaces or special characters.</td>
+                        </tr>
+                        <tr>
+                            <td>Title</td>
+                            <td><input name="title" type="text"jrequired /></td>
+                            <td>A human-readable description.</td>
+                        </tr>
+                    </table>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="new-group-create">Create group</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<div class="container-fluid">
+    <div id="pad-wrapper">
+        <div class="row-fluid header">
+            <a class="btn btn-success pull-right add" data-toggle="modal" data-target="#new-group"><i class="fa fa-plus"></i> Create Group</a>
+            <h3>Groups</h3>
+        </div>
+        <div class="row-fluid table">
+            % if not len(groups):
+                <p class="subtext" style="text-transform: uppercase;"><strong>There seem to be no groups.</strong></p>
+            % else:
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>id</th>
+                            <th>title</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        % for group in groups:
+                            <tr>
+                                <td><a href="/group/${group.id}">${group.id}</a></td>
+                                <td>${group.title}</td>
+                            </tr>
+                        % endfor
+                    </tbody>
+                </table>
+            % endif
+        </div>
+    </div>
+</div>
