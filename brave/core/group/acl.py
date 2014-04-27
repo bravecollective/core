@@ -175,7 +175,7 @@ class ACLRole(ACLRule):
         return "{grant} if user {has} the corporate role {set}".format(
                 grant='grant' if self.grant else 'deny',
                 has="doesn't have" if self.inverse else 'has',
-                set=' or '.join(self.titles),
+                set=' or '.join(self.roles),
         )
 
 
