@@ -49,8 +49,9 @@ class OneGroupController(HTTPMethod):
                                  message=_("character not found"))
         c = q.first()
 
-        r = self.group.rules[-1]
-        if not (isinstance(r, ACLList) and r.grant and not r.inverse and r.kind == 'c'):
+
+        r = self.group.rules[-1] if len(self.group.rules) else None
+        if not r or not (isinstance(r, ACLList) and r.grant and not r.inverse and r.kind == 'c'):
             r = ACLList(grant=True, inverse=False, kind='c', ids=[])
             self.group.rules.append(r)
 
@@ -77,8 +78,8 @@ class OneGroupController(HTTPMethod):
                                  message=_("character not found"))
         c = q.first()
 
-        r = self.group.rules[-1]
-        if not (isinstance(r, ACLList) and r.grant and not r.inverse and r.kind == 'c'):
+        r = self.group.rules[-1] if len(self.group.rules) else None
+        if not r or not (isinstance(r, ACLList) and r.grant and not r.inverse and r.kind == 'c'):
             return 'json:', dict(success=False,
                                  message=_("Sorry, I don't know what to do!"))
         if not c.identifier in r.ids:
