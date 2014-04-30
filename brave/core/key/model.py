@@ -10,7 +10,6 @@ from brave.core.util import strip_tags
 from brave.core.util.signal import update_modified_timestamp, trigger_api_validation
 from brave.core.util.eve import api
 
-
 log = __import__('logging').getLogger(__name__)
 
 
