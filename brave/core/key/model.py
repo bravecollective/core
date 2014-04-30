@@ -90,7 +90,7 @@ class EVECredential(Document):
         corporation, alliance = self.get_membership(info)
 
         #Prevent trying to add characters that other Core accounts already own.
-        if not EVECharacter.objects(identifier = info.characterID).first().owner == self.owner:
+        if EVECharacter.objects(identifier = info.characterID).first() and not EVECharacter.objects(identifier = info.characterID).first().owner == self.owner:
             log.warning("Security violation detected. Multiple accounts trying to register character %s, ID %d. Actual owner is %s. User adding this character is %s.",
                  EVECharacter.objects(identifier = info.characterID).first().name, info.characterID, EVECharacter.objects(identifier = info.characterID).first().owner, self.owner)
             self.violation = "Character"
