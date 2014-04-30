@@ -22,6 +22,8 @@ import re
 log = __import__('logging').getLogger(__name__)
 
 
+MINIMUM_PASSWORD_STRENGTH = 3
+
 def _check_password(passwd1, passwd2):
     """checks the passed passwords for equality and length
     (could be extended to add minimal length, complexity, ...)
@@ -145,6 +147,10 @@ class Recover(HTTPMethod):
         if not passwd_ok:
             return 'json:', dict(success=False, message=error_msg)
 
+        #If the password isn't strong enough, reject it
+        if(zxcvbn.password_strength(data.password).get("score") < MINIMUM_PASSWORD_STRENGTH):
+            return 'json:', dict(success=False, message=_("Password provided is too weak. please add more characters, or include lowercase, uppercase, and special characters."), data=data)
+
         #set new password
         user = recovery.user
         user.password = data.password
@@ -185,8 +191,8 @@ class Register(HTTPMethod):
         if err:
             return 'json:', dict(success=False, message=_("Invalid email address provided."), data=data)
         
-        #If the password has a score of less than 3, reject it
-        if(zxcvbn.password_strength(data.password).get("score") <= 2):
+        #If the password isn't strong enough, reject it
+        if(zxcvbn.password_strength(data.password).get("score") < MINIMUM_PASSWORD_STRENGTH):
             return 'json:', dict(success=False, message=_("Password provided is too weak. please add more characters, or include lowercase, uppercase, and special characters."), data=data)
         
         #Ensures that the provided username and email are lowercase
@@ -234,6 +240,10 @@ class Settings(HTTPMethod):
 
             if not User.password.check(user.password, data.old):
                 return 'json:', dict(success=False, message=_("Old password incorrect."), data=data)
+
+            #If the password isn't strong enough, reject it
+            if(zxcvbn.password_strength(data.passwd).get("score") < MINIMUM_PASSWORD_STRENGTH):
+                return 'json:', dict(success=False, message=_("Password provided is too weak. please add more characters, or include lowercase, uppercase, and special characters."), data=data)
 
             user.password = data.passwd
             user.save()
