@@ -112,11 +112,11 @@ class User(Document):
 
     def delete(self):
         
-        self.characters().delete()
-        self.credentials().delete()
-        self.grants().delete()
-        self.attempts().delete()
-        self.recovery_keys().delete()
+        self.characters.delete()
+        self.credentials.delete()
+        self.grants.delete()
+        self.attempts.delete()
+        self.recovery_keys.delete()
         super(User, self).delete()
 
 class LoginHistory(Document):
