@@ -26,7 +26,6 @@ class KeyIndex(HTTPMethod):
         self.key = key
 
     def delete(self):
-        self.key.owner.reloadChars()
         self.key.delete()
 
         if request.is_xhr:

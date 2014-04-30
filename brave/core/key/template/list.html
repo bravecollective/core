@@ -63,7 +63,7 @@
                         $.post('/key/', $('#modal form').serialize(), function(data)
                         {
                             $(
-				'<tr data-id="' + data.identifier + '">' +
+                                '<tr data-id="' + data.identifier + '">' +
                                     '<td class="key-id">' +
                                         '<i class="icon-fixed-width icon-remove"></i> ' + data.key +
                                     '</td>' +
@@ -89,8 +89,8 @@
                                         '</button>' +
                                     '</td>' +
                                 '</tr>'
-			).appendTo('table.table tbody');
-			console.log("ADDED TO TBODY");
+                        ).appendTo('table.table tbody');
+                        console.log("ADDED TO TBODY");
                             $('time').timeago();
                         });
                     }
@@ -141,7 +141,9 @@
         <td class="key-id"><i class="fa fa-fw fa-${'check' if record.verified else 'times'}"></i> ${record.key}</td>
         <td class="key-code"><span class="ellipsis">${record.code}</span></td>
         % if record.violation == "Character":
-        <td class="security-violation">Character Security Violation. Join Brave IT Team in game for assistance.</td>
+        <td class="security-violation"><font color="red">Character Security Violation.</font></td>
+        % else:
+        <td class="security-violation"><font color="green">The BIA is always watching...</font></td>
         % endif
         <td class="characters hidden-tablet hidden-phone">
             % for char in record.characters:
