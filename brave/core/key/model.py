@@ -195,7 +195,7 @@ class EVECredential(Document):
             if implementation(char) == (None, None, None):
                 allCharsOK = False
         
-        if allCharsOK:
+        if allCharsOK and self.violation == "Character":
             self.violation = "False"
 
         self.modified = datetime.utcnow()
