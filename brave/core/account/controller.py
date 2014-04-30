@@ -352,7 +352,11 @@ class Settings(HTTPMethod):
             if not User.password.check(user.password, data.passwd):
                 return 'json:', dict(success=False, message=_("First password incorrect."), data=data)
                 
-            #Make the user enter their username so they know what they're doing.
+            #Make sure the user isn't trying to merge their account into itself.
+            if data.username.lower() == data.username2.lower():
+                return 'json:', dict(success=False, message=_("You can't merge an account into itself."), data=data)
+                
+            #Make the user enter the second username so we can get the User object they want merged in.
             if not User.objects(username=data.username2.lower()):
                 return 'json:', dict(success=False, message=_("Unable to find user by second username."), data=data)
                 
@@ -363,7 +367,7 @@ class Settings(HTTPMethod):
                 return 'json:', dict(success=False, message=_("Second password incorrect."), data=data)
                 
             #Make them type "merge" exactly
-            if not data.confirm == "merge":
+            if data.confirm != "merge":
                 return 'json:', dict(success=False, message=_("Merge was either misspelled or not lowercase."), data=data)
                 
             log.info("User %s merged account %s into %s.", user.username, other.username, user.username)
