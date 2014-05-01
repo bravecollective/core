@@ -86,6 +86,9 @@ class OneGroupController(HTTPMethod):
             return 'json:', dict(success=False,
                                  message=_("Character not found in last rule!"))
         r.ids.remove(c.identifier)
+        if not r.ids:
+            # If we just removed the last user in the rule, get rid of the rule.
+            self.group.rules.pop(-1)
         success = self.group.save()
 
         if success:
