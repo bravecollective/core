@@ -49,9 +49,9 @@ class EVECredential(Document):
     @property
     def mask(self):
         """Returns a Key Mask object instead of just the integer."""
-        if self.t == "Account"
+        if self.kind == "Account"
             return EVECharacterKeyMask(self._mask)
-        elif self.t == "Corporation":
+        elif self.kind == "Corporation":
             return EVECorporationKeyMask(self._mask)
         
     @mask.setter
