@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 
 from datetime import datetime
 from mongoengine import Document, StringField, DateTimeField, BooleanField, ReferenceField, IntField
+from mongoengine.errors import NotUniqueError
 from marrow.util.bunch import Bunch
 
 from brave.core.util import strip_tags
@@ -46,6 +47,36 @@ class EVECredential(Document):
         return EVECharacter.objects(credentials=self)
     
     # EVE API Integration
+
+    def pull_character(self, info):
+        """This always updates all information on the character, so that we do not end up with
+        inconsistencies. There is some weirdness that, if a user already has a key with full
+        permissions, and adds a limited one, we'll erase information on that character. We should
+        probably check for and refresh info from the most-permissioned key instead of this."""
+        from brave.core.character.model import EVEAlliance, EVECorporation, EVECharacter
+        try:
+            char = EVECharacter(identifier=info.characterID).save()
+        except NotUniqueError:
+            char = EVECharacter.objects(identifier=info.characterID)[0]
+
+        if self.mask & 8:
+            info = api.char.CharacterSheet(self, characterID=info.characterID)
+        elif self.mask & 8388608:
+            info = api.eve.CharacterInfo(self, characterID=info.characterID)
+
+        char.corporation, char.alliance = self.get_membership(info)
+
+        char.race = info.race if 'race' in info else None
+        char.bloodline = (info.bloodLine if 'bloodLine' in info
+                          else info.bloodline if 'bloodline' in info
+                          else None)
+        char.ancestry = info.ancestry if 'ancestry' in info else None
+        char.gender = info.gender if 'gender' in info else None
+        char.security = info.security if 'security' in info else None
+        char.titles = [strip_tags(i.titleName) for i in info.corporationTitles.row] if 'corporationTitles' in info else []
+        char.roles = [i.roleName for i in info.corporationRoles.row] if 'corporationRoles' in info else []
+
+        char.save()
     
     def get_membership(self, info):
         from brave.core.character.model import EVEAlliance, EVECorporation, EVECharacter
@@ -82,74 +113,6 @@ class EVECredential(Document):
         
         return corporation, alliance
     
-    def pull_minimal(self, info):
-        """Populate character details given nothing but a validated API key."""
-        from brave.core.character.model import EVECharacter
-        
-        corporation, alliance = self.get_membership(info)
-        
-        try:
-            char, created = EVECharacter.objects.get_or_create(
-                    owner = self.owner,
-                    identifier = info.characterID
-                )
-        except:
-            log.exception("failed to get/create character for key %d", self.key)
-            return None, None, None
-        
-        if self not in char.credentials:
-            char.credentials.append(self)
-        
-        char.name = info.characterName if 'characterName' in info else info.name
-        char.corporation = corporation
-        
-        char.alliance = alliance
-        
-        return char.save(), corporation, alliance
-    
-    def pull_basic(self, info):
-        """Populate character details using an authenticated eve.CharacterInfo call."""
-        
-        log.info('pull_basic')
-        
-        try:
-            results = api.eve.CharacterInfo(self, characterID=info.characterID)
-        except:
-            log.exception("Unable to retrieve character information for: %d", info.characterID)
-            return None, None, None
-        
-        info = Bunch({k.replace('@', ''): int(v) if isinstance(v, (unicode, str)) and v.isdigit() else v for k, v in results.iteritems()})
-        
-        char, corporation, alliance = self.pull_minimal(info)
-        
-        char.race = info.race
-        char.bloodline = info.bloodLine if 'bloodLine' in info else info.bloodline
-        char.security = info.securityStatus
-        char.save()
-        
-        return char, corporation, alliance
-    
-    def pull_full(self, info):
-        """Populate character details using a character.CharacterSheet call."""
-        
-        log.info('pull_full')
-        
-        try:
-            info = api.char.CharacterSheet(self, characterID=info.characterID)
-        except:
-            log.exception("Unable to retrieve character sheet for: %d", info.characterID)
-            return None, None, None
-        
-        char, corporation, alliance = self.pull_minimal(info)
-        if not char: return None, None, None
-        
-        char.titles = [strip_tags(i.titleName) for i in info.corporationTitles.row] if 'corporationTitles' in info else []
-        char.roles = [i.roleName for i in info.corporationRoles.row] if 'corporationRoles' in info else []
-        
-        char.save()
-        
-        return char, corporation, alliance
-    
     def pull_corp(self):
         """Populate corporation details."""
         pass
@@ -166,13 +129,6 @@ class EVECredential(Document):
             log.exception("Unable to call: APIKeyInfo(%d)", self.key)
             return
         
-        if self.mask & 8 == 8:  # character.CharacterSheet
-            implementation = self.pull_full
-        elif self.mask & 8388608 == 8388608:  # eve.CharacterInfo
-            implementation = self.pull_basic
-        else:
-            implementation = self.pull_minimal
-        
         if not result.characters.row:
             log.error("No characters returned for key %d?", self.key)
             return
@@ -182,7 +138,7 @@ class EVECredential(Document):
                 log.error("corporationName missing for key %d", self.key)
                 continue
             
-            implementation(char)
+            self.pull_character(char)
         
         self.modified = datetime.utcnow()
         self.save()
