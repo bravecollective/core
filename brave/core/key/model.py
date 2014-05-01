@@ -31,7 +31,7 @@ class EVECredential(Document):
     key = IntField(db_field='k')
     code = StringField(db_field='c')
     kind = StringField(db_field='t')
-    mask = IntField(db_field='a', default=0)
+    _mask = IntField(db_field='a', default=0)
     verified = BooleanField(db_field='v', default=False)
     expires = DateTimeField(db_field='e')
     owner = ReferenceField('User', db_field='o', reverse_delete_rule='CASCADE')
@@ -39,12 +39,25 @@ class EVECredential(Document):
     modified = DateTimeField(db_field='m', default=datetime.utcnow)
     
     def __repr__(self):
-        return 'EVECredential({0}, {1}, {2}, {3!r})'.format(self.id, self.kind, self.mask, self.owner)
+        return 'EVECredential({0}, {1}, {2}, {3!r})'.format(self.id, self.kind, self._mask, self.owner)
     
     @property
     def characters(self):
         from brave.core.character.model import EVECharacter
         return EVECharacter.objects(credentials=self)
+        
+    @property
+    def mask(self):
+        """Returns a Key Mask object instead of just the integer."""
+        if self.t == "Account"
+            return EVECharacterKeyMask(self._mask)
+        elif self.t == "Corporation":
+            return EVECorporationKeyMask(self._mask)
+        
+    @mask.setter
+    def mask(self, value):
+        """Sets the value of the Key Mask"""
+        self._mask = value
     
     # EVE API Integration
 
@@ -58,12 +71,10 @@ class EVECredential(Document):
             char = EVECharacter(identifier=info.characterID).save()
         except NotUniqueError:
             char = EVECharacter.objects(identifier=info.characterID)[0]
-            
-        mask = EVECharacterKeyMask(self.mask)
         
-        if mask.has_access(EVECharacterKeyMask.CHARACTER_SHEET):
+        if self.mask.has_access(EVECharacterKeyMask.CHARACTER_SHEET):
             info = api.char.CharacterSheet(self, characterID=info.characterID)
-        elif mask.has_access(EVECharacterKeyMask.CHARACTER_INFO_PUBLIC):
+        elif self.mask.has_access(EVECharacterKeyMask.CHARACTER_INFO_PUBLIC):
             info = api.eve.CharacterInfo(self, characterID=info.characterID)
 
         char.corporation, char.alliance = self.get_membership(info)
