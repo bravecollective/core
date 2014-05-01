@@ -60,7 +60,7 @@ class EVECredential(Document):
             char = EVECharacter.objects(identifier=info.characterID)[0]
             
         mask = EVECharacterKeyMask(self.mask)
-
+        
         if mask.has_access(EVECharacterKeyMask.CHARACTER_SHEET):
             info = api.char.CharacterSheet(self, characterID=info.characterID)
         elif mask.has_access(EVECharacterKeyMask.CHARACTER_INFO_PUBLIC):
@@ -161,6 +161,13 @@ class EVEKeyMask:
             return True
             
         return False
+        
+    def has_multiple_access(self, masks):
+        for apiCall in masks:
+            if not self.mask & apiCall:
+                return False
+        
+        return True
 
 class EVECharacterKeyMask(EVEKeyMask):
     """Class for comparing character key masks against the required API calls."""

@@ -11,7 +11,7 @@ from marrow.util.convert import boolean
 from marrow.util.bunch import Bunch
 from mongoengine import ValidationError
 
-from brave.core.key.model import EVECredential
+from brave.core.key.model import EVECredential, EVECharacterKeyMask
 from brave.core.util.predicate import authorize, authenticated, is_administrator
 
 
@@ -33,7 +33,7 @@ class KeyIndex(HTTPMethod):
         
         #Delete any character that the key owner has registered, but no longer has a key for.
         for c in owner.characters:
-            if not c.credential_for(0):
+            if not c.credential_for(EVECharacterKeyMask.NULL):
                 c.delete()
 
         if request.is_xhr:
