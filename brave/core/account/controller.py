@@ -345,7 +345,7 @@ class Settings(HTTPMethod):
                 data.passwd2 = data.passwd2.encode('utf-8')
                 
             #Make the user enter their username so they know what they're doing.
-            if not user.username == data.username.lower() and not user.username == data.username:
+            if user.username != data.username.lower() and user.username != data.username:
                 return 'json:', dict(success=False, message=_("First username incorrect."), data=data)
                 
             #Check whether the user's supplied password is correct
