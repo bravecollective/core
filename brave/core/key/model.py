@@ -58,10 +58,12 @@ class EVECredential(Document):
             char = EVECharacter(identifier=info.characterID).save()
         except NotUniqueError:
             char = EVECharacter.objects(identifier=info.characterID)[0]
+            
+        mask = EVECharacterKeyMask(self.mask)
 
-        if self.mask & 8:
+        if mask.has_access(EVECharacterKeyMask.CHARACTER_SHEET):
             info = api.char.CharacterSheet(self, characterID=info.characterID)
-        elif self.mask & 8388608:
+        elif mask.has_access(EVECharacterKeyMask.CHARACTER_INFO_PUBLIC):
             info = api.eve.CharacterInfo(self, characterID=info.characterID)
 
         char.corporation, char.alliance = self.get_membership(info)
@@ -182,9 +184,9 @@ class EVECharacterKeyMask:
         return 'EVECharacterKeyMask({0})'.format(self.mask)
         
     def has_access(self, mask):
-        if self & mask:
+        if self.mask & mask:
             return True
             
-    return False
+        return False
     
     
