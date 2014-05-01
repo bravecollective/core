@@ -26,7 +26,15 @@ class KeyIndex(HTTPMethod):
         self.key = key
 
     def delete(self):
+        owner = self.key.owner
+        
+        #Delete the key
         self.key.delete()
+        
+        #Delete any character that the key owner has registered, but no longer has a key for.
+        for c in owner.characters:
+            if not c.credential_for(0):
+                c.delete()
 
         if request.is_xhr:
             return 'json:', dict(success=True)
