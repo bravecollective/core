@@ -306,6 +306,7 @@ class Settings(HTTPMethod):
                 return 'json:', dict(success=False, message=_("Delete was either misspelled or not lowercase."), data=data)
             
             #Delete the user account and then deauthenticate the browser session
+            log.info("User %s authorized the deletion of their account.", user)
             user.delete()
             deauthenticate()
             
