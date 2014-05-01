@@ -145,8 +145,25 @@ class EVECredential(Document):
         self.modified = datetime.utcnow()
         self.save()
 
-class EVECharacterKeyMask:
-    """Class for comparing character key masks against the required functions."""
+class EVEKeyMask:
+    """Base class for representing API key masks."""
+    
+    NULL = 0
+    
+    def __init__(self, mask):
+        self.mask = mask
+        
+    def __repr__(self):
+        return 'EVEKeyMask({0})'.format(self.mask)
+        
+    def has_access(self, mask):
+        if self.mask & mask:
+            return True
+            
+        return False
+
+class EVECharacterKeyMask(EVEKeyMask):
+    """Class for comparing character key masks against the required API calls."""
     
     ACCOUNT_BALANCE = 1
     ASSET_LIST = 2
@@ -177,16 +194,38 @@ class EVECharacterKeyMask:
     CONTRACTS = 67108864
     LOCATIONS = 134217728
     
-    def __init__(self, mask):
-        self.mask = mask
-    
     def __repr__(self):
         return 'EVECharacterKeyMask({0})'.format(self.mask)
-        
-    def has_access(self, mask):
-        if self.mask & mask:
-            return True
-            
-        return False
     
+class EVECorporationKeyMask(EVEKeyMask):
+    """Class for comparing corporation key masks against the required API calls."""
     
+    ACCOUNT_BALANCE = 1
+    ASSET_LIST = 2
+    MEMBER_MEDALS = 4
+    CORPORATION_SHEET = 8
+    CONTACT_LIST = 16
+    CONTAINER_LOG = 32
+    FAC_WAR_STATS = 64
+    INDUSTRY_JOBS = 128
+    KILL_LOG = 256
+    MEMBER_SECURITY = 512
+    MEMBER_SECURITY_LOG = 1024
+    MEMBER_TRACKING_LIMITED = 2048
+    MARKET_ORDERS = 4096
+    MEDALS = 8192
+    OUTPOST_LIST = 16384
+    OUTPOST_SERVICE_DETAIL = 32768
+    SHAREHOLDERS = 65536
+    STARBASE_DETAIL = 131072
+    STANDINGS = 262144
+    STARBASE_LIST = 524288
+    WALLET_JOURNAL = 1048576
+    WALLET_TRANSACTIONS = 2097152
+    TITLES = 4194304
+    CONTRACTS = 8388608
+    LOCATIONS = 16777216
+    MEMBER_TRACKING_EXTENDED = 33554432
+    
+    def __repr__(self):
+        return 'EVECorporationKeyMask({0})'.format(self.mask)
