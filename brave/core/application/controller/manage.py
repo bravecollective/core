@@ -29,7 +29,7 @@ class OwnApplicationInterface(HTTPMethod):
         except Application.DoesNotExist:
             raise HTTPNotFound()
 
-        if self.app.owner.id != user.id:
+        if self.app.owner.id != user.id and not user.admin:
             raise HTTPNotFound()
     
     def get(self):
@@ -102,7 +102,10 @@ class OwnApplicationInterface(HTTPMethod):
 class OwnApplicationList(HTTPMethod):
     @authorize(authenticated)
     def get(self):
-        records = Application.objects(owner=user._current_obj())
+        if not user.admin:
+            records = Application.objects(owner=user._current_obj())
+        else:
+            records = Application.objects()
         
         if request.is_xhr:
             return 'brave.core.template.form', dict(
