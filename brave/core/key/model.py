@@ -55,6 +55,7 @@ class EVECredential(Document):
             return EVECorporationKeyMask(self._mask)
         else:
             log.info("Incorrect key type %s for key %s.", self.kind, self.key)
+            return None
         
     @mask.setter
     def mask(self, value):

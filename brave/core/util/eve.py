@@ -158,7 +158,7 @@ class APICall(Document):
         allow_inheritance = False,
         collection = "APICall",
         indexes = [
-                dict(fields=['name', 'mask'], unique=True),
+                dict(fields=['name', '_mask'], unique=True),
             ]
     )
     
@@ -169,8 +169,28 @@ class APICall(Document):
             ('o', "Corporation")
         )))
     description = StringField()
-    mask = IntField()
+    _mask = IntField()
     group = IntField()
+    
+    @property
+    def mask(self):
+        """Returns a Key Mask object instead of just the integer."""
+        
+        #Every call seems to be Meta anyways...
+        if self.kind == "Meta" or self.kind =="m":
+            return EVECharacterKeyMask(self._mask)
+        elif self.kind == "Character" or self.kind == "c":
+            return EVECharacterKeyMask(self._mask)
+        elif self.kind == "Corporation" or self.kind == "o":
+            return EVECorporationKeyMask(self._mask)
+        else:
+            log.info("Incorrect APICall type %s for APICall %s.", self.kind, self.name)
+            return None
+        
+    @mask.setter
+    def mask(self, value):
+        """Sets the value of the Key Mask"""
+        self._mask = value
     
     def __repr__(self):
         return 'APICall(%s, %s)' % (self.name, self.mask or "N/A")

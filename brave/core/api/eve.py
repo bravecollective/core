@@ -47,7 +47,7 @@ class ProxyAPI(SignedController):
         key = None
         if anonymous is False or token or call.mask:
             # Check that this grant allows calls to this API endpoint.
-            if call.mask and (not token or token.mask & call.mask != call.mask):
+            if call.mask and (not token or not token.mask.has_access(call.mask)):
                 return dict(success=False, reason='grant.unauthorized', message="Not authorized to call endpoint: {0}.{1}".format(group, endpoint))
             
             # Find an appropriate key to use for this request if one is required or anonymous=False.
