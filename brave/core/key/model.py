@@ -54,6 +54,7 @@ class EVECredential(Document):
         permissions, and adds a limited one, we'll erase information on that character. We should
         probably check for and refresh info from the most-permissioned key instead of this."""
         from brave.core.character.model import EVEAlliance, EVECorporation, EVECharacter
+        
         try:
             char = EVECharacter(identifier=info.characterID).save()
         except NotUniqueError:
@@ -63,7 +64,10 @@ class EVECredential(Document):
             info = api.char.CharacterSheet(self, characterID=info.characterID)
         elif self.mask & 8388608:
             info = api.eve.CharacterInfo(self, characterID=info.characterID)
-
+        else:
+            log.info("Character pull failed for key %s due to insufficient key mask", self.key)
+            return
+            
         char.corporation, char.alliance = self.get_membership(info)
 
         char.name = info.name
