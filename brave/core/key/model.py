@@ -53,6 +53,8 @@ class EVECredential(Document):
             return EVECharacterKeyMask(self._mask)
         elif self.kind == "Corporation":
             return EVECorporationKeyMask(self._mask)
+        else:
+            log.info("Incorrect key type %s for key %s.", self.kind, self.key)
         
     @mask.setter
     def mask(self, value):
@@ -142,6 +144,11 @@ class EVECredential(Document):
             log.exception("Unable to call: APIKeyInfo(%d)", self.key)
             return
         
+        self.mask = int(result['accessMask'])
+        self.kind = result['type']
+        self.expires = datetime.strptime(result['expires'], '%Y-%m-%d %H:%M:%S') if result.get('expires', None) else None
+        self.verified = self._mask != 0
+        
         if not result.characters.row:
             log.error("No characters returned for key %d?", self.key)
             return
@@ -155,6 +162,7 @@ class EVECredential(Document):
         
         self.modified = datetime.utcnow()
         self.save()
+        
 
 class EVEKeyMask:
     """Base class for representing API key masks."""
