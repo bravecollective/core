@@ -102,7 +102,6 @@ class KeyList(HTTPMethod):
         
         try:
             record.save()
-            record.pull()
             characters = []
             for character in record.characters:
                 characters.append(dict(identifier = character.identifier, name = character.name))
