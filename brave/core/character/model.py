@@ -209,3 +209,15 @@ class EVECharacter(EVEEntity):
                 lowest, lowest_count = candidate, bc
         
         return lowest
+        
+    def delete(self):
+        #If this character is the primary character for the account, wipe that field for the user
+        if self == self.owner.primary:
+            self.owner.primary = None
+                    
+        #Delete any application grants associated with the character.
+        for grant in self.owner.grants:
+            if self == grant.character:
+                grant.delete()
+                
+        super(EVECharacter, self).delete()
