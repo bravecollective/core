@@ -27,6 +27,35 @@
             });
         });
     </script>
+
+    <script type="text/javascript" charset="utf-8">
+        $(function()
+        {
+
+            $(document).on('click', '.delete', function()
+            {
+                var row = $(this).parents('tr');
+
+                confirm(
+                    "Are you really, <em>really</em> sure?",
+                    "By deleting this group you may be removing something that applications depend on.<br />" +
+                        "It may even make octopuses cry. Please, think of the friendly deep-sea octopuses.",
+                    {
+                        label: "Remove Group",
+                        kind: 'btn-danger'
+                    },
+                    function()
+                    {
+                        $.ajax('/group/' + row.attr('data-id') + '/delete').
+                        done(function()
+                        {
+                            row.remove();
+                        });
+                    }
+                );
+            });
+        });
+    </script>
 </%block>
 
 <div class="modal fade" id="new-group">
@@ -75,13 +104,15 @@
                         <tr>
                             <th>id</th>
                             <th>title</th>
+                            <th>delete?</th>
                         </tr>
                     </thead>
                     <tbody>
                         % for group in groups:
-                            <tr>
+                            <tr data-id="${group.id}">
                                 <td><a href="/group/${group.id}">${group.id}</a></td>
                                 <td>${group.title}</td>
+                                <td><button class="btn btn-danger btn-small delete"><i class="fa fa-times"></i></button></td>
                             </tr>
                         % endfor
                     </tbody>

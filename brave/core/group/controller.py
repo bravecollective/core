@@ -96,6 +96,11 @@ class OneGroupController(HTTPMethod):
         return 'json:', dict(success=False,
                              message=_("Failure updating group"))
 
+    @authorize(is_administrator)
+    def delete(self):
+        self.group.delete()
+        return 'json:', dict(success=True)
+
 class GroupList(HTTPMethod):
     def get(self):
         if not is_administrator:
