@@ -102,10 +102,10 @@ class ApplicationInterface(HTTPMethod):
 class ApplicationList(HTTPMethod):
     @authorize(authenticated)
     def get(self):
-        adminRecords = []
-        
         if user.admin:
-            adminRecords = Application.objects()
+            adminRecords = {record for record in Application.objects() if record.owner != user._current_obj()}
+        else:
+            adminRecords = {}
         
         records = Application.objects(owner=user._current_obj())
         
