@@ -118,7 +118,8 @@ class KeyList(HTTPMethod):
                         identifier = str(record.id),
                         key = record.key,
                         code = record.code,
-                        characters = characters
+                        characters = characters,
+                        violation = record.violation
                     )
         
         except ValidationError:

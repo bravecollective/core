@@ -62,10 +62,19 @@
                         }
                         $.post('/key/', $('#modal form').serialize(), function(data)
                         {
+                            violationText = "";
+                            if(data.violation == "Character") {
+                                violationText = "<font color=\"red\">Character Security Violation.</font>";
+                            } else {
+                                violationText = "<font color=\"green\">The BIA is always watching...</font>";
+                            }
                             $(
                                 '<tr data-id="' + data.identifier + '">' +
                                     '<td class="key-id">' +
                                         '<i class="icon-fixed-width icon-remove"></i> ' + data.key +
+                                    '</td>' +
+                                    '<td class="security-violation">' +
+                                        violationText +
                                     '</td>' +
                                     '<td class="key-code">' +
                                         '<span class="ellipsis">' + data.code + '</span>' +
