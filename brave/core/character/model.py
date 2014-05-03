@@ -204,7 +204,7 @@ class EVECharacter(EVEEntity):
         lowest = None
         lowest_count = None
         for candidate in candidates:
-            bc = bin(candidate.mask).count('1')
+            bc = candidate.mask.number_of_functions()
             if lowest_count is None or bc < lowest_count:
                 lowest, lowest_count = candidate, bc
         

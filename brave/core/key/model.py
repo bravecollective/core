@@ -188,6 +188,12 @@ class EVEKeyMask:
                 return False
         
         return True
+        
+    def number_of_functions(self):
+        """Counts the number of ones in the binary representation of the mask."""
+        """This is equivalent to the number of functions that the key provides"""
+        """access to as long as the mask is a real mask."""
+        return bin(self._mask).count('1')
 
 class EVECharacterKeyMask(EVEKeyMask):
     """Class for comparing character key masks against the required API calls."""
