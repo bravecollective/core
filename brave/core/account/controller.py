@@ -346,6 +346,48 @@ class Settings(HTTPMethod):
                 return 'json:', dict(success=False, message=_("Invalid email address provided."), data=data)
             except NotUniqueError:
                 return 'json:', dict(success=False, message=_("The email address provided is already taken."), data=data)
+        
+        #Handle the user attempting to merge 2 accounts together
+        elif data.form == "mergeaccount":
+            if isinstance(data.passwd, unicode):
+                data.passwd = data.passwd.encode('utf-8')
+                
+            if isinstance(data.passwd2, unicode):
+                data.passwd2 = data.passwd2.encode('utf-8')
+                
+            #Make the user enter their username so they know what they're doing.
+            if user.username != data.username.lower() and user.username != data.username:
+                return 'json:', dict(success=False, message=_("First username incorrect."), data=data)
+                
+            #Check whether the user's supplied password is correct
+            if not User.password.check(user.password, data.passwd):
+                return 'json:', dict(success=False, message=_("First password incorrect."), data=data)
+                
+            #Make sure the user isn't trying to merge their account into itself.
+            if data.username.lower() == data.username2.lower():
+                return 'json:', dict(success=False, message=_("You can't merge an account into itself."), data=data)
+                
+            #Make the user enter the second username so we can get the User object they want merged in.
+            if not User.objects(username=data.username2.lower()) and not User.objects(username=data.username2):
+                return 'json:', dict(success=False, message=_("Unable to find user by second username."), data=data)
+                
+            other = User.objects(username=data.username2).first()
+            if not other:
+                other = User.objects(username=data.username2.lower()).first()
+                
+            #Check whether the user's supplied password is correct
+            if not User.password.check(other.password, data.passwd2):
+                return 'json:', dict(success=False, message=_("Second password incorrect."), data=data)
+                
+            #Make them type "merge" exactly
+            if data.confirm != "merge":
+                return 'json:', dict(success=False, message=_("Merge was either misspelled or not lowercase."), data=data)
+                
+            log.info("User %s merged account %s into %s.", user.username, other.username, user.username)
+            user.merge(other)
+            
+            #Redirect user to the root of the server instead of the settings page
+            return 'json:', dict(success=True, location="/")
             
         else:
             return 'json:', dict(success=False, message=_("Form does not exist."), location="/")
