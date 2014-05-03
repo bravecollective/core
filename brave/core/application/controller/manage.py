@@ -20,9 +20,9 @@ from brave.core.util.predicate import authorize, authenticated, is_administrator
 log = __import__('logging').getLogger(__name__)
 
 
-class OwnApplicationInterface(HTTPMethod):
+class ApplicationInterface(HTTPMethod):
     def __init__(self, app):
-        super(OwnApplicationInterface, self).__init__()
+        super(ApplicationInterface, self).__init__()
         
         try:
             self.app = Application.objects.get(id=app)
@@ -55,7 +55,7 @@ class OwnApplicationInterface(HTTPMethod):
                 )
         
         key = SigningKey.from_string(unhexlify(app.key.private), curve=NIST256p, hashfunc=sha256)
-        return 'brave.core.application.template.view_own_app', dict(
+        return 'brave.core.application.template.view_app', dict(
                 app = app,
                 key = hexlify(key.get_verifying_key().to_string()),
                 pem = key.get_verifying_key().to_pem()
@@ -86,7 +86,7 @@ class OwnApplicationInterface(HTTPMethod):
             )
     
     def delete(self):
-        log.info("APPDEL %r %r", self.app, self.app.owner)
+        log.info("Deleted application %s owned by %s", self.app, self.app.owner)
         
         self.app.delete()
 
@@ -99,13 +99,13 @@ class OwnApplicationInterface(HTTPMethod):
         raise HTTPFound(location='/application/manage/')
 
 
-class OwnApplicationList(HTTPMethod):
+class ApplicationList(HTTPMethod):
     @authorize(authenticated)
     def get(self):
-        if not user.admin:
-            records = Application.objects(owner=user._current_obj())
-        else:
-            records = Application.objects()
+        if user.admin:
+            adminRecords = Application.objects()
+        
+        records = Application.objects(owner=user._current_obj())
         
         if request.is_xhr:
             return 'brave.core.template.form', dict(
@@ -114,9 +114,10 @@ class OwnApplicationList(HTTPMethod):
                     data = None,
                 )
         
-        return 'brave.core.application.template.list_own_apps', dict(
+        return 'brave.core.application.template.manage_apps', dict(
                 area = 'apps',
-                records = records
+                records = records,
+                adminRecords = adminRecords
             )
     
     @authorize(authenticated)
@@ -142,8 +143,8 @@ class OwnApplicationList(HTTPMethod):
 
 
 class ManagementController(Controller):
-    index = OwnApplicationList()
+    index = ApplicationList()
     
     def __lookup__(self, app, *args, **kw):
         request.path_info_pop()  # We consume a single path element.
-        return OwnApplicationInterface(app), args
+        return ApplicationInterface(app), args
