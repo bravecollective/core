@@ -33,10 +33,12 @@ register = Form('register', action='/account/register', method='post', children=
         EmailField('email', autocapitalize="off", autocorrect="off", spellcheck="false", class_="span12", placeholder=L_("E-Mail Address"), required="true", datavalidate="/account/exists", datavalidatekey="email", datavalidatecheck="available"),
         PasswordField('password', class_="span12 poor", placeholder=L_("Password"), maxlength="100", required="true", pattern="\S+", datavalidate="/account/entropy", datavalidatekey="password", datavalidatecheck="approved"),
         PasswordField('pass2', class_="span12 poor", placeholder=L_("Verify Password"), maxlength="100"),
+        BlankSubmit('submit'),
     ])
 
 recover = Form('recover', action='/account/recover', method='post', children=[
         EmailField('email', autocapitalize="off", autocorrect="off", spellcheck="false", class_="span12", placeholder=L_("E-Mail Address")),
+        BlankSubmit('submit'),
         HiddenField('redirect'),
     ])
 
@@ -45,5 +47,6 @@ reset_password = Form('recover', action='/account/recover', method='post', child
         PasswordField('pass2', class_="span12 poor", placeholder=L_("Verify Password"),maxlength="100"),
         HiddenField('recovery_key'),
         HiddenField('email'),
+        BlankSubmit('submit'),
         HiddenField('redirect'),
     ])

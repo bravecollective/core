@@ -22,6 +22,8 @@ import re
 log = __import__('logging').getLogger(__name__)
 
 
+MINIMUM_PASSWORD_STRENGTH = 3
+
 def _check_password(passwd1, passwd2):
     """checks the passed passwords for equality and length
     (could be extended to add minimal length, complexity, ...)
@@ -50,10 +52,15 @@ class Authenticate(HTTPMethod):
         return 'brave.core.account.template.signin', dict(form=form)
 
     def post(self, identity, password, remember=False, redirect=None):
-        #Ensures that the provided identity is lowercase if it's an email or username, but leaves it alone if it's an OTP
-        if('@' in identity or len(identity) != 44): 
-            identity = identity.lower()
-        if not authenticate(identity, password):
+        # First try with the original input
+        success = authenticate(identity, password)
+
+        if not success:
+            # Try lowercase if it's an email or username, but not if it's an OTP
+            if '@' in identity or len(identity) != 44:
+                success = authenticate(identity.lower(), password)
+
+        if not success:
             if request.is_xhr:
                 return 'json:', dict(success=False, message=_("Invalid user name or password."))
 
@@ -71,6 +78,8 @@ class Recover(HTTPMethod):
         if not email:
             return None
         user = lookup_email(email)
+        if not user:
+            user = lookup_email(email.lower())
         if not user:
             return None
         recovery = PasswordRecovery.objects(user=user, recovery_key=recovery_key).first()
@@ -113,6 +122,8 @@ class Recover(HTTPMethod):
 
         user = lookup_email(data.email)
         if not user:
+            user = lookup_email(data.email.lower())
+        if not user:
             # FixMe: possibly do send success any way, to prevent email address confirmation
             #   - would be necessary for register as well
             return 'json:', dict(success=False, message=_("Unknown email."), data=post)
@@ -135,6 +146,10 @@ class Recover(HTTPMethod):
         passwd_ok, error_msg = _check_password(data.password, data.pass2)
         if not passwd_ok:
             return 'json:', dict(success=False, message=error_msg)
+
+        #If the password isn't strong enough, reject it
+        if(zxcvbn.password_strength(data.password).get("score") < MINIMUM_PASSWORD_STRENGTH):
+            return 'json:', dict(success=False, message=_("Password provided is too weak. please add more characters, or include lowercase, uppercase, and special characters."), data=data)
 
         #set new password
         user = recovery.user
@@ -176,8 +191,8 @@ class Register(HTTPMethod):
         if err:
             return 'json:', dict(success=False, message=_("Invalid email address provided."), data=data)
         
-        #If the password has a score of less than 3, reject it
-        if(zxcvbn.password_strength(data.password).get("score") <= 2):
+        #If the password isn't strong enough, reject it
+        if(zxcvbn.password_strength(data.password).get("score") < MINIMUM_PASSWORD_STRENGTH):
             return 'json:', dict(success=False, message=_("Password provided is too weak. please add more characters, or include lowercase, uppercase, and special characters."), data=data)
         
         #Ensures that the provided username and email are lowercase
@@ -190,7 +205,7 @@ class Register(HTTPMethod):
         except NotUniqueError:
             return 'json:', dict(success=False, message=_("Either the username or email address provided is already taken."), data=data)
         
-        authenticate(data.username.lower(), data.password)
+        authenticate(user.username, data.password)
         
         return 'json:', dict(success=True, location="/")
 
@@ -215,7 +230,7 @@ class Settings(HTTPMethod):
         user = User.objects(**query).first()
 
         if data.form == "changepassword":
-            passwd_ok, error_msg = _check_password(data.password, data.pass2)
+            passwd_ok, error_msg = _check_password(data.passwd, data.passwd1)
 
             if not passwd_ok:
                 return 'json:', dict(success=False, message=error_msg, data=data)
@@ -225,6 +240,10 @@ class Settings(HTTPMethod):
 
             if not User.password.check(user.password, data.old):
                 return 'json:', dict(success=False, message=_("Old password incorrect."), data=data)
+
+            #If the password isn't strong enough, reject it
+            if(zxcvbn.password_strength(data.passwd).get("score") < MINIMUM_PASSWORD_STRENGTH):
+                return 'json:', dict(success=False, message=_("Password provided is too weak. please add more characters, or include lowercase, uppercase, and special characters."), data=data)
 
             user.password = data.passwd
             user.save()
@@ -287,6 +306,7 @@ class Settings(HTTPMethod):
                 return 'json:', dict(success=False, message=_("Delete was either misspelled or not lowercase."), data=data)
             
             #Delete the user account and then deauthenticate the browser session
+            log.info("User %s authorized the deletion of their account.", user)
             user.delete()
             deauthenticate()
             

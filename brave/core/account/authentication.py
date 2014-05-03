@@ -40,7 +40,7 @@ def lookup(identifier):
 
 def lookup_email(email):
     """get user by email address"""
-    user = User.objects(email=email.lower()).first()
+    user = User.objects(email=email).first()
     return user
 
 def authentication_logger(fn):
@@ -76,11 +76,11 @@ def authenticate(identifier, password):
     
     # Build the MongoEngine query to find 
     if '@' in identifier:
-        query[b'email'] = identifier.lower() #Ensure that email addresses are taken as lowercase regardless of what the user provides.
+        query[b'email'] = identifier
     elif len(identifier) == 44:
         query[b'otp'] = identifier[:12]
     else:
-        query[b'username'] = identifier.lower() #Ensure that the username is lowercase regardless of what the user provides
+        query[b'username'] = identifier
     
     user = User.objects(**query).first()
     
@@ -128,11 +128,11 @@ def send_recover_email(user):
     message = mailer.new(to=user.email, subject=_("Password Recovery - Brave Collective Core Services"))
 
     #explicitley get the text contend for the mail
-    mime, content = render("brave/core/account/template/mail/lost.txt", dict(params=params))
+    mime, content = render("brave.core.account.template.mail/lost.txt", dict(params=params))
     message.plain = content
 
     #explicitley get the html contend for the mail
-    mime, content = render("brave/core/account/template/mail/lost.html", dict(params=params))
+    mime, content = render("brave.core.account.template.mail/lost.html", dict(params=params))
     message.rich = content
 
     mailer.send(message)
