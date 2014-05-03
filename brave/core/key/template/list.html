@@ -211,9 +211,9 @@
                     <tr data-id="${record.id}">
                         <td class="key-id"><i class="fa fa-fw fa-${'check' if record.verified else 'times'}"></i> ${record.key}</td>
                         % if record.violation == "Character":
-                        <td class="security-violation"><font color="red">Character Security Violation.</font></td>
+                        <td class="security-violation" title="One or more characters associated with this key was found on another account. Join the 'Brave IT Team' channel in game for assistance."><font color="red">Character Security Violation.</font></td>
                         % else:
-                        <td class="security-violation"><font color="green">The BIA is always watching...</font></td>
+                        <td class="security-violation" title="All clear!"><font color="green">The BIA is always watching...</font></td>
                         % endif
                         <td class="key-code"><span class="ellipsis">${record.code}</span></td>
                         <td class="characters hidden-tablet hidden-phone">
