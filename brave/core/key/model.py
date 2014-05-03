@@ -60,9 +60,11 @@ class EVECredential(Document):
         except NotUniqueError:
             char = EVECharacter.objects(identifier=info.characterID)[0]
             
-            log.warning("Security violation detected. Multiple accounts trying to register character %s, ID %d. Actual owner is %s. User adding this character is %s.",
-                 char.name, info.characterID, EVECharacter.objects(identifier = info.characterID).first().owner, self.owner)
-            self.violation = "Character"
+            if self.owner != char.owner:
+                log.warning("Security violation detected. Multiple accounts trying to register character %s, ID %d. Actual owner is %s. User adding this character is %s.",
+                    char.name, info.characterID, EVECharacter.objects(identifier = info.characterID).first().owner, self.owner)
+                self.violation = "Character"
+                return
 
         if self.mask & 8:
             info = api.char.CharacterSheet(self, characterID=info.characterID)
@@ -86,6 +88,7 @@ class EVECredential(Document):
         char.roles = [i.roleName for i in info.corporationRoles.row] if 'corporationRoles' in info else []
 
         char.save()
+        return char
     
     def get_membership(self, info):
         from brave.core.character.model import EVEAlliance, EVECorporation, EVECharacter
