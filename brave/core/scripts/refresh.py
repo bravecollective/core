@@ -14,10 +14,13 @@ from brave.core.util.signal import validate_key
 
 for k in EVECredential.objects():
     print("refreshing key {}".format(k.id))
+    id = k.id
     try:
-        k.pull()
+        k = k.pull()
     except HTTPError as e:
         print("Error {}: {}".format(e.response.status_code, e.response.text))
+    if not k:
+        print("removed a disabled key")
 
     # Guarantee that we make a max of 10 QPS to CCP due to this refresh process. Actual QPS will be
     # much lower (due to time spent actually making the calls).
