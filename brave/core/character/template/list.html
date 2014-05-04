@@ -112,9 +112,10 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th class="span3 sortable name">Name</th>
-                        <th class="span4 sortable corporation"><span class="line"></span>Corporation</th>
-                        <th class="span4 sortable alliance"><span class="line"></span>Alliance</th>
+                        <th class="span2 sortable name">Name</th>
+                        <th class="span3 sortable corporation"><span class="line"></span>Corporation</th>
+                        <th class="span3 sortable alliance"><span class="line"></span>Alliance</th>
+                        <th class="span3 sortable username"><span class="line"></span>User</th>
                         <th class="span1 sortable actions"><span class="line"></span></th>
                     </tr>
                 </thead>
@@ -143,8 +144,13 @@
                             <em>None</em>
                             % endif
                         </td>
+                        <td class="username">
+                            <span class="ellipsis">
+                            ${record.owner}
+                            </span>
+                        </td>
                         <td class="actions">
-                            <i class="makedefault fa fa-star${'' if web.user.primary and record.id == web.user.primary.id else '-o'} fa-2x"></i>
+                            
                         </td>
                     </tr>
                     % endfor
