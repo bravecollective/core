@@ -188,7 +188,7 @@ class ACLMask(ACLRule):
         mask = self.mask
         
         for cred in character.credentials:
-            if cred.mask & mask == mask:
+            if cred.mask.has_access(mask):
                 return None if self.inverse else self.grant
         
         return self.grant if self.inverse else None
