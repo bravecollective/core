@@ -36,6 +36,7 @@ class EVECredential(Document):
     verified = BooleanField(db_field='v', default=False)
     expires = DateTimeField(db_field='e')
     owner = ReferenceField('User', db_field='o', reverse_delete_rule='CASCADE')
+    #Only valid values are "Character" at the moment. Set it to None if there are no violations.
     violation = StringField(db_field='s')
     
     modified = DateTimeField(db_field='m', default=datetime.utcnow)
@@ -178,7 +179,7 @@ class EVECredential(Document):
                 allCharsOK = False
         
         if allCharsOK and self.violation == "Character":
-            self.violation = "False"
+            self.violation = None
 
         self.modified = datetime.utcnow()
         self.save()

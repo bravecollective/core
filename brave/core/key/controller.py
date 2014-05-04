@@ -98,10 +98,6 @@ class KeyList(HTTPMethod):
                 
         except ValueError:
             return 'json:', dict(success=False, message=_("Key ID must be a number."), field='key')
-            
-        #Prevent the user from adding a key that has already been added.
-        if EVECredential.objects(key=data.key):
-            return 'json:', dict(success=False, message=_("This key has already been added by another account."), field='key')
         
         record = EVECredential(data.key, data.code, owner=user.id)
         
@@ -110,6 +106,9 @@ class KeyList(HTTPMethod):
             characters = []
             for character in record.characters:
                 characters.append(dict(identifier = character.identifier, name = character.name))
+
+            #Necessary to update based on the pull invoked by record.save()
+            record = EVECredential.objects(owner=user.id).first()
 
             if request.is_xhr:
                 return 'json:', dict(
@@ -131,7 +130,7 @@ class KeyList(HTTPMethod):
         except NotUniqueError:
             return 'json:', dict(
                 success = False,
-                message = _("The key you're attempting to add already exists."),
+                message = _("This key has already been added by another account."),
             )
 
         raise HTTPFound(location='/key/')
