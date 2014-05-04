@@ -348,6 +348,141 @@
                 );
                 
             });
+            
+            $('.mergeacct').on('click', function()
+            {
+                confirm(
+                    "Merge Account",
+                    '<p>' +
+                        'Fill in the form below to merge another account into this one. <b>THIS IS PERMANENT AND IRREVERSIBLE.</b> You may lose access to any ' +
+                        'applications which rely on your other account, and data in other BRAVE applications may be lost as well. <b>This account is the one that ' +
+                        'will be saved; the other account will be deleted after the merge.</b> Make sure to type ' +
+                        '<b>merge</b> exactly as shown.' +
+                    '</p>' +
+                    '<p>' +
+                        '<form>' +
+                            '<input id="id" name="id" type="hidden" class="input-block-level" value="${web.user.username}" required>'
+                                +
+                            '<input id="form" name="form" type="hidden" class="input-block-level" value="mergeaccount" required>' 
+                                +
+                            '<input id="username" name="username" type="text" class="input-block-level" placeholder="Username of this account" autocomplete="off" required>'
+                                +
+                            '<input id="passwd" name="passwd" type="password" class="input-block-level" placeholder="Password of this account" maxlength="100" autocomplete="off" required>' 
+                                +
+                            '<input id="username2" name="username2" type="text" class="input-block-level" placeholder="Username of other account" autocomplete="off" required>'
+                                +
+                            '<input id="passwd2" name="passwd2" type="password" class="input-block-level" placeholder="Password of other account" maxlength="100" autocomplete="off" required>' 
+                                +
+                            '<input id="confirm" name="confirm" type="text" class="input-block-level" placeholder="Type merge here" maxlength="100" autocomplete="off" required>' 
+                                +
+                        '</form>' +
+                    '</p>',
+                    {
+                        label: "Merge Account",
+                        kind: 'btn-danger'
+                    },
+                    function()
+                    {
+                        $('#modal form .alert').remove();
+                        error = false;
+                        if ( $('#passwd').val().length >= 100 ) {
+                            $('#passwd').addClass('error');
+                            $('#passwd').focus()
+                            $('#modal form input[name="passwd"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>Passwords must not be longer than 100 characters</strong>' +
+                                '</div>'
+                            );
+                            error = true
+                        }
+                        if ( $('#passwd2').val().length >= 100 ) {
+                            $('#passwd2').addClass('error');
+                            $('#passwd2').focus()
+                            $('#modal form input[name="passwd2"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>Passwords must not be longer than 100 characters</strong>' +
+                                '</div>'
+                            );
+                            error = true
+                        }
+                        if ($('#passwd').val().length <= 0) {
+                            $('#passwd').addClass('error');
+                            $('#modal form input[name="passwd"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>Password required</strong>' +
+                                '</div>'
+                            );
+                            error = true
+                        }
+                        if ($('#passwd2').val().length <= 0) {
+                            $('#passwd2').addClass('error');
+                            $('#modal form input[name="passwd2"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>Password required</strong>' +
+                                '</div>'
+                            );
+                            error = true
+                        }
+                        if ($('#username').val().length <= 0) {
+                            $('#username').addClass('error');
+                            $('#modal form input[name="username"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>Username required</strong>' +
+                                '</div>'
+                            );
+                            error = true
+                        }
+                        if ($('#username2').val().length <= 0) {
+                            $('#username2').addClass('error');
+                            $('#modal form input[name="username2"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>Username required</strong>' +
+                                '</div>'
+                            );
+                            error = true
+                        }
+                        if ($('#username').val() == $('#username2').val()) {
+                            $('#username2').addClass('error');
+                            $('#modal form input[name="username2"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>You cannot merge an account into itself.</strong>' +
+                                '</div>'
+                            );
+                            error = true
+                        }
+                        if ( $('#confirm').val() !=  'merge') {
+                            $('#confirm').addClass('error');
+                            $('#confirm').focus()
+                            $('#modal form input[name="confirm"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>You must type in "merge" (no quotes) exactly as shown.</strong>' +
+                                '</div>'
+                            );
+                            error = true
+                        }
+                        
+                        if (error == true)
+                            return error   
+                        
+                        $('.overlay.wait').fadeIn(250);
+                        $.post('/account/settings', $('#modal form').serialize(), function(data)
+                        {
+                            console.log(data);
+                            $('.overlay.wait').fadeOut(125, function(){
+                                if (data.success) {
+                                   $('.overlay.success').fadeIn(250, function(){ window.location = data.location; });                                
+                                } else {
+                                    $('.overlay.fail').fadeIn(250, function(){
+                                        $('.overlay.fail').fadeOut(250);
+                                    });
+                                }
+                            });
+
+                        });
+                    }
+                );
+                
+            });
 
             $('.configureotp').on('click', function()
             {
@@ -510,6 +645,7 @@
             <a class="btn changeemail"><i class="fa fa-cog"></i> Change Email Address</a><br /><br />
             <a class="btn configureotp"><i class="fa fa-cog"></i> Configure OTP</a><br /><br />
             <a class="btn addotp"><i class="fa fa-cog"></i> Add OTP</a><br /><br />
+            <a class="btn mergeacct"><i class="fa fa-times"></i> Merge Account</a><br /><br />
             <a class="btn deleteacct"><i class="fa fa-times"></i> Delete Account</a><br /><br />
     </div>
 </div>

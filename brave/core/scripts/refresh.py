@@ -15,7 +15,7 @@ from brave.core.util.signal import validate_key
 for k in EVECredential.objects():
     print("refreshing key {}".format(k.id))
     try:
-        validate_key(k.id) # This performs a pull()
+        k.pull()
     except HTTPError as e:
         print("Error {}: {}".format(e.response.status_code, e.response.text))
 

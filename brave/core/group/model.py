@@ -26,6 +26,9 @@ class Group(Document):
     
     creator = ReferenceField('User', db_field='c')
     modified = DateTimeField(db_field='m', default=datetime.utcnow)
+
+    def __repr__(self):
+        return 'Group({0})'.format(self.id).encode('ascii', 'backslashreplace')
     
     def evaluate(self, user, character):
         for rule in self.rules:
@@ -34,3 +37,18 @@ class Group(Document):
                 return result
         
         return False  # deny by default
+
+    @staticmethod
+    def create(id, title, user, rules=[]):
+        # This is unavoidably racy.
+        g = Group.objects(id=id)
+        if g:
+            return None
+        g = Group(id=id,
+            title=title,
+            rules=[],
+            creator=user._current_obj(),
+            modified=datetime.utcnow(),
+        ).save()
+
+        return g

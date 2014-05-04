@@ -199,13 +199,26 @@ class EVECharacter(EVEEntity):
     def credential_for(self, mask):
         """Return the least-permissive API key that can satisfy the given mask."""
         
-        candidates = [i for i in self.credentials if not mask or not i.mask or i.mask & mask == mask]
+        candidates = [i for i in self.credentials if not mask or not i.mask or i.mask.has_access(mask)]
         
         lowest = None
         lowest_count = None
         for candidate in candidates:
-            bc = bin(candidate.mask).count('1')
+            bc = candidate.mask.number_of_functions()
             if lowest_count is None or bc < lowest_count:
                 lowest, lowest_count = candidate, bc
         
         return lowest
+        
+    def delete(self):
+        #If this character is the primary character for the account, wipe that field for the user
+        if self == self.owner.primary:
+            self.owner.primary = None
+            self.owner.save()
+                    
+        #Delete any application grants associated with the character.
+        for grant in self.owner.grants:
+            if self == grant.character:
+                grant.delete()
+                
+        super(EVECharacter, self).delete()

@@ -31,7 +31,7 @@ class EVECredential(Document):
     key = IntField(db_field='k')
     code = StringField(db_field='c')
     kind = StringField(db_field='t')
-    mask = IntField(db_field='a', default=0)
+    _mask = IntField(db_field='a', default=0)
     verified = BooleanField(db_field='v', default=False)
     expires = DateTimeField(db_field='e')
     owner = ReferenceField('User', db_field='o', reverse_delete_rule='CASCADE')
@@ -39,12 +39,28 @@ class EVECredential(Document):
     modified = DateTimeField(db_field='m', default=datetime.utcnow)
     
     def __repr__(self):
-        return 'EVECredential({0}, {1}, {2}, {3!r})'.format(self.id, self.kind, self.mask, self.owner)
+        return 'EVECredential({0}, {1}, {2}, {3!r})'.format(self.id, self.kind, self._mask, self.owner)
     
     @property
     def characters(self):
         from brave.core.character.model import EVECharacter
         return EVECharacter.objects(credentials=self)
+        
+    @property
+    def mask(self):
+        """Returns a Key Mask object instead of just the integer."""
+        if self.kind == "Account":
+            return EVECharacterKeyMask(self._mask)
+        elif self.kind == "Corporation":
+            return EVECorporationKeyMask(self._mask)
+        else:
+            log.info("Incorrect key type %s for key %s.", self.kind, self.key)
+            return None
+        
+    @mask.setter
+    def mask(self, value):
+        """Sets the value of the Key Mask"""
+        self._mask = value
     
     # EVE API Integration
 
@@ -58,14 +74,18 @@ class EVECredential(Document):
             char = EVECharacter(identifier=info.characterID).save()
         except NotUniqueError:
             char = EVECharacter.objects(identifier=info.characterID)[0]
-
-        if self.mask & 8:
+        
+        if self.mask.has_access(EVECharacterKeyMask.CHARACTER_SHEET):
             info = api.char.CharacterSheet(self, characterID=info.characterID)
-        elif self.mask & 8388608:
+        elif self.mask.has_access(EVECharacterKeyMask.CHARACTER_INFO_PUBLIC):
             info = api.eve.CharacterInfo(self, characterID=info.characterID)
 
         char.corporation, char.alliance = self.get_membership(info)
 
+        char.name = info.name if 'name' in info else info.characterName
+        char.owner = self.owner
+        if self not in char.credentials:
+            char.credentials.append(self)
         char.race = info.race if 'race' in info else None
         char.bloodline = (info.bloodLine if 'bloodLine' in info
                           else info.bloodline if 'bloodline' in info
@@ -129,6 +149,11 @@ class EVECredential(Document):
             log.exception("Unable to call: APIKeyInfo(%d)", self.key)
             return
         
+        self.mask = int(result['accessMask'])
+        self.kind = result['type']
+        self.expires = datetime.strptime(result['expires'], '%Y-%m-%d %H:%M:%S') if result.get('expires', None) else None
+        self.verified = self._mask != 0
+        
         if not result.characters.row:
             log.error("No characters returned for key %d?", self.key)
             return
@@ -142,3 +167,102 @@ class EVECredential(Document):
         
         self.modified = datetime.utcnow()
         self.save()
+        
+
+class EVEKeyMask:
+    """Base class for representing API key masks."""
+    
+    NULL = 0
+    
+    def __init__(self, mask):
+        self.mask = mask
+        
+    def __repr__(self):
+        return 'EVEKeyMask({0})'.format(self.mask)
+        
+    def has_access(self, mask):
+        if self.mask & mask:
+            return True
+            
+        return False
+        
+    def has_multiple_access(self, masks):
+        for apiCall in masks:
+            if not self.mask & apiCall:
+                return False
+        
+        return True
+        
+    def number_of_functions(self):
+        """Counts the number of ones in the binary representation of the mask."""
+        """This is equivalent to the number of functions that the key provides"""
+        """access to as long as the mask is a real mask."""
+        return bin(self._mask).count('1')
+
+class EVECharacterKeyMask(EVEKeyMask):
+    """Class for comparing character key masks against the required API calls."""
+    
+    ACCOUNT_BALANCE = 1
+    ASSET_LIST = 2
+    CALENDAR_EVENT_ATTENDEES = 4
+    CHARACTER_SHEET = 8
+    CONTACT_LIST = 16
+    CONTACT_NOTIFICATIONS = 32
+    FAC_WAR_STATS = 64
+    INDUSTRY_JOBS = 128
+    KILL_LOG = 256
+    MAIL_BODIES = 512
+    MAILING_LISTS = 1024
+    MAIL_MESSAGES = 2048
+    MARKET_ORDERS = 4096
+    MEDALS = 8192
+    NOTIFICATIONS = 16384
+    NOTIFICATION_TEXTS = 32768
+    RESEARCH = 65536
+    SKILL_IN_TRAINING = 131072
+    SKILL_QUEUE = 262144
+    STANDINGS = 524288
+    UPCOMING_CALENDAR_EVENTS = 1048576
+    WALLET_JOURNAL = 2097152
+    WALLET_TRANSACTIONS = 4194304
+    CHARACTER_INFO_PUBLIC = 8388608
+    CHARACTER_INFO_PRIVATE = 16777216
+    ACCOUNT_STATUS = 33554432
+    CONTRACTS = 67108864
+    LOCATIONS = 134217728
+    
+    def __repr__(self):
+        return 'EVECharacterKeyMask({0})'.format(self.mask)
+    
+class EVECorporationKeyMask(EVEKeyMask):
+    """Class for comparing corporation key masks against the required API calls."""
+    
+    ACCOUNT_BALANCE = 1
+    ASSET_LIST = 2
+    MEMBER_MEDALS = 4
+    CORPORATION_SHEET = 8
+    CONTACT_LIST = 16
+    CONTAINER_LOG = 32
+    FAC_WAR_STATS = 64
+    INDUSTRY_JOBS = 128
+    KILL_LOG = 256
+    MEMBER_SECURITY = 512
+    MEMBER_SECURITY_LOG = 1024
+    MEMBER_TRACKING_LIMITED = 2048
+    MARKET_ORDERS = 4096
+    MEDALS = 8192
+    OUTPOST_LIST = 16384
+    OUTPOST_SERVICE_DETAIL = 32768
+    SHAREHOLDERS = 65536
+    STARBASE_DETAIL = 131072
+    STANDINGS = 262144
+    STARBASE_LIST = 524288
+    WALLET_JOURNAL = 1048576
+    WALLET_TRANSACTIONS = 2097152
+    TITLES = 4194304
+    CONTRACTS = 8388608
+    LOCATIONS = 16777216
+    MEMBER_TRACKING_EXTENDED = 33554432
+    
+    def __repr__(self):
+        return 'EVECorporationKeyMask({0})'.format(self.mask)
