@@ -25,3 +25,9 @@ for k in EVECredential.objects():
     # Guarantee that we make a max of 10 QPS to CCP due to this refresh process. Actual QPS will be
     # much lower (due to time spent actually making the calls).
     time.sleep(0.1)
+
+for c in EVECharacter.objects():
+    print("checking character {}".format(c))
+    if c.credentials == []:
+        print("deleting character without keys")
+        c.delete()
