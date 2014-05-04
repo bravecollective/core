@@ -41,11 +41,15 @@ class CharacterList(HTTPMethod):
     def get(self, admin=False):
         if admin and not is_administrator:
             raise HTTPNotFound()
+            
+        characters = user.characters
+        if admin:
+            characters = EVECharacter.objects()
 
         return 'brave.core.character.template.list', dict(
                 area = 'chars',
                 admin = bool(admin),
-                records = user.characters
+                records = characters
             )
 
 
