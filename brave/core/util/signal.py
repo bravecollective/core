@@ -9,11 +9,13 @@ from mongoengine.signals import pre_save, post_save
 from marrow.util.futures import ScalingPoolExecutor
 from marrow.util.bunch import Bunch
 from marrow.mailer import Mailer
+from requests.exceptions import HTTPError
 from web.core import config
 
 from brave.core import util
 
 
+log = __import__('logging').getLogger(__name__)
 validator_pool = ScalingPoolExecutor(5, 10, 60)
 
 
@@ -59,7 +61,15 @@ def validate_key(identifier):
     
     cred = EVECredential.objects.get(id=identifier)
     
-    result = APICall.objects.get(name='account.APIKeyInfo')(cred)
+    try:
+        result = APICall.objects.get(name='account.APIKeyInfo')(cred)
+    except HTTPError as e:
+        if e.response.status_code == 403:
+            # the key has been disabled; remove it
+            cred.delete()
+            return
+        else:
+            raise
     
     cred.mask = int(result['accessMask'])
     cred.kind = result['type']
