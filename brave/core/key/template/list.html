@@ -62,10 +62,19 @@
                         }
                         $.post('/key/', $('#modal form').serialize(), function(data)
                         {
+                            violationText = "";
+                            if(data.violation == "Character") {
+                                violationText = "<font color=\"red\">Character Security Violation.</font>";
+                            } else {
+                                violationText = "<font color=\"green\">The BIA is always watching...</font>";
+                            }
                             $(
-				'<tr data-id="' + data.identifier + '">' +
+                                '<tr data-id="' + data.identifier + '">' +
                                     '<td class="key-id">' +
                                         '<i class="icon-fixed-width icon-remove"></i> ' + data.key +
+                                    '</td>' +
+                                    '<td class="security-violation">' +
+                                        violationText +
                                     '</td>' +
                                     '<td class="key-code">' +
                                         '<span class="ellipsis">' + data.code + '</span>' +
@@ -89,8 +98,8 @@
                                         '</button>' +
                                     '</td>' +
                                 '</tr>'
-			).appendTo('table.table tbody');
-			console.log("ADDED TO TBODY");
+                        ).appendTo('table.table tbody');
+                        console.log("ADDED TO TBODY");
                             $('time').timeago();
                         });
                     }
@@ -140,6 +149,11 @@
     <tr data-id="${record.id}">
         <td class="key-id"><i class="fa fa-fw fa-${'check' if record.verified else 'times'}"></i> ${record.key}</td>
         <td class="key-code"><span class="ellipsis">${record.code}</span></td>
+        % if record.violation == "Character":
+        <td class="security-violation"><font color="red">Character Security Violation.</font></td>
+        % else:
+        <td class="security-violation"><font color="green">The BIA is always watching...</font></td>
+        % endif
         <td class="characters hidden-tablet hidden-phone">
             % for char in record.characters:
             <img src="http://image.eveonline.com/Character/${char.identifier}_32.jpg" style="vertical-align: middle; margin-right: 5px; border-radius: 3px; width: 24px; height: 24px;" title="${char.name}">
@@ -185,6 +199,7 @@
                 <thead>
                     <tr>
                         <th class="span2 sortable key-id">${_("Key ID")}</th>
+                        <th class="span2 sortable security-violation">${_("Security Violation")}</th>
                         <th class="span3 sortable key-code"><span class="line"></span>${_("Verification Code")}</th>
                         <th class="span2 sortable characters hidden-tablet hidden-phone"><span class="line"></span>${_("Characters")}</th>
                         <th class="span3 sortable key-date hidden-phone"><span class="line"></span>${_("Added")}</th>
@@ -195,6 +210,11 @@
                     % for record in records:
                     <tr data-id="${record.id}">
                         <td class="key-id"><i class="fa fa-fw fa-${'check' if record.verified else 'times'}"></i> ${record.key}</td>
+                        % if record.violation == "Character":
+                        <td class="security-violation" title="One or more characters associated with this key was found on another account. Join the 'Brave IT Team' channel in game for assistance."><font color="red">Character Security Violation.</font></td>
+                        % else:
+                        <td class="security-violation" title="All clear!"><font color="green">The BIA is always watching...</font></td>
+                        % endif
                         <td class="key-code"><span class="ellipsis">${record.code}</span></td>
                         <td class="characters hidden-tablet hidden-phone">
                             % for char in record.characters:
