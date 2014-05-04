@@ -10,6 +10,7 @@ from web.core.templating import render
 from marrow.util.convert import boolean
 from marrow.util.bunch import Bunch
 from mongoengine import ValidationError
+from mongoengine.errors import NotUniqueError
 
 from brave.core.key.model import EVECredential, EVECharacterKeyMask
 from brave.core.util.predicate import authorize, authenticated, is_administrator
@@ -97,6 +98,10 @@ class KeyList(HTTPMethod):
                 
         except ValueError:
             return 'json:', dict(success=False, message=_("Key ID must be a number."), field='key')
+            
+        #Prevent the user from adding a key that has already been added.
+        if EVECredential.objects(key=data.key):
+            return 'json:', dict(success=False, message=_("This key has already been added by another account."), field='key')
         
         record = EVECredential(data.key, data.code, owner=user.id)
         
@@ -113,7 +118,8 @@ class KeyList(HTTPMethod):
                         identifier = str(record.id),
                         key = record.key,
                         code = record.code,
-                        characters = characters
+                        characters = characters,
+                        violation = record.violation
                     )
         
         except ValidationError:
@@ -122,6 +128,11 @@ class KeyList(HTTPMethod):
                         success = False,
                         message = _("Validation error: one or more fields are incorrect or missing."),
                     )
+        except NotUniqueError:
+            return 'json:', dict(
+                success = False,
+                message = _("The key you're attempting to add already exists."),
+            )
 
         raise HTTPFound(location='/key/')
 

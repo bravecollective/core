@@ -24,7 +24,8 @@ class EVECredential(Document):
             indexes = [
                     'owner',
                     # Don't keep expired credentials.
-                    dict(fields=['expires'], expireAfterSeconds=0)
+                    dict(fields=['expires'], expireAfterSeconds=0),
+                    dict(fields=['key'], unique=True)
                 ],
         )
     
@@ -35,6 +36,7 @@ class EVECredential(Document):
     verified = BooleanField(db_field='v', default=False)
     expires = DateTimeField(db_field='e')
     owner = ReferenceField('User', db_field='o', reverse_delete_rule='CASCADE')
+    violation = StringField(db_field='s')
     
     modified = DateTimeField(db_field='m', default=datetime.utcnow)
     
@@ -74,7 +76,13 @@ class EVECredential(Document):
             char = EVECharacter(identifier=info.characterID).save()
         except NotUniqueError:
             char = EVECharacter.objects(identifier=info.characterID)[0]
-        
+            
+            if self.owner != char.owner:
+                log.warning("Security violation detected. Multiple accounts trying to register character %s, ID %d. Actual owner is %s. User adding this character is %s.",
+                    char.name, info.characterID, EVECharacter.objects(identifier = info.characterID).first().owner, self.owner)
+                self.violation = "Character"
+                return
+
         if self.mask.has_access(EVECharacterKeyMask.CHARACTER_SHEET):
             info = api.char.CharacterSheet(self, characterID=info.characterID)
         elif self.mask.has_access(EVECharacterKeyMask.CHARACTER_INFO_PUBLIC):
@@ -97,6 +105,7 @@ class EVECredential(Document):
         char.roles = [i.roleName for i in info.corporationRoles.row] if 'corporationRoles' in info else []
 
         char.save()
+        return char
     
     def get_membership(self, info):
         from brave.core.character.model import EVEAlliance, EVECorporation, EVECharacter
@@ -158,13 +167,19 @@ class EVECredential(Document):
             log.error("No characters returned for key %d?", self.key)
             return
         
+        allCharsOK = True
+
         for char in result.characters.row:
             if 'corporationName' not in char:
                 log.error("corporationName missing for key %d", self.key)
                 continue
             
-            self.pull_character(char)
+            if not self.pull_character(char):
+                allCharsOK = False
         
+        if allCharsOK and self.violation == "Character":
+            self.violation = "False"
+
         self.modified = datetime.utcnow()
         self.save()
         
