@@ -115,8 +115,11 @@
                         <th class="span2 sortable name">Name</th>
                         <th class="span3 sortable corporation"><span class="line"></span>Corporation</th>
                         <th class="span3 sortable alliance"><span class="line"></span>Alliance</th>
+                        % if admin:
                         <th class="span3 sortable username"><span class="line"></span>User</th>
+                        % else:
                         <th class="span1 sortable actions"><span class="line"></span></th>
+                        % endif
                     </tr>
                 </thead>
                 <tbody>
@@ -144,14 +147,17 @@
                             <em>None</em>
                             % endif
                         </td>
+                        % if admin:
                         <td class="username">
                             <span class="ellipsis">
                             ${record.owner}
                             </span>
                         </td>
+                        % else:
                         <td class="actions">
-                            
+                            <i class="makedefault fa fa-star${'' if web.user.primary and record.id == web.user.primary.id else '-o'} fa-2x"></i>
                         </td>
+                        % endif
                     </tr>
                     % endfor
                 </tbody>
