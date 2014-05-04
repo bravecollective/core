@@ -35,9 +35,7 @@
             
             <h3 class="name">${web.user.primary.name}</h3>
             <span class="area">
-            % for title in web.user.primary.titles: 
-            ${title},
-            %endfor
+            ${", ".join(web.user.primary.titles)}
             </span>
             <div class="area">
                 <a target="_blank" href="https://gate.eveonline.com/Corporation/${web.user.primary.corporation.name}">${web.user.primary.corporation.name}</a>
