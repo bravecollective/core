@@ -55,8 +55,7 @@ class Application(Document):
     
     mask = EmbeddedDocumentField(ApplicationMasks, db_field='m', default=lambda: ApplicationMasks())
     groups = ListField(StringField(), db_field='g', default=list)
-    
-    # TODO: "Development"-only applications.
+    development = BooleanField(db_field='dev')
     
     owner = ReferenceField('User', db_field='o')
     

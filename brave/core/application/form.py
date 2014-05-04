@@ -12,7 +12,6 @@ log = __import__('logging').getLogger(__name__)
 
 
 # TODO: Secondary form with additional 'owner' selector.
-# TODO: "Development"-only applications.
 def manage_form(action='/application/manage/'):
     return Form('application', action=action, method='post', class_='modal-body tab-content form-horizontal', children=[
             Tab('general', L_("General"), class_='active', children=[
@@ -20,6 +19,7 @@ def manage_form(action='/application/manage/'):
                     TextArea('description', L_("Description"), rows="6", class_='input-block-level'),
                     URLField('site', L_("Primary Site"), placeholder="http://", required=True, class_='input-block-level validate'),
                     EmailField('contact', L_("Primary Contact"), placeholder="user@example.com", class_='input-block-level'),
+                    TextField('development', L_("Development"), placeholder="True or False", class_='input-block-level'),
                 ]),
             EmbeddedDocumentTab('key', L_("ECDSA Key"), labels=False, children=[
                     Paragraph('ecdsa', L_("You must generate a 256-bit NIST ECDSA key (using SHA256 hashing), hexlify or PEM encode the raw public key and paste it below.  The result should be 128 hexidecimal characters.")),
