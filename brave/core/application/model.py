@@ -100,7 +100,7 @@ class ApplicationGrant(Document):
         """Returns a Key Mask object instead of just the integer."""
         if self._mask:
             return EVECharacterKeyMask(self._mask)
-        return _mask
+        return None
         
     @mask.setter
     def mask(self, value):
