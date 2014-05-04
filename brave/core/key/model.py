@@ -24,7 +24,8 @@ class EVECredential(Document):
             indexes = [
                     'owner',
                     # Don't keep expired credentials.
-                    dict(fields=['expires'], expireAfterSeconds=0)
+                    dict(fields=['expires'], expireAfterSeconds=0),
+                    dict(fields=['key'], unique=True)
                 ],
         )
     
