@@ -14,6 +14,7 @@ from marrow.util.convert import boolean
 from brave.core.application.model import Application
 from brave.core.api.model import AuthenticationBlacklist, AuthenticationRequest
 from brave.core.api.util import SignedController
+from brave.core.key.model import EVECharacterKeyMask
 
 
 log = __import__('logging').getLogger(__name__)
@@ -138,13 +139,21 @@ class CoreAPI(SignedController):
         token = ApplicationGrant.objects.get(id=token, application=request.service)
         character = token.character
         
-        # Step 2: Match ACLs.
+        # Step 2: Update info about the character from the EVE API
+        mask, key = character.credential_multi_for((EVECharacterKeyMask.CHARACTER_SHEET,
+         EVECharacterKeyMask.CHARACTER_INFO_PUBLIC, EVECharacterKeyMask.NULL))
+        
+        #User has no keys registered.
+        if not key:
+            return None
+            
+        key.pull()
+        
+        # Step 3: Match ACLs.
         tags = []
         for group in Group.objects(id__in=request.service.groups):
             if group.evaluate(token.user, character):
                 tags.append(group.id)
-        
-        # TODO: Verify continued character ownership.
         
         return dict(
                 character = dict(id=character.identifier, name=character.name),

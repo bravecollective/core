@@ -210,6 +210,15 @@ class EVECharacter(EVEEntity):
         
         return lowest
         
+    def credential_multi_for(self, masks):
+        """Returns the lowest permission API key that can satisfy the highest possible given mask."""
+        
+        for mask in masks:
+            if self.credential_for(mask):
+                return mask, self.credential_for(mask)
+                
+        return None, None
+        
     def delete(self):
         #If this character is the primary character for the account, wipe that field for the user
         if self == self.owner.primary:
