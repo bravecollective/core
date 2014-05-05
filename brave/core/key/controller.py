@@ -107,7 +107,7 @@ class KeyList(HTTPMethod):
             record.pull()
             characters = []
             for character in record.characters:
-                characters.append(dict(identifier = character.identifier, name = character.name)
+                characters.append(dict(identifier = character.identifier, name = character.name))
             
 
             if request.is_xhr:
