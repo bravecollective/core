@@ -36,7 +36,11 @@ class EVECredential(Document):
     verified = BooleanField(db_field='v', default=False)
     expires = DateTimeField(db_field='e')
     owner = ReferenceField('User', db_field='o', reverse_delete_rule='CASCADE')
-    #Only valid values are "Character" at the moment. Set it to None if there are no violations.
+    #the violation field is used to indicate some sort of conflict for a key. 
+    #A value of 'Character' means that a key gives access to a character which 
+    #is already attached to a different account than the owner of the key.
+    #A value of None is used to indicate no problem
+    #TODO: Add Key violations
     violation = StringField(db_field='s')
     
     modified = DateTimeField(db_field='m', default=datetime.utcnow)

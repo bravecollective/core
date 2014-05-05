@@ -107,8 +107,8 @@ class KeyList(HTTPMethod):
             for character in record.characters:
                 characters.append(dict(identifier = character.identifier, name = character.name))
 
-            #Necessary to update based on the pull invoked by record.save()
-            record = EVECredential.objects(owner=user.id).first()
+            #Necessary to guarantee that the pull finished before returning.
+            record.pull()
 
             if request.is_xhr:
                 return 'json:', dict(
