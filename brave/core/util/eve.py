@@ -175,6 +175,7 @@ class APICall(Document):
     @property
     def mask(self):
         """Returns a Key Mask object instead of just the integer."""
+        from brave.core.key.model import EVECharacterKeyMask
         
         #Every call seems to be Meta anyways...
         if self.kind == "Meta" or self.kind =="m":
