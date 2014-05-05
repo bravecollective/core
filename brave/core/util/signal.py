@@ -9,13 +9,10 @@ from mongoengine.signals import pre_save, post_save
 from marrow.util.futures import ScalingPoolExecutor
 from marrow.util.bunch import Bunch
 from marrow.mailer import Mailer
-from requests.exceptions import HTTPError
 from web.core import config
 
 from brave.core import util
 
-
-log = __import__('logging').getLogger(__name__)
 validator_pool = ScalingPoolExecutor(5, 10, 60)
 
 
@@ -50,7 +47,6 @@ def update_modified_timestamp(sender, document, **kwargs):
     """Automatically maintain a "last modification" date."""
     
     document.modified = datetime.utcnow()
-
 
 @signal(post_save)
 def trigger_api_validation(sender, document, **kwargs):
