@@ -49,7 +49,10 @@ class EVECredential(Document):
     @property
     def mask(self):
         """Returns a Key Mask object instead of just the integer."""
+        
         if self.kind == "Account":
+            return EVECharacterKeyMask(self._mask)
+        elif self.kind == "Character":
             return EVECharacterKeyMask(self._mask)
         elif self.kind == "Corporation":
             return EVECorporationKeyMask(self._mask)
@@ -204,7 +207,7 @@ class EVEKeyMask:
         """Counts the number of ones in the binary representation of the mask."""
         """This is equivalent to the number of functions that the key provides"""
         """access to as long as the mask is a real mask."""
-        return bin(self._mask).count('1')
+        return bin(self.mask).count('1')
 
 class EVECharacterKeyMask(EVEKeyMask):
     """Class for comparing character key masks against the required API calls."""

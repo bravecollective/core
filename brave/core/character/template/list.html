@@ -93,10 +93,10 @@
     % if web.user.admin:
     <div id="tabs-wrapper">
         <div class="row-fluid">
-            <a class="span3 tab${' active' if not admin else ''}" href="/key/">
+            <a class="span3 tab${' active' if not admin else ''}" href="/character/">
                 Your Characters
             </a>
-            <a class="span3 tab${' active' if admin else ''}" href="/key/?admin=true">
+            <a class="span3 tab${' active' if admin else ''}" href="/character/?admin=true">
                 All Characters
             </a>
         </div>
@@ -115,7 +115,11 @@
                         <th class="span3 sortable name">Name</th>
                         <th class="span4 sortable corporation"><span class="line"></span>Corporation</th>
                         <th class="span4 sortable alliance"><span class="line"></span>Alliance</th>
+                        % if admin:
+                        <th class="span3 sortable username"><span class="line"></span>User</th>
+                        % else:
                         <th class="span1 sortable actions"><span class="line"></span></th>
+                        % endif
                     </tr>
                 </thead>
                 <tbody>
@@ -143,9 +147,17 @@
                             <em>None</em>
                             % endif
                         </td>
+                        % if admin:
+                        <td class="username">
+                            <span class="ellipsis">
+                            ${record.owner}
+                            </span>
+                        </td>
+                        % else:
                         <td class="actions">
                             <i class="makedefault fa fa-star${'' if web.user.primary and record.id == web.user.primary.id else '-o'} fa-2x"></i>
                         </td>
+                        % endif
                     </tr>
                     % endfor
                 </tbody>
