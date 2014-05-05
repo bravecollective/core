@@ -79,6 +79,11 @@ class ApplicationInterface(HTTPMethod):
         app.mask.required = valid['required'] or 0
         app.mask.optional = valid['optional'] or 0
         
+        if valid['development'] == "true" or valid['development'] == "True":
+            app.development = True
+        else:
+            app.development = False
+        
         app.save()
         
         return 'json:', dict(
@@ -135,6 +140,11 @@ class ApplicationList(HTTPMethod):
         app.key.public = valid['key']['public']
         app.mask.required = valid['required'] or 0
         app.mask.optional = valid['optional'] or 0
+        
+        if valid['development'] == "true" or valid['development'] == "True":
+            app.development = True
+        else:
+            app.development = False
         
         app.save()
         
