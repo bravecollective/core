@@ -97,7 +97,6 @@ class User(Document):
         """Consumes other and takes its children."""
         
         other.credentials.update(set__owner=self)
-        other.credentials.update(set__violation="False")
         other.characters.update(set__owner=self)
         
         LoginHistory.objects(user=other).update(set__user=self)
