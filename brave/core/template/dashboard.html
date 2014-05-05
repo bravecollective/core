@@ -34,7 +34,9 @@
             <img src="//image.eveonline.com/Character/${web.user.primary.identifier}_128.jpg" class="avatar">
             
             <h3 class="name">${web.user.primary.name}</h3>
-            <span class="area">Some day your character’s corporate title will go here.</span>
+            <span class="area">
+            ${", ".join(web.user.primary.titles)}
+            </span>
             <div class="area">
                 <a target="_blank" href="https://gate.eveonline.com/Corporation/${web.user.primary.corporation.name}">${web.user.primary.corporation.name}</a>
                 % if web.user.primary.alliance:
