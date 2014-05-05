@@ -128,20 +128,20 @@
                         <td class="name">
                             <span class="ellipsis">
                             <img src="//image.eveonline.com/Character/${record.identifier}_32.jpg" style="vertical-align: -55%; margin-right: 5px; border-radius: 6px; width: 32px; height: 32px;">
-                            <strong>${record.name}</strong>
+                            <strong>${record.name | h}</strong>
                             </span>
                         </td>
                         <td class="corporation">
                             <span class="ellipsis">
                             <img src="//image.eveonline.com/Corporation/${record.corporation.identifier}_32.png" style="vertical-align: -55%; margin-right: 5px; width: 32px; height: 32px;">
-                            ${record.corporation.name}
+                            ${record.corporation.name | h}
                             </span>
                         </td>
                         <td class="alliance">
                             % if record.alliance:
                             <span class="ellipsis">
                             <img src="//image.eveonline.com/Alliance/${record.alliance.identifier}_32.png" style="vertical-align: -55%; margin-right: 5px; width: 32px; height: 32px;">
-                            ${record.alliance.name}
+                            ${record.alliance.name | h}
                             </span>
                             % else:
                             <em>None</em>
@@ -150,7 +150,7 @@
                         % if admin:
                         <td class="username">
                             <span class="ellipsis">
-                            ${record.owner}
+                            ${record.owner | h}
                             </span>
                         </td>
                         % else:

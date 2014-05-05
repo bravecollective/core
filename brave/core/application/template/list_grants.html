@@ -84,11 +84,11 @@
                     % for record in records:
                     <tr data-id="${record.id}">
                         <td class="name">
-                            <a href="${record.application.site}"><strong>${record.application.name}</strong></a> <i class="fa fa-external-link muted"></i><br>
-                            <span class="subtext">${record.application.description}</span>
+                            <a href="${record.application.site | u}"><strong>${record.application.name | h}</strong></a> <i class="fa fa-external-link muted"></i><br>
+                            <span class="subtext">${record.application.description | h}</span>
                         </td>
                         <td class="character hidden-tablet hidden-phone">
-                            <img src="//image.eveonline.com/Character/${record.character.identifier}_32.jpg" style="vertical-align: middle; margin-right: 5px; border-radius: 3px; width: 24px; height: 24px;" title="${record.character.name}"> ${record.character.name}
+                            <img src="//image.eveonline.com/Character/${record.character.identifier}_32.jpg" style="vertical-align: middle; margin-right: 5px; border-radius: 3px; width: 24px; height: 24px;" title="${record.character.name | u}"> ${record.character.name}
                         </td>
                         <td class="date">
                             <time class="relative" datetime="${record.id.generation_time |n,f.iso}">${record.id.generation_time |n,f.pretty}</time>

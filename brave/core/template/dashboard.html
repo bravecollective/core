@@ -33,14 +33,14 @@
         <div class="header">
             <img src="//image.eveonline.com/Character/${web.user.primary.identifier}_128.jpg" class="avatar">
             
-            <h3 class="name">${web.user.primary.name}</h3>
+            <h3 class="name">${web.user.primary.name | h}</h3>
             <span class="area">
-            ${", ".join(web.user.primary.titles)}
+            ${", ".join(web.user.primary.titles) | h}
             </span>
             <div class="area">
-                <a target="_blank" href="https://gate.eveonline.com/Corporation/${web.user.primary.corporation.name}">${web.user.primary.corporation.name}</a>
+                <a target="_blank" href="https://gate.eveonline.com/Corporation/${web.user.primary.corporation.name | u}">${web.user.primary.corporation.name | h}</a>
                 % if web.user.primary.alliance:
-                <span>›</span> <a target="_blank" href="https://gate.eveonline.com/Alliance/${web.user.primary.alliance.name}">${web.user.primary.alliance.name}</a>
+                <span>›</span> <a target="_blank" href="https://gate.eveonline.com/Alliance/${web.user.primary.alliance.name | u}">${web.user.primary.alliance.name | h}</a>
                 % endif
             </div>
         </div>
@@ -83,7 +83,7 @@
                             % for attempt in web.user.attempts.order_by('-id').limit(10):
                             <tr>
                                 <td><time datetime="${attempt.id.generation_time.isoformat().replace('+00:00', 'Z')}">${attempt.id.generation_time.isoformat(' ').replace('+00:00', '')}</time></td>
-                                <td>${attempt.location}</td>
+                                <td>${attempt.location | h}</td>
                                 % if attempt.success:
                                 <td><i class="fa fa-check-circle-o fa-lg text-success"></i></td>
                                 % else:
@@ -107,7 +107,7 @@
                 <h4>Authorized Applications</h4>
                 <ul>
                     % for grant in web.user.grants:
-                    <li><a target="_blank" href="${grant.application.site}" title="${grant.application.description}">${grant.application.name}</a></li>
+                    <li><a target="_blank" href="${grant.application.site | u}" title="${grant.application.description | u}">${grant.application.name | h}</a></li>
                     % endfor
                 </ul>
                 
@@ -116,7 +116,7 @@
                 <h4>Group Membership</h4>
                 <ul>
                     % for id, group in web.user.primary.tags.iteritems():
-                    <li>${group.title}</li>
+                    <li>${group.title | h}</li>
                     % endfor
                 </ul>
             </div>

@@ -56,11 +56,11 @@
                     % for record in records:
                     <tr data-id="${record.id}">
                         <td class="name">
-                            <a href="/application/${record.id}"><strong>${record.name}</strong></a><br>
-                            <span class="subtext">${record.description}</span>
+                            <a href="/application/${record.id}"><strong>${record.name | h}</strong></a><br>
+                            <span class="subtext">${record.description | h}</span>
                         </td>
                         <td class="actions">
-                            <a href=${record.site}><button class="btn btn-small authorize">Authorize</button></a>
+                            <a href=${record.site | u}><button class="btn btn-small authorize">Authorize</button></a>
                         </td>
                     </tr>
                     % endfor
@@ -91,11 +91,11 @@
                     % for record in devRecords:
                     <tr data-id="${record.id}">
                         <td class="name">
-                            <a href="/application/${record.id}"><strong>${record.name}</strong></a><br>
-                            <span class="subtext">${record.description}</span>
+                            <a href="/application/${record.id}"><strong>${record.name | h}</strong></a><br>
+                            <span class="subtext">${record.description | h}</span>
                         </td>
                         <td class="actions">
-                            <a href=${record.site}><button class="btn btn-small authorize">Authorize</button></a>
+                            <a href=${record.site | u}><button class="btn btn-small authorize">Authorize</button></a>
                         </td>
                     </tr>
                     % endfor

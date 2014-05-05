@@ -84,8 +84,8 @@
                     % for record in records:
                     <tr data-id="${record.id}">
                         <td class="name">
-                            <a href="/application/manage/${record.id}"><strong>${record.name}</strong></a><br>
-                            <span class="subtext">${record.description}</span>
+                            <a href="/application/manage/${record.id}"><strong>${record.name | h}</strong></a><br>
+                            <span class="subtext">${record.description | h}</span>
                         </td>
                         <td class="tr">
                             ${record.grants.count()}
@@ -127,14 +127,14 @@
                     % for record in adminRecords:
                     <tr data-id="${record.id}">
                         <td class="name">
-                            <a href="/application/manage/${record.id}"><strong>${record.name}</strong></a><br>
-                            <span class="subtext">${record.description}</span>
+                            <a href="/application/manage/${record.id}"><strong>${record.name | h}</strong></a><br>
+                            <span class="subtext">${record.description | h}</span>
                         </td>
                         <td class="owner">
-                            ${record.owner}
+                            ${record.owner | h}
                         </td>
                         <td class="url">
-                            <a href="${record.site}">${record.site}</a>
+                            <a href="${record.site | u}">${record.site | h}</a>
                         </td>
                         <td class="tr">
                             ${record.grants.count()}
