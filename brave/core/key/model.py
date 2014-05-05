@@ -6,6 +6,7 @@ from datetime import datetime
 from mongoengine import Document, StringField, DateTimeField, BooleanField, ReferenceField, IntField
 from mongoengine.errors import NotUniqueError
 from marrow.util.bunch import Bunch
+from requests.exceptions import HTTPError
 
 from brave.core.util import strip_tags
 from brave.core.util.signal import update_modified_timestamp, trigger_api_validation
