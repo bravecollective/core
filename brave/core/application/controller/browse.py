@@ -48,7 +48,7 @@ class ApplicationInterface(Controller):
 class BrowseController(Controller):
     @authorize(authenticated)
     def index(self):
-        records = Application.objects(development=False or None)  # TODO: This needs to be ACL-filtered!
+        records = Application.objects(development__in=[False, None])  # TODO: This needs to be ACL-filtered!
         devRecords = Application.objects(development=True)
         
         return 'brave.core.application.template.list_apps', dict(
