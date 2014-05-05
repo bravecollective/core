@@ -103,12 +103,12 @@ class KeyList(HTTPMethod):
         
         try:
             record.save()
-            characters = []
-            for character in record.characters:
-                characters.append(dict(identifier = character.identifier, name = character.name))
-
             #Necessary to guarantee that the pull finished before returning.
             record.pull()
+            characters = []
+            for character in record.characters:
+                characters.append(dict(identifier = character.identifier, name = character.name)
+            
 
             if request.is_xhr:
                 return 'json:', dict(
