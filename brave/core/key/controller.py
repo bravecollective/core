@@ -10,6 +10,7 @@ from web.core.templating import render
 from marrow.util.convert import boolean
 from marrow.util.bunch import Bunch
 from mongoengine import ValidationError
+from mongoengine.errors import NotUniqueError
 
 from brave.core.key.model import EVECredential, EVECharacterKeyMask
 from brave.core.util.predicate import authorize, authenticated, is_administrator
@@ -102,9 +103,12 @@ class KeyList(HTTPMethod):
         
         try:
             record.save()
+            #Necessary to guarantee that the pull finished before returning.
+            record.pull()
             characters = []
             for character in record.characters:
                 characters.append(dict(identifier = character.identifier, name = character.name))
+            
 
             if request.is_xhr:
                 return 'json:', dict(
@@ -113,7 +117,8 @@ class KeyList(HTTPMethod):
                         identifier = str(record.id),
                         key = record.key,
                         code = record.code,
-                        characters = characters
+                        characters = characters,
+                        violation = record.violation
                     )
         
         except ValidationError:
@@ -122,6 +127,11 @@ class KeyList(HTTPMethod):
                         success = False,
                         message = _("Validation error: one or more fields are incorrect or missing."),
                     )
+        except NotUniqueError:
+            return 'json:', dict(
+                success = False,
+                message = _("This key has already been added by another account."),
+            )
 
         raise HTTPFound(location='/key/')
 
