@@ -12,8 +12,9 @@ from marrow.util.bunch import Bunch
 from mongoengine import ValidationError
 from mongoengine.errors import NotUniqueError
 
-from brave.core.key.model import EVECredential, EVECharacterKeyMask
+from brave.core.key.model import EVECredential
 from brave.core.util.predicate import authorize, authenticated, is_administrator
+from brave.core.util.eve import EVECharacterKeyMask
 
 
 log = __import__('logging').getLogger(__name__)

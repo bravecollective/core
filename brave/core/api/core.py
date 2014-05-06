@@ -14,7 +14,7 @@ from marrow.util.convert import boolean
 from brave.core.application.model import Application
 from brave.core.api.model import AuthenticationBlacklist, AuthenticationRequest
 from brave.core.api.util import SignedController
-from brave.core.key.model import EVECharacterKeyMask
+from brave.core.util.eve import EVECharacterKeyMask
 
 
 log = __import__('logging').getLogger(__name__)
