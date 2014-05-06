@@ -4,7 +4,7 @@ from marrow.util.bunch import Bunch
 from marrow.mailer.validator import EmailValidator
 from web.auth import authenticate, deauthenticate
 from web.core import Controller, HTTPMethod, request, config
-from web.core.http import HTTPFound, HTTPSeeOther, HTTPForbidden
+from web.core.http import HTTPFound, HTTPSeeOther, HTTPForbidden, HTTPNotFound
 from web.core.locale import _
 from mongoengine import ValidationError, NotUniqueError
 
@@ -12,6 +12,7 @@ from brave.core.account.model import User, PasswordRecovery
 from brave.core.account.form import authenticate as authenticate_form, register as register_form, \
     recover as recover_form, reset_password as reset_password_form
 from brave.core.account.authentication import lookup_email, send_recover_email
+from brave.core.util.predicate import is_administrator
 
 from yubico import yubico
 from marrow.util.convert import boolean
