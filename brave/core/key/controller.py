@@ -82,7 +82,6 @@ class KeyList(HTTPMethod):
         credentials = user.credentials
         if admin:
             #Don't send the verification code for the API keys.
-            #See: The Great Brave API Key Leak of 2014
             credentials = EVECredential.objects.only('violation', 'key', 'verified', 'owner')
 
         return 'brave.core.key.template.list', dict(
