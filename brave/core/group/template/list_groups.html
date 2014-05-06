@@ -109,9 +109,9 @@
                     </thead>
                     <tbody>
                         % for group in groups:
-                            <tr data-id="${group.id}">
-                                <td><a href="/group/${group.id}">${group.id}</a></td>
-                                <td>${group.title}</td>
+                            <tr data-id="${group.id | u}">
+                                <td><a href="/group/${group.id | u}">${group.id | h}</a></td>
+                                <td>${group.title | h}</td>
                                 <td><button class="btn btn-danger btn-small delete"><i class="fa fa-times"></i></button></td>
                             </tr>
                         % endfor

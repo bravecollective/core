@@ -147,8 +147,8 @@
 
 <%def name="row(record)">
     <tr data-id="${record.id}">
-        <td class="key-id"><i class="fa fa-fw fa-${'check' if record.verified else 'times'}"></i> ${record.key}</td>
-        <td class="key-code"><span class="ellipsis">${record.code}</span></td>
+        <td class="key-id"><i class="fa fa-fw fa-${'check' if record.verified else 'times'}"></i> ${record.key | h}</td>
+        <td class="key-code"><span class="ellipsis">${record.code | h}</span></td>
         % if record.violation == "Character":
         <td class="security-violation"><font color="red">Character Security Violation.</font></td>
         % else:
@@ -156,7 +156,7 @@
         % endif
         <td class="characters hidden-tablet hidden-phone">
             % for char in record.characters:
-            <img src="http://image.eveonline.com/Character/${char.identifier}_32.jpg" style="vertical-align: middle; margin-right: 5px; border-radius: 3px; width: 24px; height: 24px;" title="${char.name}">
+            <img src="http://image.eveonline.com/Character/${char.identifier}_32.jpg" style="vertical-align: middle; margin-right: 5px; border-radius: 3px; width: 24px; height: 24px;" title="${char.name | u}">
             % endfor
         </td>
         <td class="key-date hidden-phone"><time datetime="${record.id.generation_time.isoformat().replace('+00:00', 'Z')}">${record.id.generation_time.isoformat(' ').replace('+00:00', '')}</time></td>
@@ -209,16 +209,16 @@
                 <tbody>
                     % for record in records:
                     <tr data-id="${record.id}">
-                        <td class="key-id"><i class="fa fa-fw fa-${'check' if record.verified else 'times'}"></i> ${record.key}</td>
+                        <td class="key-id"><i class="fa fa-fw fa-${'check' if record.verified else 'times'}"></i> ${record.key | h}</td>
                         % if record.violation == "Character":
                         <td class="security-violation" title="One or more characters associated with this key was found on another account. Join the 'Brave IT Team' channel in game for assistance."><font color="red">Character Security Violation.</font></td>
                         % else:
                         <td class="security-violation" title="All clear!"><font color="green">The BIA is always watching...</font></td>
                         % endif
-                        <td class="key-code"><span class="ellipsis">${record.code}</span></td>
+                        <td class="key-code"><span class="ellipsis">${record.code | h}</span></td>
                         <td class="characters hidden-tablet hidden-phone">
                             % for char in record.characters:
-                            <img src="//image.eveonline.com/Character/${char.identifier}_32.jpg" style="vertical-align: middle; margin-right: 5px; border-radius: 3px; width: 24px; height: 24px;" title="${char.name}">
+                            <img src="//image.eveonline.com/Character/${char.identifier}_32.jpg" style="vertical-align: middle; margin-right: 5px; border-radius: 3px; width: 24px; height: 24px;" title="${char.name | u}">
                             % endfor
                         </td>
                         <td class="key-date hidden-phone"><time datetime="${record.id.generation_time.isoformat().replace('+00:00', 'Z')}">${record.id.generation_time.isoformat(' ').replace('+00:00', '')}</time></td>

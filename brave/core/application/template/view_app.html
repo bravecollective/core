@@ -2,7 +2,7 @@
 
 <%inherit file="brave.core.template.master"/>
 
-<%block name="title">${app} — Application Details</%block>
+<%block name="title">${app | h} — Application Details</%block>
 
 <%block name="header">
     ${parent.header()}
