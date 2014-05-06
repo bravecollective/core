@@ -112,9 +112,15 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
+                        % if not admin:
                         <th class="span3 sortable name">Name</th>
                         <th class="span4 sortable corporation"><span class="line"></span>Corporation</th>
                         <th class="span4 sortable alliance"><span class="line"></span>Alliance</th>
+                        % else:
+                        <th class="span2 sortable name">Name</th>
+                        <th class="span3 sortable corporation"><span class="line"></span>Corporation</th>
+                        <th class="span3 sortable alliance"><span class="line"></span>Alliance</th>
+                        % endif
                         % if admin:
                         <th class="span3 sortable username"><span class="line"></span>User</th>
                         % else:
