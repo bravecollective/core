@@ -207,13 +207,17 @@
                     <tr>
                         <th class="span2 sortable key-id">${_("Key ID")}</th>
                         <th class="span2 sortable security-violation">${_("Security Violation")}</th>
+                        % if not admin:
                         <th class="span3 sortable key-code"><span class="line"></span>${_("Verification Code")}</th>
-                        <th class="span2 sortable characters hidden-tablet hidden-phone"><span class="line"></span>${_("Characters")}</th>
-                        <th class="span3 sortable key-date hidden-phone"><span class="line"></span>${_("Added")}</th>
-                        % if admin:
-                        <th class="span3 sortable username"><span class="line"></span>${_("User")}</th>
+                        % else:
+                        <th class="span1 sortable key-code"><span class="line"></span>${_("Code")}</th>
                         % endif
-                        <th class="span2 actions"><span class="line"></span>${_("Actions")}</th>
+                        <th class="span2 sortable characters hidden-tablet hidden-phone"><span class="line"></span>${_("Characters")}</th>
+                        <th class="span2 sortable key-date hidden-phone"><span class="line"></span>${_("Added")}</th>
+                        % if admin:
+                        <th class="span2 sortable username"><span class="line"></span>${_("User")}</th>
+                        % endif
+                        <th class="span1 actions"><span class="line"></span>${_("Actions")}</th>
                     </tr>
                 </thead>
                 <tbody>
