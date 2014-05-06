@@ -10,7 +10,7 @@ from requests.exceptions import HTTPError
 
 from brave.core.util import strip_tags
 from brave.core.util.signal import update_modified_timestamp, trigger_api_validation
-from brave.core.util.eve import api
+from brave.core.util.eve import api, EVECharacterKeyMask, EVECorporationKeyMask
 
 
 log = __import__('logging').getLogger(__name__)
@@ -25,7 +25,8 @@ class EVECredential(Document):
             indexes = [
                     'owner',
                     # Don't keep expired credentials.
-                    dict(fields=['expires'], expireAfterSeconds=0)
+                    dict(fields=['expires'], expireAfterSeconds=0),
+                    dict(fields=['key'], unique=True)
                 ],
         )
     
@@ -36,6 +37,12 @@ class EVECredential(Document):
     verified = BooleanField(db_field='v', default=False)
     expires = DateTimeField(db_field='e')
     owner = ReferenceField('User', db_field='o', reverse_delete_rule='CASCADE')
+    #the violation field is used to indicate some sort of conflict for a key. 
+    #A value of 'Character' means that a key gives access to a character which 
+    #is already attached to a different account than the owner of the key.
+    #A value of None is used to indicate no problem
+    #TODO: Add Key violations
+    violation = StringField(db_field='s')
     
     modified = DateTimeField(db_field='m', default=datetime.utcnow)
     
@@ -78,7 +85,13 @@ class EVECredential(Document):
             char = EVECharacter(identifier=info.characterID).save()
         except NotUniqueError:
             char = EVECharacter.objects(identifier=info.characterID)[0]
-        
+            
+            if self.owner != char.owner:
+                log.warning("Security violation detected. Multiple accounts trying to register character %s, ID %d. Actual owner is %s. User adding this character is %s.",
+                    char.name, info.characterID, EVECharacter.objects(identifier = info.characterID).first().owner, self.owner)
+                self.violation = "Character"
+                return
+
         if self.mask.has_access(EVECharacterKeyMask.CHARACTER_SHEET):
             info = api.char.CharacterSheet(self, characterID=info.characterID)
         elif self.mask.has_access(EVECharacterKeyMask.CHARACTER_INFO_PUBLIC):
@@ -101,6 +114,7 @@ class EVECredential(Document):
         char.roles = [i.roleName for i in info.corporationRoles.row] if 'corporationRoles' in info else []
 
         char.save()
+        return char
     
     def get_membership(self, info):
         from brave.core.character.model import EVEAlliance, EVECorporation, EVECharacter
@@ -169,111 +183,19 @@ class EVECredential(Document):
             log.error("No characters returned for key %d?", self.key)
             return self
         
+        allCharsOK = True
+
         for char in result.characters.row:
             if 'corporationName' not in char:
                 log.error("corporationName missing for key %d", self.key)
                 continue
             
-            self.pull_character(char)
+            if not self.pull_character(char):
+                allCharsOK = False
         
+        if allCharsOK and self.violation == "Character":
+            self.violation = None
+
         self.modified = datetime.utcnow()
         self.save()
         return self
-
-class EVEKeyMask:
-    """Base class for representing API key masks."""
-    
-    NULL = 0
-    
-    def __init__(self, mask):
-        self.mask = mask
-        
-    def __repr__(self):
-        return 'EVEKeyMask({0})'.format(self.mask)
-        
-    def has_access(self, mask):
-        if self.mask & mask:
-            return True
-            
-        return False
-        
-    def has_multiple_access(self, masks):
-        for apiCall in masks:
-            if not self.mask & apiCall:
-                return False
-        
-        return True
-        
-    def number_of_functions(self):
-        """Counts the number of ones in the binary representation of the mask."""
-        """This is equivalent to the number of functions that the key provides"""
-        """access to as long as the mask is a real mask."""
-        return bin(self.mask).count('1')
-
-class EVECharacterKeyMask(EVEKeyMask):
-    """Class for comparing character key masks against the required API calls."""
-    
-    ACCOUNT_BALANCE = 1
-    ASSET_LIST = 2
-    CALENDAR_EVENT_ATTENDEES = 4
-    CHARACTER_SHEET = 8
-    CONTACT_LIST = 16
-    CONTACT_NOTIFICATIONS = 32
-    FAC_WAR_STATS = 64
-    INDUSTRY_JOBS = 128
-    KILL_LOG = 256
-    MAIL_BODIES = 512
-    MAILING_LISTS = 1024
-    MAIL_MESSAGES = 2048
-    MARKET_ORDERS = 4096
-    MEDALS = 8192
-    NOTIFICATIONS = 16384
-    NOTIFICATION_TEXTS = 32768
-    RESEARCH = 65536
-    SKILL_IN_TRAINING = 131072
-    SKILL_QUEUE = 262144
-    STANDINGS = 524288
-    UPCOMING_CALENDAR_EVENTS = 1048576
-    WALLET_JOURNAL = 2097152
-    WALLET_TRANSACTIONS = 4194304
-    CHARACTER_INFO_PUBLIC = 8388608
-    CHARACTER_INFO_PRIVATE = 16777216
-    ACCOUNT_STATUS = 33554432
-    CONTRACTS = 67108864
-    LOCATIONS = 134217728
-    
-    def __repr__(self):
-        return 'EVECharacterKeyMask({0})'.format(self.mask)
-    
-class EVECorporationKeyMask(EVEKeyMask):
-    """Class for comparing corporation key masks against the required API calls."""
-    
-    ACCOUNT_BALANCE = 1
-    ASSET_LIST = 2
-    MEMBER_MEDALS = 4
-    CORPORATION_SHEET = 8
-    CONTACT_LIST = 16
-    CONTAINER_LOG = 32
-    FAC_WAR_STATS = 64
-    INDUSTRY_JOBS = 128
-    KILL_LOG = 256
-    MEMBER_SECURITY = 512
-    MEMBER_SECURITY_LOG = 1024
-    MEMBER_TRACKING_LIMITED = 2048
-    MARKET_ORDERS = 4096
-    MEDALS = 8192
-    OUTPOST_LIST = 16384
-    OUTPOST_SERVICE_DETAIL = 32768
-    SHAREHOLDERS = 65536
-    STARBASE_DETAIL = 131072
-    STANDINGS = 262144
-    STARBASE_LIST = 524288
-    WALLET_JOURNAL = 1048576
-    WALLET_TRANSACTIONS = 2097152
-    TITLES = 4194304
-    CONTRACTS = 8388608
-    LOCATIONS = 16777216
-    MEMBER_TRACKING_EXTENDED = 33554432
-    
-    def __repr__(self):
-        return 'EVECorporationKeyMask({0})'.format(self.mask)

@@ -2,7 +2,7 @@
 
 <%inherit file="brave.core.template.light"/>
 
-<%block name="title">${_("Authorize {0}").format(ar.application.name)}</%block>
+<%block name="title">${_("Authorize {0}").format(ar.application.name) | h}</%block>
 
 <%block name="header">
     ${parent.header()}
@@ -99,7 +99,7 @@
         <div class="auth">
             <h6>${_("Granting Authorization")}</h6>
             
-            <blockquote data-application="${ar.application.name}"></blockquote>
+            <blockquote data-application="${ar.application.name | u}"></blockquote>
             
             <p>This application wishes to know certain information about your character.  All applications are given access to the following information:</p>
             
@@ -124,7 +124,7 @@
                         % for record in characters:
                         <li><a tabindex="-1" href="#" data-id="${record.id}" class="allow"><span class="ellipsis">
                             <img src="//image.eveonline.com/Character/${record.identifier}_32.jpg" style="vertical-align: -60%; margin-right: 5px; border-radius: 6px; width: 32px; height: 32px;">
-                            <strong>${record.name}</strong>
+                            <strong>${record.name | h}</strong>
                             % if default == record:
                             <span class="label label-inverse" style="margin-left: 5px;">Default</span>
                             % endif

@@ -97,6 +97,8 @@ class ApplicationGrant(Document):
     @property
     def mask(self):
         """Returns a Key Mask object instead of just the integer."""
+        from brave.core.util.eve import EVECharacterKeyMask
+        
         if self._mask:
             return EVECharacterKeyMask(self._mask)
         return None
