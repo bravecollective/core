@@ -42,6 +42,7 @@ setup(
                 'yubico',
                 'futures',
                 'zxcvbn',
+                'flake8',
             ],
         
     )

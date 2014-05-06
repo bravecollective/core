@@ -5,5 +5,7 @@ services:
   - mongodb
 install:
   - pip install -r requirements.txt . --use-mirrors
-script: python setup.py test
+script:
+  - flake8 --ignore=E,W,F401,F841
+  - python setup.py test
 
