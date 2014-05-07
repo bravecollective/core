@@ -56,7 +56,7 @@
                     % for record in records:
                     <tr data-id="${record.id}">
                         <td class="name">
-                            <a href="/application/${record.id}"><strong>${record.name | h}</strong></a><br>
+                            <a href=${record.site}><strong>${record.name | h}</strong></a><br>
                             <span class="subtext">${record.description | h}</span>
                         </td>
                         <td class="actions">
@@ -91,7 +91,7 @@
                     % for record in devRecords:
                     <tr data-id="${record.id}">
                         <td class="name">
-                            <a href="/application/${record.id}"><strong>${record.name | h}</strong></a><br>
+                            <a href=${record.site}><strong>${record.name | h}</strong></a><br>
                             <span class="subtext">${record.description | h}</span>
                         </td>
                         <td class="actions">

@@ -168,19 +168,6 @@ class EVECharacter(EVEEntity):
     credentials = ListField(ReferenceField(EVECredential, reverse_delete_rule=PULL), db_field='e', default=list)
     
     owner = ReferenceField('User', db_field='o', reverse_delete_rule=NULLIFY)
-
-    def update(self, alliance, corporation, race, bloodline, ancestry, gender, security, titles):
-        """A utility method to make sure that all important character properties are updated
-        together."""
-        self.alliance = alliance
-        self.corporation = corporation
-        self.race = race
-        self.bloodline = bloodline
-        self.ancestry = ancestry
-        self.gender = gender
-        self.security = security
-        self.titles = titles
-        self.roles = roles
     
     @property
     def tags(self):
