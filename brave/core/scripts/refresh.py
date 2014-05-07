@@ -9,8 +9,8 @@ import time
 
 from requests.exceptions import HTTPError
 
+from brave.core.character.model import EVECharacter
 from brave.core.key.model import EVECredential
-from brave.core.util.signal import validate_key
 
 for k in EVECredential.objects():
     print("refreshing key {}".format(k.id))
