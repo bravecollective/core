@@ -79,11 +79,16 @@ class KeyList(HTTPMethod):
         
         if admin and not is_administrator:
             raise HTTPNotFound()
+            
+        credentials = user.credentials
+        if admin:
+            #Don't send the verification code for the API keys.
+            credentials = EVECredential.objects.only('violation', 'key', 'verified', 'owner')
 
         return 'brave.core.key.template.list', dict(
                 area = 'keys',
                 admin = admin,
-                records = user.credentials
+                records = credentials
             )
 
     @authorize(authenticated)
