@@ -10,7 +10,7 @@ def delete():
             for c in EVECredential.objects(key=credential.key):
                 dups.append(c)
 
-    print "Deleting {0} keys.".format(len(dups),)
+    print "Deleting {0} keys.".format(len(set(dups)),)
 
     for c in dups:
         c.delete()
