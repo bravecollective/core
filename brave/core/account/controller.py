@@ -2,7 +2,7 @@
 
 from marrow.util.bunch import Bunch
 from marrow.mailer.validator import EmailValidator
-from web.auth import authenticate, deauthenticate
+from web.auth import authenticate, deauthenticate, user
 from web.core import Controller, HTTPMethod, request, config
 from web.core.http import HTTPFound, HTTPSeeOther, HTTPForbidden, HTTPNotFound
 from web.core.locale import _
@@ -396,6 +396,29 @@ class Settings(HTTPMethod):
         return 'json:', dict(success=True, location="/account/settings")
 
 
+class AccountInterface(HTTPMethod):
+    """Handles the individual user pages."""
+    
+    def __init__(self, userID):
+        super(AccountInterface, self).__init__()
+        
+        try:
+            self.user = User.objects.get(id=userID)
+        except User.DoesNotExist:
+            raise HTTPNotFound()
+        except ValidationError:
+            #Handles improper objectIDs
+            raise HTTPNotFound()
+
+        if self.user.id != user.id and not user.admin:
+            raise HTTPNotFound()
+            
+    def get(self):
+        return 'brave.core.account.template.accountdetails', dict(
+        user = self.user
+        )
+
+
 class AccountController(Controller):
     authenticate = Authenticate()
     register = Register()
@@ -431,4 +454,8 @@ class AccountController(Controller):
     def deauthenticate(self):
         deauthenticate()
         raise HTTPSeeOther(location='/')
+        
+    def __lookup__(self, user, *args, **kw):
+        request.path_info_pop()  # We consume a single path element.
+        return AccountInterface(user), args
 
