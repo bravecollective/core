@@ -83,7 +83,9 @@
                         <td class="name">
                             <span class="ellipsis">
                             <img src="//image.eveonline.com/Character/${record.identifier}_32.jpg" style="vertical-align: -55%; margin-right: 5px; border-radius: 6px; width: 32px; height: 32px;">
+                            <a href="/character/${record.identifier}">
                             <strong>${record.name | h}</strong>
+                            </a>
                             </span>
                         </td>
                         <td class="corporation">
@@ -133,7 +135,7 @@
                 <tbody>
                     % for record in user.credentials:
                     <tr data-id="${record.id}">
-                        <td class="key-id"><i class="fa fa-fw fa-${'check' if record.verified else 'times'}"></i> ${record.key | h}</td>
+                        <td class="key-id"><i class="fa fa-fw fa-${'check' if record.verified else 'times'}"></i> <a href="/key/${record.id}">${record.key | h}</a></td>
                         % if record.violation == "Character":
                         <td class="security-violation" title="One or more characters associated with this key was found on another account. Join the 'Brave IT Team' channel in game for assistance."><font color="red">Character Security Violation.</font></td>
                         % else:
