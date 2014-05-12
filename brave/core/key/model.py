@@ -48,6 +48,14 @@ class EVECredential(Document):
     def __repr__(self):
         return 'EVECredential({0}, {1}, {2}, {3!r})'.format(self.id, self.kind, self._mask, self.owner)
     
+    def delete(self):
+        #Delete any character that this key provides access to, but that the owner no longer has a key for.
+        for c in self.characters:
+            if not c.credential_for(EVECharacterKeyMask.NULL):
+                c.delete()
+                
+        super(EVECredential, self).delete()
+    
     @property
     def characters(self):
         from brave.core.character.model import EVECharacter
