@@ -6,6 +6,7 @@ from datetime import datetime
 from mongoengine import Document, StringField, DateTimeField, BooleanField, ReferenceField, IntField
 from mongoengine.errors import NotUniqueError
 from marrow.util.bunch import Bunch
+from requests.exceptions import HTTPError
 
 from brave.core.util import strip_tags
 from brave.core.util.signal import update_modified_timestamp, trigger_api_validation
@@ -160,17 +161,24 @@ class EVECredential(Document):
     
     def pull_corp(self):
         """Populate corporation details."""
-        pass
+        return self
     
     def pull(self):
-        """Pull all details available for this key."""
+        """Pull all details available for this key.
+        
+        If this key isn't valid (can't call APIKeyInfo on it), then this object will delete itself
+        and return None. Probably call this like "cred = cred.pull()"."""
         
         if self.kind == 'Corporation':
             return self.pull_corp()
         
         try:
             result = api.account.APIKeyInfo(self)  # cached
-        except:
+        except HTTPError as e:
+            if e.response.status_code == 403:
+                log.debug("key disabled; deleting %d" % self.key)
+                self.delete()
+                return None
             log.exception("Unable to call: APIKeyInfo(%d)", self.key)
             return
         
@@ -181,7 +189,7 @@ class EVECredential(Document):
         
         if not result.characters.row:
             log.error("No characters returned for key %d?", self.key)
-            return
+            return self
         
         allCharsOK = True
 
@@ -198,4 +206,4 @@ class EVECredential(Document):
 
         self.modified = datetime.utcnow()
         self.save()
-        
+        return self
