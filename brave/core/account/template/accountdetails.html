@@ -33,7 +33,7 @@
         <div class="header">
             <img src="//image.eveonline.com/Character/${user.primary.identifier}_128.jpg" class="avatar">
             
-            <h3 class="name">${user.primary.name | h}</h3>
+            <h3 class="name">${user.primary.name | h} (${user})</h3>
             <span class="area">
             ${", ".join(user.primary.titles) | h}
             </span>
