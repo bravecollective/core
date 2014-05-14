@@ -50,7 +50,9 @@
                 % if admin:
                 <td class="username">
                     <span class="ellipsis">
+                    <a href="/account/${record.owner.id}">
                     ${record.owner | h}
+                    </a>
                     </span>
                 </td>
                 % else:

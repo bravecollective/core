@@ -41,7 +41,7 @@
                 </td>
                 <td class="key-date hidden-phone"><time datetime="${record.id.generation_time.isoformat().replace('+00:00', 'Z')}">${record.id.generation_time.isoformat(' ').replace('+00:00', '')}</time></td>
                 % if admin:
-                <td class="username">${record.owner | h}</td>
+                <td class="username"><a href="/account/${record.owner.id}">${record.owner | h}</a></td>
                 % else:
                 <td class="actions">
                     <button class="btn btn-default btn-small refresh" title="Refresh API Key" rel="tooltip" data-placement="bottom"><i class="fa fa-refresh"></i></button>
