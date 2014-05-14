@@ -137,6 +137,15 @@ class OneGroupController(HTTPMethod):
             return 'json:', dict(success=True)
         return 'json:', dict(success=False,
                              message=_("Failure updating group"))
+                             
+    @authorize(is_administrator)
+    def modify_rule(self, grant, kind, add, name):
+        # TODO: Handle reject rules
+        if not grant:
+            return 'json:', dict(success=False,
+                                 message=_("HTTP Error 501, Not Implemented Yet."))
+                                 
+        return getattr(self, add + "_" + kind)(name)
 
     @authorize(is_administrator)
     def delete(self):
