@@ -7,6 +7,7 @@ from mongoengine import Document, StringField, DateTimeField, BooleanField, Refe
 from mongoengine.errors import NotUniqueError
 from marrow.util.bunch import Bunch
 
+from brave.core.account.model import User
 from brave.core.util import strip_tags
 from brave.core.util.signal import update_modified_timestamp, trigger_api_validation
 from brave.core.util.eve import api, EVECharacterKeyMask, EVECorporationKeyMask
@@ -36,11 +37,11 @@ class EVECredential(Document):
     verified = BooleanField(db_field='v', default=False)
     expires = DateTimeField(db_field='e')
     owner = ReferenceField('User', db_field='o', reverse_delete_rule='CASCADE')
-    #the violation field is used to indicate some sort of conflict for a key. 
-    #A value of 'Character' means that a key gives access to a character which 
-    #is already attached to a different account than the owner of the key.
-    #A value of None is used to indicate no problem
-    #TODO: Add Key violations
+    # The violation field is used to indicate some sort of conflict for a key. 
+    # A value of 'Character' means that a key gives access to a character which 
+    # is already attached to a different account than the owner of the key.
+    # A value of None is used to indicate no problem
+    # TODO: Add Key violations
     violation = StringField(db_field='s')
     
     modified = DateTimeField(db_field='m', default=datetime.utcnow)
@@ -89,6 +90,10 @@ class EVECredential(Document):
                 log.warning("Security violation detected. Multiple accounts trying to register character %s, ID %d. Actual owner is %s. User adding this character is %s.",
                     char.name, info.characterID, EVECharacter.objects(identifier = info.characterID).first().owner, self.owner)
                 self.violation = "Character"
+                
+                # Mark both accounts as duplicates of each other.
+                User.add_duplicate(self.owner, char.owner)
+                
                 return
 
         if self.mask.has_access(EVECharacterKeyMask.CHARACTER_SHEET):

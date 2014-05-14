@@ -13,6 +13,7 @@ from mongoengine import ValidationError
 from mongoengine.errors import NotUniqueError
 
 from brave.core.key.model import EVECredential
+from brave.core.account.model import User
 from brave.core.util.predicate import authorize, authenticated, is_administrator
 from brave.core.util.eve import EVECharacterKeyMask
 
@@ -134,6 +135,13 @@ class KeyList(HTTPMethod):
                         message = _("Validation error: one or more fields are incorrect or missing."),
                     )
         except NotUniqueError:
+            if EVECredential.objects(key=data.key):
+                """Mark both of these accounts as duplicates to each other."""
+                acc = User.objects(username=user.username).first()
+                other = EVECredential.objects(key=data.key).first().owner
+            
+                User.add_duplicate(acc, other)
+            
             return 'json:', dict(
                 success = False,
                 message = _("This key has already been added by another account."),

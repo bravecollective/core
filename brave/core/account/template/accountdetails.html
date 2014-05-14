@@ -127,6 +127,15 @@
                     % endfor
                 </ul>
                 % endif
+                
+                <hr>
+                % if len(user.other_accs_char_key):
+                <h4>Duplicate Accounts</h4>
+                <ul>
+                    % for other_user in user.other_accs_char_key:
+                    <li><a href="/account/${other_user.id}">${other_user | h}</a></li>
+                    % endfor
+                % endif
             </div>
         </div>
         

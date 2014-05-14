@@ -38,6 +38,11 @@ class User(Document):
     seen = DateTimeField(db_field='s')
     host = IPAddressField(db_field='h')
     
+    # Distinguish how we identified the other core accounts as being owned by this one
+    # because IP address IDing can cause mis-IDs
+    other_accs_char_key = ListField(ReferenceField('User'), db_field='otherAccountsCharKey')
+    other_accs_IP = ListField(ReferenceField('User'), db_field='otherAccountsIP')
+    
     # Python Magic Methods
     
     def __repr__(self):
@@ -118,6 +123,24 @@ class User(Document):
         self.attempts.delete()
         self.recovery_keys.delete()
         super(User, self).delete()
+        
+    @staticmethod
+    def add_duplicate(acc, other, IP=False):
+        """Marks other as a duplicate account to this account."""
+        """And marks this account as duplicate to other."""
+        if not IP:
+            if not other in acc.other_accs_char_key:
+                acc.other_accs_char_key.append(other)
+            if not acc in other.other_accs_char_key:
+                other.other_accs_char_key.append(acc)
+        else:
+            if not other in acc.other_accs_IP:
+                acc.other_accs_IP.append(other)
+            if not acc in other.other_IP:
+                other.other_accs_IP.append(acc)
+                
+        acc.save()
+        other.save()
 
 class LoginHistory(Document):
     meta = dict(
