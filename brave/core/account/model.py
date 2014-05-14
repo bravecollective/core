@@ -128,6 +128,10 @@ class User(Document):
     def add_duplicate(acc, other, IP=False):
         """Marks other as a duplicate account to this account."""
         """And marks this account as duplicate to other."""
+        # If the 2 accounts supplied are the same, do nothing
+        if acc.id == other.id:
+            return
+        
         if not IP:
             if not other in acc.other_accs_char_key:
                 acc.other_accs_char_key.append(other)
@@ -136,7 +140,7 @@ class User(Document):
         else:
             if not other in acc.other_accs_IP:
                 acc.other_accs_IP.append(other)
-            if not acc in other.other_IP:
+            if not acc in other.other_accs_IP:
                 other.other_accs_IP.append(acc)
                 
         acc.save()

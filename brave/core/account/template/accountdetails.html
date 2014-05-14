@@ -129,11 +129,19 @@
                 % endif
                 
                 <hr>
-                % if len(user.other_accs_char_key):
+                % if len(user.other_accs_char_key) or len(user.other_accs_IP):
                 <h4>Duplicate Accounts</h4>
                 <ul>
-                    % for other_user in user.other_accs_char_key:
-                    <li><a href="/account/${other_user.id}">${other_user | h}</a></li>
+                    <% other_accs = set(user.other_accs_char_key + user.other_accs_IP) %>
+                    % for other_user in other_accs:
+                    <%
+                    method = ""
+                    if other_user in user.other_accs_char_key:
+                        method += "(char) "
+                    if other_user in user.other_accs_IP:
+                        method += "(IP) " 
+                    %>
+                    <li><a href="/account/${other_user.id}">${other_user | h}</a> ${method}</li>
                     % endfor
                 % endif
             </div>
