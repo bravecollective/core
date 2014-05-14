@@ -169,7 +169,7 @@ class APICall(Document):
             ('o', "Corporation")
         )))
     description = StringField()
-    _mask = IntField()
+    _mask = IntField(db_field="mask")
     group = IntField()
     
     @property
