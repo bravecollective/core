@@ -78,7 +78,8 @@ class OneGroupController(HTTPMethod):
                                  message=_("character not found"))
         c = q.first()
 
-        r = self.group.rules[-1] if len(self.group.rules) else None
+        r = self.get_applicable_rule('c', True, False, c.identifier)
+        
         if not r or not (isinstance(r, ACLList) and r.grant and not r.inverse and r.kind == 'c'):
             return 'json:', dict(success=False,
                                  message=_("Sorry, I don't know what to do!"))
@@ -88,7 +89,7 @@ class OneGroupController(HTTPMethod):
         r.ids.remove(c.identifier)
         if not r.ids:
             # If we just removed the last user in the rule, get rid of the rule.
-            self.group.rules.pop(-1)
+            self.group.rules.remove(r)
         success = self.group.save()
 
         if success:
