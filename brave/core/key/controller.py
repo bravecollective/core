@@ -43,6 +43,13 @@ class KeyIndex(HTTPMethod):
             return 'json:', dict(success=True)
 
         raise HTTPFound(location='/key/')
+        
+    def get(self):
+        return 'brave.core.key.template.keyDetails', dict(
+        area = 'admin',
+        admin = True,
+        record = self.key
+        )
 
 
 class KeyInterface(Controller):
@@ -54,7 +61,7 @@ class KeyInterface(Controller):
         except EVECredential.DoesNotExist:
             raise HTTPNotFound()
 
-        if self.key.owner.id != user.id:
+        if self.key.owner.id != user.id and not user.admin:
             raise HTTPNotFound()
         
         self.index = KeyIndex(self.key)

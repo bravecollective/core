@@ -202,7 +202,7 @@ class Register(HTTPMethod):
         try:
             user.save()
         except ValidationError:
-            return 'json:', dict(success=False, message=_("Invalid email address provided."), data=data)
+            return 'json:', dict(success=False, message=_("Invalid email address or username provided."), data=data)
         except NotUniqueError:
             return 'json:', dict(success=False, message=_("Either the username or email address provided is already taken."), data=data)
         
@@ -415,6 +415,7 @@ class AccountInterface(HTTPMethod):
             
     def get(self):
         return 'brave.core.account.template.accountdetails', dict(
+        area = 'admin',
         user = self.user
         )
 
