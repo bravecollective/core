@@ -51,5 +51,9 @@
             <input name="name" type="text" />
             <input type="submit" class="btn btn-default" value="Remove character" />
         </form>
+        <form method="POST" action="/group/${group.id | u}/add_corporation">
+            <input name="name" type="text" />
+            <input type="submit" class="btn btn-default" value="Add corporation" />
+        </form>
     </div>
 </div>

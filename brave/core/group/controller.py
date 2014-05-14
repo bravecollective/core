@@ -9,7 +9,7 @@ from web.core import Controller, HTTPMethod, request
 from web.core.locale import _
 from web.core.http import HTTPFound, HTTPNotFound
 
-from brave.core.character.model import EVECharacter
+from brave.core.character.model import EVECharacter, EVECorporation
 from brave.core.group.model import Group
 from brave.core.group.acl import ACLList
 from brave.core.util.predicate import authorize, is_administrator
@@ -95,11 +95,63 @@ class OneGroupController(HTTPMethod):
             return 'json:', dict(success=True)
         return 'json:', dict(success=False,
                              message=_("Failure updating group"))
+                             
+    @authorize(is_administrator)
+    def add_corporation(self, name=None):
+        """Adds a corporation ACL check the the group."""
+        
+        # Make sure that the corporation name is supplied.
+        if not name:
+            return 'json:', dict(success=False,
+                                 message=_("Corporation name required."))
+        
+        # QuerySet of all corporations with that name. Should only be one.
+        corps = EVECorporation.objects(name=name)
+        assert corps.count() <= 1
+            
+        # TODO: Look up the corporation instead of requiring that it already
+        # be in the DB.
+        if corps.count() != 1:
+            return 'json:', dict(success=False,
+                                     message=("Corporation not found."))
+            
+        corp = corps.first()
+        
+        # r = the last rule
+        r = self.get_applicable_rule('o', True, False, corp.identifier)
+        
+        if r:
+            return 'json:', dict(success=False,
+                                 message=_("This corporation is already granted access in an ACL rule."))
+        
+        # If r doesn't exist, OR if it's not a grant rule for corporations, create a new rule
+        if not r or not (isinstance(r, ACLList) and r.grant and not r.inverse and r.kind == 'o'):
+            r = ACLList(grant=True, inverse=False, kind='o', ids=[])
+            self.group.rules.append(r)
+            
+        r.ids.append(corp.identifier)
+        success = self.group.save()
+        
+        if success:
+            return 'json:', dict(success=True)
+        return 'json:', dict(success=False,
+                             message=_("Failure updating group"))
 
     @authorize(is_administrator)
     def delete(self):
         self.group.delete()
         return 'json:', dict(success=True)
+        
+    @authorize(is_administrator)
+    def get_applicable_rule(self, kind, grant, inverse, comp):
+        """Gets the first rule that contains comp of the chosen kind."""
+        if len(self.group.rules):
+            for rule in self.group.rules:
+                # If it's the right type of rule, it contains comp in it's ids, and it's the right grant type.
+                if kind == rule.kind and comp in rule.ids and grant == rule.grant and inverse == rule.inverse:
+                    return rule
+                    
+        return None
 
 class GroupList(HTTPMethod):
     def get(self):
