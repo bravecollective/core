@@ -64,9 +64,9 @@
                         {
                             violationText = "";
                             if(data.violation == "Character") {
-                                violationText = "<font color=\"red\">Character Security Violation.</font>";
+                                violationText = "<text title=\"One or more characters associated with this key was found on another account. Join the 'Brave IT Team' channel in game for assistance.\"><font color=\"red\">Character Security Violation.</font></text>";
                             } else {
-                                violationText = "<font color=\"green\">The BIA is always watching...</font>";
+                                violationText = "<text title=\"All clear!\"><font color=\"green\">The BIA is always watching...</font></text>";
                             }
                             $(
                                 '<tr data-id="' + data.identifier + '">' +
@@ -76,7 +76,7 @@
                                     '<td class="security-violation">' +
                                         violationText +
                                     '</td>' +
-                                    '<td class="key-code">' +
+                                    '<td class="key-code" title="' + data.code + '">' +
                                         '<span class="ellipsis">' + data.code.substr(0,10) + '...' + '</span>' +
                                     '</td>' +
                                     '<td class="characters hidden-tablet hidden-phone">' +
