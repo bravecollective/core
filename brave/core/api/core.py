@@ -140,8 +140,8 @@ class CoreAPI(SignedController):
         character = token.character
         
         # Step 2: Update info about the character from the EVE API
-        mask, key = character.credential_multi_for((EVECharacterKeyMask.CHARACTER_SHEET,
-         EVECharacterKeyMask.CHARACTER_INFO_PUBLIC, EVECharacterKeyMask.NULL))
+        mask, key = character.credential_multi_for((api.char.CharacterSheet.mask,
+         api.eve.CharacterInfo.mask, EVECharacterKeyMask.NULL))
         
         #User has no keys registered.
         if not key:
