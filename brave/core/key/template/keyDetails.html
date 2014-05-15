@@ -73,6 +73,8 @@
         <b>Key Mask:</b> <a href="/key/mask/${record.mask.mask}">${record.mask.mask}</a><br/>
         <b>Added:</b> <time datetime="${record.id.generation_time.isoformat().replace('+00:00', 'Z')}">${record.id.generation_time.isoformat(' ').replace('+00:00', '')}</time><br/>
         <b>User:</b> <a href="/account/${record.owner.id}">${record.owner.username}</a><br/>
+        <b>Type:</b> ${record.kind}<br/>
+        % if record.kind == 'Character' or record.kind == 'c':
         <b>Characters:</b> 
         <% 
         x = 1 
@@ -91,6 +93,7 @@
             char_line = "None"
         %>
         ${char_line}
+        % endif
         <br/>
         <b>Violation:</b> 
         % if record.violation == "Character":
@@ -98,5 +101,9 @@
         % else:
         <text class="security-violation" title="All clear!"><font color="green">The BIA is always watching...</font></td>
         % endif
+        <br/>
+        <br/>
+        <h3>API Calls Enabled:</h3>
+        <%include file="brave.core.key.template.maskTable" args="type=record.kind, functions=record.mask.functionsAllowed()"/>
     </div>
 </div>

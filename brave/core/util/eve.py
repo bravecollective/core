@@ -393,8 +393,8 @@ class EVEKeyMask:
         return bin(self.mask).count('1')
         
     def functionsAllowed(self):
-        """Returns a list with the value of all the functions permitted by this mask."""
-        """For example, [8, 16, 1024, 1048576]"""
+        """Returns a list with the APICall object of all the functions permitted by this mask."""
+        
         funcs = []
         if not self.functions():
             return funcs
@@ -402,7 +402,7 @@ class EVEKeyMask:
         for function in self.functions():
             if self.has_access(function.mask.mask):
                 funcs.append(function)
-                
+        
         return funcs
     
     @staticmethod
@@ -418,7 +418,7 @@ class EVECharacterKeyMask(EVEKeyMask):
         
     @staticmethod
     def functions():
-        return APICall.objects(kind='c')
+        return APICall.objects(kind='c').order_by('mask')
     
 class EVECorporationKeyMask(EVEKeyMask):
     """Class for comparing corporation key masks against the required API calls."""
@@ -428,5 +428,5 @@ class EVECorporationKeyMask(EVEKeyMask):
         
     @staticmethod
     def functions():
-        return APICall.objects(kind='o')
+        return APICall.objects(kind='o').order_by('mask')
 
