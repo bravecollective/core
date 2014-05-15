@@ -33,11 +33,6 @@ class KeyIndex(HTTPMethod):
         
         #Delete the key
         self.key.delete()
-        
-        #Delete any character that the key owner has registered, but no longer has a key for.
-        for c in owner.characters:
-            if not c.credential_for(EVECharacterKeyMask.NULL):
-                c.delete()
 
         if request.is_xhr:
             return 'json:', dict(success=True)

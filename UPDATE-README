@@ -1,0 +1,11 @@
+#This file includes instructions and notices for admins that they should keep in mind when
+#updating their core installations to a new version.
+#WARNING: Backup your database regularly and before making any changes to it.
+
+5ec0143: All usernames and email addresses in the database need to be lowercased.
+    brave/core/scripts/case_migration.py should resolve this for you.
+ad709e0: It is highly recommended that admins remove all characters whose owners no longer have a valid API key for them.
+    brave/core/scripts/delete_orphan_characters.py should resolve this.
+3016b8b: KeyID is made unique in the Credentials collection; all duplicate keys must be 
+    purged from the database prior to upgrading. brave/core/scripts/fix_key_duplicates.py should resolve this for you.
+    Removal of orphaned characters (see ad709e0) is now required.

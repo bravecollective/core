@@ -77,7 +77,7 @@
                                         violationText +
                                     '</td>' +
                                     '<td class="key-code">' +
-                                        '<span class="ellipsis">' + data.code + '</span>' +
+                                        '<span class="ellipsis">' + data.code.substr(0,10) + '...' + '</span>' +
                                     '</td>' +
                                     '<td class="characters hidden-tablet hidden-phone">' +
                                         data.characters.map( function(element) {
@@ -154,7 +154,7 @@
         <td class="security-violation"><font color="green">The BIA is always watching...</font></td>
         % endif
         % if not admin:
-        <td class="key-code"><span class="ellipsis">${record.code | h}</span></td>
+        <td class="key-code" title=${record.code}><span class="ellipsis">${"{0}...".format(record.code[:10])| h}</span></td>
         % else:
         <td class="key-code"><span class="ellipsis">Redacted.</span></td>
         % endif
