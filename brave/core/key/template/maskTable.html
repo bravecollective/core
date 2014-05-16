@@ -5,7 +5,7 @@ from brave.core.util.eve import EVECharacterKeyMask, EVECorporationKeyMask
 from web.core.http import HTTPNotFound
 import math
 colors = []
-if type == "c" or type == "Character":
+if type == "c" or type == "Character" or type == "Account" or type == "a":
     all_functions = EVECharacterKeyMask.functions()
 elif type == "o" or type == "Corporation":
     all_functions = EVECorporationKeyMask.functions()
@@ -20,7 +20,6 @@ for func in all_functions:
 x = 0
 %>
 <br/>
-
 <div class="row-fluid table">
     <table class="table table-hover">
         <thead>
