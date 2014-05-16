@@ -14,7 +14,7 @@
                 <th class="span3 sortable alliance"><span class="line"></span>Alliance</th>
                 % endif
                 % if admin:
-                <th class="span3 sortable username"><span class="line"></span>User</th>
+                <th class="span2 sortable username"><span class="line"></span>User</th>
                 % else:
                 <th class="span1 sortable actions"><span class="line"></span></th>
                 % endif
@@ -26,7 +26,7 @@
                 <td class="name">
                     <span class="ellipsis">
                     <img src="//image.eveonline.com/Character/${record.identifier}_32.jpg" style="vertical-align: -55%; margin-right: 5px; border-radius: 6px; width: 32px; height: 32px;">
-                    <a href="/character/${record.identifier}">
+                    <a href="/character/${record.id}">
                     <strong>${record.name | h}</strong>
                     </a>
                     </span>

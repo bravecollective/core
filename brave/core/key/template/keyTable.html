@@ -36,7 +36,9 @@
                 % endif
                 <td class="characters hidden-tablet hidden-phone">
                     % for char in record.characters:
+                    <a href="/character/${char.id}">
                     <img src="//image.eveonline.com/Character/${char.identifier}_32.jpg" style="vertical-align: middle; margin-right: 5px; border-radius: 3px; width: 24px; height: 24px;" title="${char.name | u}">
+                    </a>
                     % endfor
                 </td>
                 <td class="key-date hidden-phone"><time datetime="${record.id.generation_time.isoformat().replace('+00:00', 'Z')}">${record.id.generation_time.isoformat(' ').replace('+00:00', '')}</time></td>
