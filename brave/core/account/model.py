@@ -133,18 +133,19 @@ class User(Document):
             return
         
         if not IP:
-            if not other in acc.other_accs_char_key:
+            if other not in acc.other_accs_char_key:
                 acc.other_accs_char_key.append(other)
-            if not acc in other.other_accs_char_key:
+            if acc not in other.other_accs_char_key:
                 other.other_accs_char_key.append(acc)
         else:
-            if not other in acc.other_accs_IP:
+            if other not in acc.other_accs_IP:
                 acc.other_accs_IP.append(other)
-            if not acc in other.other_accs_IP:
+            if acc not in other.other_accs_IP:
                 other.other_accs_IP.append(acc)
                 
         acc.save()
         other.save()
+
 
 class LoginHistory(Document):
     meta = dict(

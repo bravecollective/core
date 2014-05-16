@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 from datetime import datetime
 from mongoengine import Document, StringField, DateTimeField, BooleanField, ReferenceField, IntField
 from mongoengine.errors import NotUniqueError
-from marrow.util.bunch import Bunch
 from requests.exceptions import HTTPError
 
 from brave.core.account.model import User
@@ -38,8 +37,8 @@ class EVECredential(Document):
     verified = BooleanField(db_field='v', default=False)
     expires = DateTimeField(db_field='e')
     owner = ReferenceField('User', db_field='o', reverse_delete_rule='CASCADE')
-    # The violation field is used to indicate some sort of conflict for a key. 
-    # A value of 'Character' means that a key gives access to a character which 
+    # The violation field is used to indicate some sort of conflict for a key.
+    # A value of 'Character' means that a key gives access to a character which
     # is already attached to a different account than the owner of the key.
     # A value of None is used to indicate no problem
     # TODO: Add Key violations
@@ -96,8 +95,10 @@ class EVECredential(Document):
             char = EVECharacter.objects(identifier=info.characterID)[0]
             
             if self.owner != char.owner:
-                log.warning("Security violation detected. Multiple accounts trying to register character %s, ID %d. Actual owner is %s. User adding this character is %s.",
-                    char.name, info.characterID, EVECharacter.objects(identifier = info.characterID).first().owner, self.owner)
+                log.warning("Security violation detected. Multiple accounts trying to register character"
+                            " %s, ID %d. Actual owner is %s. User adding this character is %s.",
+                            char.name, info.characterID,
+                            EVECharacter.objects(identifier = info.characterID).first().owner, self.owner)
                 self.violation = "Character"
                 
                 # Mark both accounts as duplicates of each other.

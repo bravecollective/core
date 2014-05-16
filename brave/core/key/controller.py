@@ -41,9 +41,9 @@ class KeyIndex(HTTPMethod):
         
     def get(self):
         return 'brave.core.key.template.keyDetails', dict(
-        area = 'admin',
-        admin = True,
-        record = self.key
+            area = 'admin',
+            admin = True,
+            record = self.key
         )
 
 
@@ -133,8 +133,8 @@ class KeyList(HTTPMethod):
         except ValidationError:
             if request.is_xhr:
                 return 'json:', dict(
-                        success = False,
-                        message = _("Validation error: one or more fields are incorrect or missing."),
+                            success = False,
+                            message = _("Validation error: one or more fields are incorrect or missing."),
                     )
         except NotUniqueError:
             if EVECredential.objects(key=data.key):
@@ -158,6 +158,7 @@ class CorpKeyMaskController(Controller):
     def __lookup__(self, mask, *args, **kw):
         return CorpKeyMaskInterface(mask), args
         
+        
 class CorpKeyMaskInterface(HTTPMethod):
     """Interface for /key/mask/corp/{MASK}"""
     
@@ -168,11 +169,12 @@ class CorpKeyMaskInterface(HTTPMethod):
     def get(self):
         funcs = EVECorporationKeyMask(int(self.mask)).functionsAllowed()
         return 'brave.core.key.template.maskDetails', dict(
-        mask = self.mask,
-        area = 'keys',
-        functions = funcs,
-        kind = "o"
+            mask = self.mask,
+            area = 'keys',
+            functions = funcs,
+            kind = "o"
         )
+        
         
 class KeyMaskController(Controller):
     """Controller for /key/mask/"""
@@ -180,6 +182,7 @@ class KeyMaskController(Controller):
     
     def __lookup__(self, mask, *args, **kw):
         return KeyMaskInterface(mask), args
+        
         
 class KeyMaskInterface(HTTPMethod):
     """Interface for /key/mask/{MASK}"""
@@ -191,10 +194,10 @@ class KeyMaskInterface(HTTPMethod):
     def get(self):
         funcs = EVECharacterKeyMask(int(self.mask)).functionsAllowed()
         return 'brave.core.key.template.maskDetails', dict(
-        mask = self.mask,
-        area = 'keys',
-        functions = funcs,
-        kind = "c"
+            mask = self.mask,
+            area = 'keys',
+            functions = funcs,
+            kind = "c"
         )
     
 

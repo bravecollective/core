@@ -204,7 +204,8 @@ class Register(HTTPMethod):
         except ValidationError:
             return 'json:', dict(success=False, message=_("Invalid email address or username provided."), data=data)
         except NotUniqueError:
-            return 'json:', dict(success=False, message=_("Either the username or email address provided is already taken."), data=data)
+            return 'json:', dict(success=False, message=_("Either the username or email address provided is "
+                                                          "already taken."), data=data)
         
         authenticate(user.username, data.password)
         
@@ -407,7 +408,7 @@ class AccountInterface(HTTPMethod):
         except User.DoesNotExist:
             raise HTTPNotFound()
         except ValidationError:
-            #Handles improper objectIDs
+            # Handles improper objectIDs
             raise HTTPNotFound()
 
         if self.user.id != user.id and not user.admin:
@@ -415,8 +416,8 @@ class AccountInterface(HTTPMethod):
             
     def get(self):
         return 'brave.core.account.template.accountdetails', dict(
-        area = 'admin',
-        user = self.user
+            area = 'admin',
+            user = self.user
         )
 
 
@@ -436,17 +437,17 @@ class AccountController(Controller):
         return 'json:', dict(available=not bool(count), query={str(k): v for k, v in query.items()})
         
     def entropy(self, **query):
-        #Remove the timestamp
+        # Remove the timestamp
         query.pop('ts', None)
         
-        #Make sure the user provides only a password
+        # Make sure the user provides only a password
         if set(query.keys()) - {'password'}:
             raise HTTPForbidden()
         
-        password = query.get("password");
-        strong = False;
+        password = query.get("password")
+        strong = False
         
-        #If the password has a score of greater than 2, allow it
+        # If the password has a score of greater than 2, allow it
         if(zxcvbn.password_strength(password).get("score") > 2):
             strong = True
         
@@ -459,4 +460,3 @@ class AccountController(Controller):
     def __lookup__(self, user, *args, **kw):
         request.path_info_pop()  # We consume a single path element.
         return AccountInterface(user), args
-

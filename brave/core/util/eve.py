@@ -35,7 +35,6 @@ As a few examples:
 from __future__ import print_function
 
 import requests
-import math
 
 from hashlib import sha256
 from datetime import datetime
@@ -177,7 +176,7 @@ class APICall(Document):
     def mask(self):
         """Returns a Key Mask object instead of just the integer."""
         
-        if self.kind == "Meta" or self.kind =="m":
+        if self.kind == "Meta" or self.kind == "m":
             return EVECharacterKeyMask(self._mask)
         elif self.kind == "Character" or self.kind == "c":
             return EVECharacterKeyMask(self._mask)
@@ -420,6 +419,7 @@ class EVECharacterKeyMask(EVEKeyMask):
     def functions():
         return APICall.objects(kind='c').order_by('mask')
     
+    
 class EVECorporationKeyMask(EVEKeyMask):
     """Class for comparing corporation key masks against the required API calls."""
     
@@ -429,4 +429,3 @@ class EVECorporationKeyMask(EVEKeyMask):
     @staticmethod
     def functions():
         return APICall.objects(kind='o').order_by('mask')
-
