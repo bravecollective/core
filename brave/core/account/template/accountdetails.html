@@ -127,7 +127,7 @@
                     % endfor
                 </ul>
                 % endif
-                
+                % if user.admin:
                 <hr>
                 % if len(user.other_accs_char_key) or len(user.other_accs_IP):
                 <h4>Duplicate Accounts</h4>
@@ -143,6 +143,7 @@
                     %>
                     <li><a href="/account/${other_user.id}">${other_user | h}</a> ${method}</li>
                     % endfor
+                % endif
                 % endif
             </div>
         </div>
