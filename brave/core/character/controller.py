@@ -39,8 +39,8 @@ class CharacterInterface(HTTPMethod):
     @authorize(authenticated)
     def get(self):
         return 'brave.core.character.template.charDetails', dict(
-            char = self.char,
-            area = 'admin'
+            char=self.char,
+            area='admin'
         )
 
 class CharacterList(HTTPMethod):
@@ -54,9 +54,9 @@ class CharacterList(HTTPMethod):
             characters = EVECharacter.objects()
 
         return 'brave.core.character.template.list', dict(
-                area = 'chars',
-                admin = bool(admin),
-                records = characters
+                area='chars',
+                admin=bool(admin),
+                records=characters
             )
 
 

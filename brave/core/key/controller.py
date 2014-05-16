@@ -41,9 +41,9 @@ class KeyIndex(HTTPMethod):
         
     def get(self):
         return 'brave.core.key.template.keyDetails', dict(
-            area = 'admin',
-            admin = True,
-            record = self.key
+            area='admin',
+            admin=True,
+            record=self.key
         )
 
 
@@ -89,9 +89,9 @@ class KeyList(HTTPMethod):
             credentials = EVECredential.objects.only('violation', 'key', 'verified', 'owner')
 
         return 'brave.core.key.template.list', dict(
-                area = 'keys',
-                admin = admin,
-                records = credentials
+                area='keys',
+                admin=admin,
+                records=credentials
             )
 
     @authorize(authenticated)
@@ -133,8 +133,8 @@ class KeyList(HTTPMethod):
         except ValidationError:
             if request.is_xhr:
                 return 'json:', dict(
-                            success = False,
-                            message = _("Validation error: one or more fields are incorrect or missing."),
+                            success=False,
+                            message=_("Validation error: one or more fields are incorrect or missing."),
                     )
         except NotUniqueError:
             if EVECredential.objects(key=data.key):
@@ -145,8 +145,8 @@ class KeyList(HTTPMethod):
                 User.add_duplicate(acc, other)
             
             return 'json:', dict(
-                success = False,
-                message = _("This key has already been added by another account."),
+                success=False,
+                message=_("This key has already been added by another account."),
             )
 
         raise HTTPFound(location='/key/')
@@ -169,10 +169,10 @@ class CorpKeyMaskInterface(HTTPMethod):
     def get(self):
         funcs = EVECorporationKeyMask(int(self.mask)).functionsAllowed()
         return 'brave.core.key.template.maskDetails', dict(
-            mask = self.mask,
-            area = 'keys',
-            functions = funcs,
-            kind = "o"
+            mask=self.mask,
+            area='keys',
+            functions=funcs,
+            kind="o"
         )
         
         
@@ -194,10 +194,10 @@ class KeyMaskInterface(HTTPMethod):
     def get(self):
         funcs = EVECharacterKeyMask(int(self.mask)).functionsAllowed()
         return 'brave.core.key.template.maskDetails', dict(
-            mask = self.mask,
-            area = 'keys',
-            functions = funcs,
-            kind = "c"
+            mask=self.mask,
+            area='keys',
+            functions=funcs,
+            kind="c"
         )
     
 

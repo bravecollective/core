@@ -416,8 +416,8 @@ class AccountInterface(HTTPMethod):
             
     def get(self):
         return 'brave.core.account.template.accountdetails', dict(
-            area = 'admin',
-            user = self.user
+            area='admin',
+            user=self.user
         )
 
 
