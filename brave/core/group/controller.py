@@ -11,8 +11,10 @@ from web.core.http import HTTPFound, HTTPNotFound
 
 from brave.core.character.model import EVECharacter
 from brave.core.group.model import Group
-from brave.core.group.acl import ACLList
+from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
 from brave.core.util.predicate import authorize, is_administrator
+
+import json
 
 log = __import__('logging').getLogger(__name__)
 
@@ -95,6 +97,46 @@ class OneGroupController(HTTPMethod):
             return 'json:', dict(success=True)
         return 'json:', dict(success=False,
                              message=_("Failure updating group"))
+
+    @authorize(is_administrator)
+    def set_rules(self, rules, really=False):
+        rules = json.loads(rules)
+        rule_objects = []
+        log.debug(rules)
+        for r in rules:
+            grant = r['grant'] == "true"
+            inverse = r['inverse'] == "true"
+            if r['type'] == "list":
+                if r['kind'] == 'c':
+                    cls = EVECharacter
+                elif r['kind'] == 'o':
+                    cls = EVECorporation
+                else:
+                    cls = EVEAlliance
+                if not isinstance(r['names'], list):
+                    r['names'] = [r['names']]
+                ids = [cls.objects(name=name).first().identifier for name in r['names']]
+                rule_objects.append(ACLList(grant=grant, inverse=inverse, kind=r['kind'], ids=ids))
+            elif r['type'] == "key":
+                rule_objects.append(ACLKey(grant=grant, inverse=inverse, kind=r['kind']))
+            elif r['type'] == "title":
+                if not isinstance(r['titles'], list):
+                    r['titles'] = [r['titles']]
+                rule_objects.append(ACLTitle(grant=grant, inverse=inverse, titles=r['titles']))
+            elif r['type'] == "role":
+                if not isinstance(r['roles'], list):
+                    r['roles'] = [r['roles']]
+                rule_objects.append(ACLRole(grant=grant, inverse=inverse, roles=r['roles']))
+            elif r['type'] == "mask":
+                rule_objects.append(ACLMask(grant=grant, inverse=inverse, mask=r['mask']))
+
+        log.debug(rule_objects)
+
+        if not really:
+            return "json:", "\n".join([r.human_readable_repr() for r in rule_objects])
+
+        return 'json:', dict(success=False,
+                             message=_("unimplemented"))
 
     @authorize(is_administrator)
     def delete(self):

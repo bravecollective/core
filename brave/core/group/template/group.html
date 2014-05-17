@@ -1,32 +1,212 @@
 ## encoding: utf-8
 
+<%!
+from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
+%>
+
 <%inherit file="brave.core.template.master"/>
 
 <%block name="title">${group.id | h} - ${group.title | h}</%block>
+
+<%block name="pre">
+    ${parent.pre()}
+
+    <style type="text/css">
+        .stringlistinput .remove {
+            cursor: pointer;
+        }
+
+        .handle {
+            cursor: move;
+        }
+    </style>
+</%block>
 
 <%block name="post">
     ${parent.post()}
 
     <script type="text/javascript" charset="utf-8">
         $(function() {
-            $('form').submit(function(evt) {
-                var form = $(this);
-                var name = form.find("input[name=name]").val()
-                $.post(form.attr('action'), {name: name}, function(result) {
-                    if (!result.success) {
-                        alert(result.message);
+            $(".sortable").sortable({handle: ".handle"});
+
+            function get_rule_data() {
+                a = [];
+                $("#acl-rules > li").each(function() {
+                    a.push($(this).find(":input").serializeAssoc());
+                });
+                return a;
+            }
+
+            $("#echo").click(function() {
+                console.log(JSON.stringify(get_rule_data()));
+                $.post($("#acl-rules").data("action"), {
+                    rules: JSON.stringify(get_rule_data()),
+                }, function(data) {
+                    alert("Here's what the server heard. Check to make sure everything looks right!\n\n" + data);
+                });
+            });
+
+            $("body").on("click", ".stringlistinput .remove", function() {
+                $(this).closest("li").remove();
+            });
+
+            $("body").on("click", ".acllist .stringlistinput .add", function() {
+                $ul = $(this).siblings('ul');
+                $text_input = $(this).siblings("input[type=text]");
+
+                new_string = $text_input.val();
+                validate_input = $(this).closest('.stringlistinput').data('validate-input');
+                if (validate_input) {
+                    if (!validate_input(new_string)) {
                         return;
                     }
-                    window.location = window.location;
-                });
-                evt.preventDefault();
-                return false;
+                }
+
+                input_name = $(this).closest('.stringlistinput').data('input-name');
+                $li = $('<li>').append($('<input type="hidden">').attr('name', input_name).val(new_string))
+                               .text(new_string + " ")
+                               .append($('<i class="remove fa fa-times">'))
+                               .appendTo($ul);
+                $text_input.val("");
+            });
+
+            $(".acllist .stringlistinput").data('validate-input', function(input) {
+                console.log("fixme");
+                return true;
             });
         });
     </script>
 </%block>
 
+<%def name="stringlistinput(input_name, list)">
+<div class="stringlistinput" data-input-name"{input_name}">
+    <ul>
+        % for item in list:
+            <li>
+                <input type="hidden" name="${input_name}" value="${item | h}" />
+                ${item | h}
+                <i class="remove fa fa-times"></i>
+            </li>
+        % endfor
+    </ul>
+    <input type="text"/><input type="button" value="add" class="add" />
+</div>
+</%def>
+
+<%def name="aclrule(rule)">
+    % if isinstance(rule, ACLList):
+        ${acllist(rule)}
+    % elif isinstance(rule, ACLKey):
+        ${aclkey(rule)}
+    % elif isinstance(rule, ACLTitle):
+        ${acltitle(rule)}
+    % elif isinstance(rule, ACLRole):
+        ${aclrole(rule)}
+    % elif isinstance(rule, ACLMask):
+        ${aclmask(rule)}
+    % else:
+        ERROR THIS WON'T WORK: ${rule.human_readable_repr()}
+    % endif
+</%def>
+
+<%def name="acllist(rule)">
+    <div class="acllist" data-kind="${rule.kind}">
+        <input type="hidden" name="type" value="list" />
+        <input type="hidden" name="kind" value="${rule.kind}" />
+        <select name="grant">
+            <option value="true">grant</option>
+            <option value="false">deny</option>
+        </select>
+        if character
+        <select name="inverse">
+            <option value="false">is</option>
+            <option value="true">is not</option>
+        </select>
+        % if rule.kind == "c":
+            one of these characters:
+        % elif rule.kind == "o":
+            in one of these corporations:
+        % else:
+            in one of these alliances:
+        % endif
+        ${stringlistinput("names", [o.name for o in rule.target_objects()])}
+    </div>
+</%def>
+
+<%def name="aclkey(rule)">
+    <div class="aclkey">
+        <input type="hidden" name="type" value="key" />
+        <select name="grant">
+            <option value="true">grant</option>
+            <option value="false">deny</option>
+        </select>
+        if key type
+        <select name="inverse">
+            <option value="false">is</option>
+            <option value="true">is not</option>
+        </select>
+        <select name="kind">
+            <option value="Account">Account</option>
+            <option value="Character">Character</option>
+            <option value="Corporation">Corporation</option>
+        </select>
+    </div>
+</%def>
+
+<%def name="acltitle(rule)">
+    <div class="acltitle">
+        <input type="hidden" name="type" value="title" />
+        <select name="grant">
+            <option value="true">grant</option>
+            <option value="false">deny</option>
+        </select>
+        if character
+        <select name="inverse">
+            <option value="false">has any</option>
+            <option value="true">has none</option>
+        </select>
+        of these titles:
+        ${stringlistinput("titles", rule.titles)}
+    </div>
+</%def>
+
+<%def name="aclrole(rule)">
+    <div class="aclrole">
+        <input type="hidden" name="type" value="role" />
+        <select name="grant">
+            <option value="true">grant</option>
+            <option value="false">deny</option>
+        </select>
+        if character
+        <select name="inverse">
+            <option value="false">has any</option>
+            <option value="true">has none</option>
+        </select>
+        of these roles:
+        ${stringlistinput("roles", rule.roles)}
+    </div>
+</%def>
+
+<%def name="aclmask(rule)">
+    <div class="aclmask">
+        <input type="hidden" name="type" value="mask" />
+        <select name="grant">
+            <option value="true">grant</option>
+            <option value="false">deny</option>
+        </select>
+        if the character's user
+        <select name="inverse">
+            <option value="false">has</option>
+            <option value="true">has not</option>
+        </select>
+        submitted a key supporting permissions:
+        <input type="text" name="mask" value="${rule.mask}" />
+        (todo readability)
+    </div>
+</%def>
+
 <div class="container-fluid">
+
     <div id="pad-wrapper">
         <div class="row-fluid header">
             <h3>${group.id | h} - ${group.title | h}</h3>
@@ -36,20 +216,18 @@
                 <p class="subtext" style="text-transform: uppercase;"><strong>This group has no ACL rules.</strong></p>
             % else:
                 Rules:
-                <ul>
+                <ul id="acl-rules" class="sortable" data-action="/group/${group.id}/set_rules">
                     % for rule in group.rules:
-                        <li>${rule.human_readable_repr() | h}</li>
+                        <li><span class="handle">[drag]</span> ${aclrule(rule)}</li>
                     % endfor
                 </ul>
             % endif
         </div>
-        <form method="POST" action="/group/${group.id | u}/add_character">
-            <input name="name" type="text" />
-            <input type="submit" class="btn btn-default" value="Add character" />
-        </form>
-        <form method="POST" action="/group/${group.id | u}/remove_character">
-            <input name="name" type="text" />
-            <input type="submit" class="btn btn-default" value="Remove character" />
-        </form>
+        <button id="echo">sanity check</button>
     </div>
+</div>
+
+<div style="display: none" id="acl-templates">
+    TODO
+    ${aclrule(ACLList(kind='c', ids=[]))}
 </div>
