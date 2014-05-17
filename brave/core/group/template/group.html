@@ -30,20 +30,40 @@ from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
             $(".sortable").sortable({handle: ".handle"});
 
             function get_rule_data() {
-                a = [];
+                var a = [];
                 $("#acl-rules > li").each(function() {
                     a.push($(this).find(":input").serializeAssoc());
                 });
                 return a;
             }
 
-            $("#echo").click(function() {
+            $("#submit").click(function() {
                 console.log(JSON.stringify(get_rule_data()));
                 $.post($("#acl-rules").data("action"), {
                     rules: JSON.stringify(get_rule_data()),
                 }, function(data) {
-                    alert("Here's what the server heard. Check to make sure everything looks right!\n\n" + data);
+                    var confirm_text = "Here's what the server heard. Check to make sure everything looks right!<pre>" + data + "</pre>";
+                    confirm("confirm", confirm_text, "okay", function() {
+                        $.post($("#acl-rules").data("action"), {
+                            rules: JSON.stringify(get_rule_data()),
+                            really: "really",
+                        }, function(data) {
+                            alert("ok");
+                        });
+                    });
                 });
+            });
+
+            $(".addrule").click(function() {
+                var template_selector = ".acl"+$(this).data("rule");
+                var kind = $(this).data("kind");
+                if (kind) {
+                    template_selector += "[data-kind="+kind+"]";
+                }
+                var editor = $("#acl-templates").find(template_selector).clone();
+                var row = $("#row-template-container li").clone();
+                row.find(".rule").append(editor);
+                $("#acl-rules").append(row);
             });
 
             $("body").on("click", ".stringlistinput .remove", function() {
@@ -223,11 +243,31 @@ from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
                 </ul>
             % endif
         </div>
-        <button id="echo">sanity check</button>
+        <div>
+            Add new rule:
+            <button class="addrule" data-rule="list" data-kind="c">by character</button>
+            <button class="addrule" data-rule="list" data-kind="o">by corporation</button>
+            <button class="addrule" data-rule="list" data-kind="a">by alliance</button>
+            <button class="addrule" data-rule="key">by key type</button>
+            <button class="addrule" data-rule="title">by corporate title</button>
+            <button class="addrule" data-rule="role">by corporate role</button>
+            <button class="addrule" data-rule="mask">by key mask</button>
+        </div>
+        <button id="submit">submit</button>
     </div>
 </div>
 
+<ul style="display: none" id="row-template-container">
+    <li>
+        <span class="handle">[drag]</span> <span class="rule"></span>
+    </li>
+</ul>
 <div style="display: none" id="acl-templates">
-    TODO
     ${aclrule(ACLList(kind='c', ids=[]))}
+    ${aclrule(ACLList(kind='o', ids=[]))}
+    ${aclrule(ACLList(kind='a', ids=[]))}
+    ${aclrule(ACLKey(kind='Account'))}
+    ${aclrule(ACLTitle(titles=[]))}
+    ${aclrule(ACLRole(roles=[]))}
+    ${aclrule(ACLMask(mask=0))}
 </div>

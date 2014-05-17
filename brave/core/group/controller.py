@@ -9,7 +9,7 @@ from web.core import Controller, HTTPMethod, request
 from web.core.locale import _
 from web.core.http import HTTPFound, HTTPNotFound
 
-from brave.core.character.model import EVECharacter
+from brave.core.character.model import EVECharacter, EVECorporation, EVEAlliance
 from brave.core.group.model import Group
 from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
 from brave.core.util.predicate import authorize, is_administrator
@@ -103,6 +103,14 @@ class OneGroupController(HTTPMethod):
         rules = json.loads(rules)
         rule_objects = []
         log.debug(rules)
+        log.debug(really)
+
+        def listify(rule, field):
+            if field not in rule:
+                rule[field] = []
+            elif not isinstance(r[field], list):
+                rule[field] = [rule[field]]
+
         for r in rules:
             grant = r['grant'] == "true"
             inverse = r['inverse'] == "true"
@@ -113,19 +121,16 @@ class OneGroupController(HTTPMethod):
                     cls = EVECorporation
                 else:
                     cls = EVEAlliance
-                if not isinstance(r['names'], list):
-                    r['names'] = [r['names']]
+                listify(r, 'names')
                 ids = [cls.objects(name=name).first().identifier for name in r['names']]
                 rule_objects.append(ACLList(grant=grant, inverse=inverse, kind=r['kind'], ids=ids))
             elif r['type'] == "key":
                 rule_objects.append(ACLKey(grant=grant, inverse=inverse, kind=r['kind']))
             elif r['type'] == "title":
-                if not isinstance(r['titles'], list):
-                    r['titles'] = [r['titles']]
+                listify(r, 'titles')
                 rule_objects.append(ACLTitle(grant=grant, inverse=inverse, titles=r['titles']))
             elif r['type'] == "role":
-                if not isinstance(r['roles'], list):
-                    r['roles'] = [r['roles']]
+                listify(r, 'roles')
                 rule_objects.append(ACLRole(grant=grant, inverse=inverse, roles=r['roles']))
             elif r['type'] == "mask":
                 rule_objects.append(ACLMask(grant=grant, inverse=inverse, mask=r['mask']))
@@ -133,9 +138,16 @@ class OneGroupController(HTTPMethod):
         log.debug(rule_objects)
 
         if not really:
+            log.debug("not really")
             return "json:", "\n".join([r.human_readable_repr() for r in rule_objects])
 
-        return 'json:', dict(success=False,
+        log.debug("really!")
+        self.group.rules = rule_objects
+        success = self.group.save()
+        log.debug(success)
+        if success:
+            return 'json:', dict(success=True)
+        return 'json:', dict(success=True,
                              message=_("unimplemented"))
 
     @authorize(is_administrator)
