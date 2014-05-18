@@ -19,6 +19,23 @@ from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
         .handle {
             cursor: move;
         }
+
+        #acl-rules select {
+            padding: 0;
+            width: auto;
+        }
+        .stringlistinput li:not(:last-child) {
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            padding: 0 3px;
+            margin: 3px;
+        }
+        .stringlistinput li .input-append {
+            margin-bottom: 0;
+        }
+        .stringlistinput li .add-on {
+            height: auto;
+        }
     </style>
 </%block>
 
@@ -71,7 +88,7 @@ from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
             });
 
             $("body").on("click", ".acllist .stringlistinput .add", function() {
-                var $ul = $(this).siblings('ul');
+                var $ul = $(this).closest('ul');
                 var $text_input = $(this).siblings("input[type=text]");
 
                 var new_string = $text_input.val();
@@ -86,7 +103,7 @@ from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
                 var $li = $('<li>').text(new_string + " ")
                                .append($('<input type="hidden">').attr('name', input_name).val(new_string))
                                .append($('<i class="remove fa fa-times">'))
-                               .appendTo($ul);
+                               .insertBefore($ul.children().last());
                 $text_input.val("");
             });
 
@@ -100,7 +117,7 @@ from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
 
 <%def name="stringlistinput(input_name, list)">
 <div class="stringlistinput" data-input-name="${input_name}">
-    <ul>
+    <ul class="inline">
         % for item in list:
             <li>
                 ${item | h}
@@ -108,8 +125,13 @@ from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
                 <i class="remove fa fa-times"></i>
             </li>
         % endfor
+        <li>
+            <div class="input-append">
+                <input type="text"/>
+                <button class="add add-on">add</button>
+            </div>
+        </li>
     </ul>
-    <input type="text"/><input type="button" value="add" class="add" />
 </div>
 </%def>
 
