@@ -102,6 +102,10 @@ from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
                 $("#acl-rules tbody").append(row);
             });
 
+            $("body").on("click", ".deleterule", function() {
+                $(this).closest("tr").remove();
+            });
+
             $("body").on("click", ".stringlistinput .remove", function() {
                 $(this).closest("li").remove();
             });
@@ -270,7 +274,7 @@ from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
         <td class="handle"><i class="fa fa-arrows-v"></i></td>
         <td class="rule">${aclrule(rule) if rule else ""}</td>
         <td>
-            <button class="btn btn-small delete" title="${_('Remove rule')}" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i></button>
+            <button class="btn btn-small deleterule" title="${_('Remove rule')}" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i></button>
         </td>
     </tr>
 </%def>
