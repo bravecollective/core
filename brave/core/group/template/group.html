@@ -18,23 +18,68 @@ from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
 
         .handle {
             cursor: move;
+            line-height: 200%;
         }
 
         #acl-rules select {
             padding: 0;
             width: auto;
         }
+
+        #acl-rules input {
+            margin-bottom: 0;
+        }
+
         .stringlistinput li:not(:last-child) {
             border: 1px solid #ccc;
             border-radius: 3px;
             padding: 0 3px;
             margin: 3px;
         }
+        .stringlistinput li:first-child {
+            margin-left: 0px;
+        }
         .stringlistinput li .input-append {
             margin-bottom: 0;
         }
         .stringlistinput li .add-on {
             height: auto;
+        }
+
+        .aclmask input[type=text] {
+            width: auto;
+        }
+
+        /*
+        #acl-rules {
+            display: table;
+        }
+        #acl-rules > li {
+            display: table-row;
+            .sortable-row();
+        }
+        #acl-rules > li > * {
+            display: table-cell;
+        }
+        */
+        #acl-rules {
+            list-style-type: none;
+        }
+        #acl-rules > li {
+            border: 1px solid black;
+            border-radius: 3px;
+            padding: 3px;
+            margin: 3px;
+        }
+
+        #acl-rules .rule {
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .handle {
+            display: inline-block;
+            height: 100%;
         }
     </style>
 </%block>
@@ -243,7 +288,6 @@ from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
         </select>
         submitted a key supporting permissions:
         <input type="text" name="mask" value="${rule.mask}" />
-        (todo readability)
     </div>
 </%def>
 
@@ -260,7 +304,11 @@ from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
                 Rules:
                 <ul id="acl-rules" class="sortable" data-action="/group/${group.id}/set_rules">
                     % for rule in group.rules:
-                        <li><span class="handle">[drag]</span> ${aclrule(rule)}</li>
+                        <li>
+                            <div class="handle">[drag]</div>
+                            <div class="rule">${aclrule(rule)}</div>
+                            <button class="btn btn-danger btn-small delete" title="${_('Remove API Key')}" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i></button>
+                        </li>
                     % endfor
                 </ul>
             % endif
@@ -281,7 +329,8 @@ from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
 
 <ul style="display: none" id="row-template-container">
     <li>
-        <span class="handle">[drag]</span> <span class="rule"></span>
+        <div class="handle">[drag]</div>
+        <div class="rule"></div>
     </li>
 </ul>
 <div style="display: none" id="acl-templates">
