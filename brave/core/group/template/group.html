@@ -50,37 +50,6 @@ from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
             width: auto;
         }
 
-        /*
-        #acl-rules {
-            display: table;
-        }
-        #acl-rules > li {
-            display: table-row;
-            .sortable-row();
-        }
-        #acl-rules > li > * {
-            display: table-cell;
-        }
-        */
-        #acl-rules {
-            list-style-type: none;
-        }
-        #acl-rules > li {
-            border: 1px solid black;
-            border-radius: 3px;
-            padding: 3px;
-            margin: 3px;
-        }
-
-        #acl-rules .rule {
-            display: inline-block;
-            vertical-align: middle;
-        }
-
-        .handle {
-            display: inline-block;
-            height: 100%;
-        }
     </style>
 </%block>
 
@@ -89,11 +58,16 @@ from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
 
     <script type="text/javascript" charset="utf-8">
         $(function() {
-            $(".sortable").sortable({handle: ".handle"});
+            $(".sortable").sortable({
+                handle: ".handle",
+                update: function(event, ui) {
+                    ui.item.parent().children().removeClass("first").filter(":first-child").addClass("first");
+                },
+            });
 
             function get_rule_data() {
                 var a = [];
-                $("#acl-rules > li").each(function() {
+                $("#acl-rules > tbody > tr").each(function() {
                     a.push($(this).find(":input").serializeAssoc());
                 });
                 return a;
@@ -123,9 +97,9 @@ from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
                     template_selector += "[data-kind="+kind+"]";
                 }
                 var editor = $("#acl-templates").find(template_selector).clone();
-                var row = $("#row-template-container li").clone();
+                var row = $("#row-template-container tr").clone();
                 row.find(".rule").append(editor);
-                $("#acl-rules").append(row);
+                $("#acl-rules tbody").append(row);
             });
 
             $("body").on("click", ".stringlistinput .remove", function() {
@@ -291,6 +265,16 @@ from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
     </div>
 </%def>
 
+<%def name="rule_row(rule)">
+    <tr>
+        <td class="handle"><i class="fa fa-arrows-v"></i></td>
+        <td class="rule">${aclrule(rule) if rule else ""}</td>
+        <td>
+            <button class="btn btn-small delete" title="${_('Remove rule')}" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i></button>
+        </td>
+    </tr>
+</%def>
+
 <div class="container-fluid">
 
     <div id="pad-wrapper">
@@ -302,15 +286,13 @@ from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
                 <p class="subtext" style="text-transform: uppercase;"><strong>This group has no ACL rules.</strong></p>
             % else:
                 Rules:
-                <ul id="acl-rules" class="sortable" data-action="/group/${group.id}/set_rules">
+                <table id="acl-rules" data-action="/group/${group.id}/set_rules">
+                    <tbody class="sortable">
                     % for rule in group.rules:
-                        <li>
-                            <div class="handle">[drag]</div>
-                            <div class="rule">${aclrule(rule)}</div>
-                            <button class="btn btn-danger btn-small delete" title="${_('Remove API Key')}" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i></button>
-                        </li>
+                        ${rule_row(rule)}
                     % endfor
-                </ul>
+                    </tbody>
+                </table>
             % endif
         </div>
         <div>
@@ -327,12 +309,10 @@ from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
     </div>
 </div>
 
-<ul style="display: none" id="row-template-container">
-    <li>
-        <div class="handle">[drag]</div>
-        <div class="rule"></div>
-    </li>
-</ul>
+<table style="display: none" id="row-template-container">
+    <tr></tr>
+    ${rule_row(None)}
+</table>
 <div style="display: none" id="acl-templates">
     ${aclrule(ACLList(kind='c', ids=[]))}
     ${aclrule(ACLList(kind='o', ids=[]))}
