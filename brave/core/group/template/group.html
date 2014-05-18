@@ -2,6 +2,9 @@
 
 <%!
 from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
+
+def selected(bool):
+    return "selected" if bool else ""
 %>
 
 <%inherit file="brave.core.template.master"/>
@@ -174,18 +177,22 @@ from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
     % endif
 </%def>
 
+<%def name="select_grant(rule)">
+    <select name="grant">
+        <option value="true" ${selected(rule.grant)}>grant</option>
+        <option value="false" ${selected(not rule.grant)}>deny</option>
+    </select>
+</%def>
+
 <%def name="acllist(rule)">
     <div class="acllist" data-kind="${rule.kind}">
         <input type="hidden" name="type" value="list" />
         <input type="hidden" name="kind" value="${rule.kind}" />
-        <select name="grant">
-            <option value="true">grant</option>
-            <option value="false">deny</option>
-        </select>
+        ${select_grant(rule)}
         if character
         <select name="inverse">
-            <option value="false">is</option>
-            <option value="true">is not</option>
+            <option value="false" ${selected(not rule.inverse)}>is</option>
+            <option value="true" ${selected(rule.inverse)}>is not</option>
         </select>
         % if rule.kind == "c":
             one of these characters:
@@ -201,19 +208,16 @@ from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
 <%def name="aclkey(rule)">
     <div class="aclkey">
         <input type="hidden" name="type" value="key" />
-        <select name="grant">
-            <option value="true">grant</option>
-            <option value="false">deny</option>
-        </select>
+        ${select_grant(rule)}
         if key type
         <select name="inverse">
-            <option value="false">is</option>
-            <option value="true">is not</option>
+            <option value="false" ${selected(not rule.inverse)}>is</option>
+            <option value="true" ${selected(rule.inverse)}>is not</option>
         </select>
         <select name="kind">
-            <option value="Account">Account</option>
-            <option value="Character">Character</option>
-            <option value="Corporation">Corporation</option>
+            <option value="Account" ${selected(rule.kind == "Account")}>Account</option>
+            <option value="Character" ${selected(rule.kind == "Character")}>Character</option>
+            <option value="Corporation" ${selected(rule.kind == "Corporation")}>Corporation</option>
         </select>
     </div>
 </%def>
@@ -221,14 +225,11 @@ from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
 <%def name="acltitle(rule)">
     <div class="acltitle">
         <input type="hidden" name="type" value="title" />
-        <select name="grant">
-            <option value="true">grant</option>
-            <option value="false">deny</option>
-        </select>
+        ${select_grant(rule)}
         if character
         <select name="inverse">
-            <option value="false">has any</option>
-            <option value="true">has none</option>
+            <option value="false" ${selected(not rule.inverse)}>has any</option>
+            <option value="true" ${selected(rule.inverse)}>has none</option>
         </select>
         of these titles:
         ${stringlistinput("titles", rule.titles)}
@@ -238,14 +239,11 @@ from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
 <%def name="aclrole(rule)">
     <div class="aclrole">
         <input type="hidden" name="type" value="role" />
-        <select name="grant">
-            <option value="true">grant</option>
-            <option value="false">deny</option>
-        </select>
+        ${select_grant(rule)}
         if character
         <select name="inverse">
-            <option value="false">has any</option>
-            <option value="true">has none</option>
+            <option value="false" ${selected(not rule.inverse)}>has any</option>
+            <option value="true" ${selected(rule.inverse)}>has none</option>
         </select>
         of these roles:
         ${stringlistinput("roles", rule.roles)}
@@ -255,14 +253,11 @@ from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
 <%def name="aclmask(rule)">
     <div class="aclmask">
         <input type="hidden" name="type" value="mask" />
-        <select name="grant">
-            <option value="true">grant</option>
-            <option value="false">deny</option>
-        </select>
+        ${select_grant(rule)}
         if the character's user
         <select name="inverse">
-            <option value="false">has</option>
-            <option value="true">has not</option>
+            <option value="false" ${selected(not rule.inverse)}>has</option>
+            <option value="true" ${selected(rule.inverse)}>has not</option>
         </select>
         submitted a key supporting permissions:
         <input type="text" name="mask" value="${rule.mask}" />
