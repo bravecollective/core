@@ -71,20 +71,20 @@ from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
             });
 
             $("body").on("click", ".acllist .stringlistinput .add", function() {
-                $ul = $(this).siblings('ul');
-                $text_input = $(this).siblings("input[type=text]");
+                var $ul = $(this).siblings('ul');
+                var $text_input = $(this).siblings("input[type=text]");
 
-                new_string = $text_input.val();
-                validate_input = $(this).closest('.stringlistinput').data('validate-input');
+                var new_string = $text_input.val();
+                var validate_input = $(this).closest('.stringlistinput').data('validate-input');
                 if (validate_input) {
                     if (!validate_input(new_string)) {
                         return;
                     }
                 }
 
-                input_name = $(this).closest('.stringlistinput').data('input-name');
-                $li = $('<li>').append($('<input type="hidden">').attr('name', input_name).val(new_string))
-                               .text(new_string + " ")
+                var input_name = $(this).closest('.stringlistinput').data('input-name');
+                var $li = $('<li>').text(new_string + " ")
+                               .append($('<input type="hidden">').attr('name', input_name).val(new_string))
                                .append($('<i class="remove fa fa-times">'))
                                .appendTo($ul);
                 $text_input.val("");
@@ -99,12 +99,12 @@ from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
 </%block>
 
 <%def name="stringlistinput(input_name, list)">
-<div class="stringlistinput" data-input-name"{input_name}">
+<div class="stringlistinput" data-input-name="${input_name}">
     <ul>
         % for item in list:
             <li>
-                <input type="hidden" name="${input_name}" value="${item | h}" />
                 ${item | h}
+                <input type="hidden" name="${input_name}" value="${item | h}" />
                 <i class="remove fa fa-times"></i>
             </li>
         % endfor
