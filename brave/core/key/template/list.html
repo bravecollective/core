@@ -62,6 +62,10 @@
                         }
                         $.post('/key/', $('#modal form').serialize(), function(data)
                         {
+                            if (!data.success) {
+                                alert(data.message);
+                                return;
+                            }
                             violationText = "";
                             if(data.violation == "Character") {
                                 violationText = "<font color=\"red\">Character Security Violation.</font>";
