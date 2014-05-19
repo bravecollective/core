@@ -53,6 +53,10 @@ def selected(bool):
             width: auto;
         }
 
+        .stringlistinput input.error[type=text] {
+            border: 1px solid red;
+        }
+
     </style>
 </%block>
 
@@ -116,26 +120,41 @@ def selected(bool):
             $("body").on("click", ".acllist .stringlistinput .add", function() {
                 var $ul = $(this).closest('ul');
                 var $text_input = $(this).siblings("input[type=text]");
-
+                var input_name = $(this).closest('.stringlistinput').data('input-name');
                 var new_string = $text_input.val();
-                var validate_input = $(this).closest('.stringlistinput').data('validate-input');
-                if (validate_input) {
-                    if (!validate_input(new_string)) {
-                        return;
-                    }
+                function finish() {
+                    var $li = $('<li>').text(new_string + " ")
+                                       .append($('<input type="hidden">').attr('name', input_name).val(new_string))
+                                       .append($('<i class="remove fa fa-times">'))
+                                       .insertBefore($ul.children().last());
+                    $text_input.val("");
                 }
 
-                var input_name = $(this).closest('.stringlistinput').data('input-name');
-                var $li = $('<li>').text(new_string + " ")
-                               .append($('<input type="hidden">').attr('name', input_name).val(new_string))
-                               .append($('<i class="remove fa fa-times">'))
-                               .insertBefore($ul.children().last());
-                $text_input.val("");
+                var validate_input = $(this).closest('.stringlistinput').data('validate-input');
+                if (validate_input) {
+                    validate_input($text_input, finish);
+                }
+                else {
+                    finish();
+                }
             });
 
-            $(".acllist .stringlistinput").data('validate-input', function(input) {
-                console.log("fixme");
-                return true;
+            $("body").on("input", "input[type=text]", function() {
+                $(this).removeClass("error");
+            });
+
+            $(".acllist .stringlistinput").data('validate-input', function($input, finish) {
+                $.post("/group/check_rule_reference_exists", {
+                    kind: $input.closest(".acllist").data("kind"),
+                    name: $input.val(),
+                }, function(data) {
+                    if (data.exists) {
+                        finish()
+                    }
+                    else {
+                        $input.addClass("error");
+                    }
+                });
             });
         });
     </script>

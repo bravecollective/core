@@ -66,13 +66,17 @@ class ACLList(ACLRule):
         # this acl rule doesn't match or is not applicable
         return self.grant if self.inverse else None
 
+    @staticmethod
+    def target_class(kind):
+        if kind == 'c':
+            return EVECharacter
+        elif kind == 'o':
+            return EVECorporation
+        elif kind == 'a':
+            return EVEAlliance
+
     def target_objects(self):
-        if self.kind == 'c':
-            return EVECharacter.objects(identifier__in=self.ids)
-        elif self.kind == 'o':
-            return EVECorporation.objects(identifier__in=self.ids)
-        elif self.kind == 'a':
-            return EVEAlliance.objects(identifier__in=self.ids)
+        return self.target_class(self.kind).objects(identifier__in=self.ids)
     
     def __repr__(self):
         return "ACLList({0} {1} {2} {3!r})".format(
