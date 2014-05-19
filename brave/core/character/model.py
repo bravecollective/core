@@ -197,20 +197,6 @@ class EVECharacter(EVEEntity):
                 
         return lowest
         
-    def credential_for_excluding(self, mask, key):
-        """Return the least-permissive API key that can satisfy the given mask that is not key."""
-        
-        candidates = [i for i in self.credentials if (not mask or not i.mask or i.mask.has_access(mask)) and i.key != key]
-        
-        lowest = None
-        lowest_count = None
-        for candidate in candidates:
-            bc = candidate.mask.number_of_functions()
-            if lowest_count is None or bc < lowest_count:
-                lowest, lowest_count = candidate, bc
-
-        return lowest
-        
     def credential_multi_for(self, masks):
         """Returns the lowest permission API key that can satisfy the highest possible given mask."""
         
