@@ -36,8 +36,8 @@ class AdminController(Controller):
     
     print "YOLO3"
     
-    def search(self, Character=None, charMethod=None, Alliance=None, Corporation=None, KeyID=None, KeyMask=None,
-                Username=None, userMethod=None, IP=None):
+    def search(self, Character=None, charMethod=None, Alliance=None, Corporation=None, Group=None, KeyID=None,
+                KeyMask=None, Username=None, userMethod=None, IP=None):
                     
         if not is_administrator:
             raise HTTPNotFound()
@@ -120,6 +120,14 @@ class AdminController(Controller):
             Corporation = EVECorporation.objects(name=Corporation).first()
             chars = chars.filter(corporation=Corporation)
             
+        if Group:
+            groupList = []
+            for c in chars:
+                if Group in c.tags:
+                    groupList.append(c.id)
+                    
+            chars = chars.filter(id__in=groupList)
+            
         if KeyID:
             keys = keys.filter(key=KeyID)
             
@@ -139,7 +147,7 @@ class AdminController(Controller):
         if IP:
             users = users.filter(host=IP)
 
-        if Character or Alliance or Corporation:
+        if Character or Alliance or Corporation or Group:
             kind = 'Character'
             results = chars
         elif KeyID or KeyMask or KeyMask == 0:
