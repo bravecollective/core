@@ -230,16 +230,18 @@ def selected(bool):
     <div class="aclkey">
         <input type="hidden" name="type" value="key" />
         ${select_grant(rule)}
-        if key type
+        if we
         <select name="inverse">
-            <option value="false" ${selected(not rule.inverse)}>is</option>
-            <option value="true" ${selected(rule.inverse)}>is not</option>
+            <option value="false" ${selected(not rule.inverse)}>have</option>
+            <option value="true" ${selected(rule.inverse)}>don't have</option>
         </select>
+        a(n)
         <select name="kind">
             <option value="Account" ${selected(rule.kind == "Account")}>Account</option>
             <option value="Character" ${selected(rule.kind == "Character")}>Character</option>
-            <option value="Corporation" ${selected(rule.kind == "Corporation")}>Corporation</option>
+            <option value="Corporation" ${selected(rule.kind == "Corporation (wtf?)")}>Corporation</option>
         </select>
+        key for this character
     </div>
 </%def>
 
@@ -275,12 +277,12 @@ def selected(bool):
     <div class="aclmask">
         <input type="hidden" name="type" value="mask" />
         ${select_grant(rule)}
-        if the character's user
+        if we
         <select name="inverse">
-            <option value="false" ${selected(not rule.inverse)}>has</option>
-            <option value="true" ${selected(rule.inverse)}>has not</option>
+            <option value="false" ${selected(not rule.inverse)}>have</option>
+            <option value="true" ${selected(rule.inverse)}>don't have</option>
         </select>
-        submitted a key supporting permissions:
+        a key for this character supporting permissions:
         <input type="text" name="mask" value="${rule.mask}" />
     </div>
 </%def>
