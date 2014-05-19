@@ -56,10 +56,10 @@ class AuthorizeHandler(HTTPMethod):
             if len(characters):
                 default = u.primary or characters[0]
             else:
-                return 'brave.core.template.authorize',
+                return ('brave.core.template.authorize',
                 dict(success=False, message=_("This application requires that you have a character connected to your"
                                               " account. Please <a href=\"/key/\">add an API key</a> to your account."),
-                     ar=ar)
+                     ar=ar))
             return 'brave.core.template.authorize', dict(success=True, ar=ar, characters=characters, default=default)
         
         ngrant = ApplicationGrant(user=u, application=ar.application, mask=grant.mask, expires=datetime.utcnow() + timedelta(days=30), character=grant.character)
