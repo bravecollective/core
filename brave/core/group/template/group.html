@@ -11,8 +11,11 @@
         $(function() {
             $('form').submit(function(evt) {
                 var form = $(this);
-                var name = form.find("input[name=name]").val()
-                $.post(form.attr('action'), {name: name}, function(result) {
+                var name = form.find("input[name=name]").val();
+                var grant = form.find("select[name=grant]").val();
+                var kind = form.find("select[name=kind]").val();
+                var add = form.find("select[name=add]").val();
+                $.post(form.attr('action'), {name: name, grant: grant, kind: kind, add: add}, function(result) {
                     if (!result.success) {
                         alert(result.message);
                         return;
@@ -51,5 +54,37 @@
             <input name="name" type="text" />
             <input type="submit" class="btn btn-default" value="Remove character" />
         </form>
+        <form method="POST" action="/group/${group.id | u}/add_corporation">
+            <input name="name" type="text" />
+            <input type="submit" class="btn btn-default" value="Add corporation" />
+        </form>
+        <div class="span12">
+            <form method="POST" action="/group/${group.id | u}/modify_rule" id="addRule" class="form-inline">
+                <div class="span2">
+                <select name="add" form="addRule" class="input-block-level">
+                    <option value="add">Add</option>
+                    <option value="remove">Remove</option>
+                </select>
+                </div>
+                <div class="span2">
+                <select name="grant" form="addRule" class="input-block-level">
+                    <option value=true>Grant</option>
+                    <option value=false>Reject</option>
+                </select>
+                </div>
+                <div class="span1">
+                if character
+                </div>
+                <div class="span2">
+                <select name="kind" form="addRule" class="input-block-level">
+                    <option value='character'>is (character)</option>
+                    <option value='corporation'>is in (corporation)</option>
+                    <option value='alliance'>is in (alliance)</option>
+                </select>
+                </div>
+                <input name="name" type="text" />
+                <input type="submit" class="btn btn-default" value="Add rule" />
+            </form>
+        </div>
     </div>
 </div>
