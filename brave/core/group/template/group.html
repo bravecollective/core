@@ -105,8 +105,8 @@ def selected(bool):
                 if (kind) {
                     template_selector += "[data-kind="+kind+"]";
                 }
-                var editor = $("#acl-templates").find(template_selector).clone();
-                var row = $("#row-template-container tr").clone();
+                var editor = $("#acl-templates").find(template_selector).clone(true);
+                var row = $("#row-template-container tr").clone().removeClass("first");
                 row.find(".rule").append(editor);
                 $("#acl-rules tbody").append(row);
             });
@@ -332,7 +332,6 @@ def selected(bool):
 </div>
 
 <table style="display: none" id="row-template-container">
-    <tr></tr>
     ${rule_row(None)}
 </table>
 <div style="display: none" id="acl-templates">
