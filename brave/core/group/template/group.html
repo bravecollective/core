@@ -313,11 +313,11 @@ def selected(bool):
     ${rule_row(None)}
 </table>
 <div style="display: none" id="acl-templates">
-    ${aclrule(ACLList(kind='c', ids=[]))}
-    ${aclrule(ACLList(kind='o', ids=[]))}
-    ${aclrule(ACLList(kind='a', ids=[]))}
-    ${aclrule(ACLKey(kind='Account'))}
-    ${aclrule(ACLTitle(titles=[]))}
-    ${aclrule(ACLRole(roles=[]))}
-    ${aclrule(ACLMask(mask=0))}
+    ${aclrule(ACLList(grant=True, kind='c', ids=[]))}
+    ${aclrule(ACLList(grant=True, kind='o', ids=[]))}
+    ${aclrule(ACLList(grant=True, kind='a', ids=[]))}
+    ${aclrule(ACLKey(grant=True, kind='Account'))}
+    ${aclrule(ACLTitle(grant=True, titles=[]))}
+    ${aclrule(ACLRole(grant=True, roles=[]))}
+    ${aclrule(ACLMask(grant=True, mask=0))}
 </div>
