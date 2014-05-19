@@ -90,10 +90,12 @@ def selected(bool):
                         $.post($("#acl-rules").data("action"), {
                             rules: JSON.stringify(get_rule_data()),
                             really: "really",
-                        }, function(data) {
-                            alert("ok");
+                        }).fail(function(data) {
+                            alert("something went wrong!");
                         });
                     });
+                }).fail(function(data) {
+                    alert("something went wrong!");
                 });
             });
 
