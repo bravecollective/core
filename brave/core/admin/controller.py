@@ -36,7 +36,7 @@ class AdminController(Controller):
     
     print "YOLO3"
     
-    def search(self, Character=None, charMethod=None, Alliance=None, Corporation=None, Group=None, KeyID=None,
+    def search(self, Character=None, charMethod=None, Alliance=None, Corporation=None, group=None, KeyID=None,
                 KeyMask=None, Username=None, userMethod=None, IP=None):
                     
         if not is_administrator:
@@ -45,62 +45,6 @@ class AdminController(Controller):
         chars = EVECharacter.objects()
         keys = EVECredential.objects()
         users = User.objects()
-            
-        """    if Character:
-            if charMethod == 'contains':
-                chars = chars.filter(name__icontains=Character)
-                
-                keyList = []
-                for k in EVECredential.objects:
-                    for c in k.characters:
-                        if Character.lower() in c.name.lower():
-                            keyList.append(k.id)
-                keys = keys.filter(id__in=keyList)
-                
-                userList = []
-                for l in User.objects:
-                    for c in l.characters:
-                        if Character.lower() in c.name.lower():
-                            userList.append(l.id)
-                users = users.filter(id__in=userList)
-            elif charMethod == 'starts':
-                chars = chars.filter(name__istartswith=Character)
-                
-                keyList = []
-                for k in EVECredential.objects:
-                    for c in k.characters:
-                        if Character.lower() in c.name.lower()[:len(Character)]:
-                            keyList.append(k.id)
-                keys = keys.filter(id__in=keyList)
-                
-                userList = []
-                for l in User.objects:
-                    for c in l.characters:
-                        if Character.lower() in c.name.lower()[:len(Character)]:
-                            userList.append(l.id)
-                users = users.filter(id__in=userList)
-            elif charMethod == 'is':
-                chars = chars.filter(name__iexact=Character)
-                
-                keyList = []
-                for k in EVECredential.objects:
-                    for c in k.characters:
-                        if Character.lower() == c.name.lower():
-                            keyList.append(k.id)
-                keys = keys.filter(id__in=keyList)
-                
-                userList = []
-                for l in User.objects:
-                    for c in l.characters:
-                        if Character.lower() == c.name.lower():
-                            userList.append(l.id)
-                users = users.filter(id__in=userList)
-            else:
-                return 'json:', dict(success=False, message=_("You broke the web page. Good Job."))
-                
-        if Alliance:
-            chars = chars.filter(alliance.name__iexact=Alliance)
-            keys = keys.filter("""
             
         if Character:
             if charMethod == 'contains':
@@ -120,10 +64,10 @@ class AdminController(Controller):
             Corporation = EVECorporation.objects(name=Corporation).first()
             chars = chars.filter(corporation=Corporation)
             
-        if Group:
+        if group:
             groupList = []
             for c in chars:
-                if Group in c.tags:
+                if group in c.tags:
                     groupList.append(c.id)
                     
             chars = chars.filter(id__in=groupList)
@@ -147,7 +91,7 @@ class AdminController(Controller):
         if IP:
             users = users.filter(host=IP)
 
-        if Character or Alliance or Corporation or Group:
+        if Character or Alliance or Corporation or group:
             kind = 'Character'
             results = chars
         elif KeyID or KeyMask or KeyMask == 0:
