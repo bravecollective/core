@@ -20,32 +20,33 @@ class AdminInterface(HTTPMethod):
     
     @authorize(is_administrator)
     def get(self):
-        print "YOLO2"
         return 'brave.core.admin.template.search', dict(
             )
 
 class AdminController(Controller):
     """Entry point for the Search RESTful interface."""
 
-    print "YOLO1"
-
     #index = AdminInterface()
 
     def index(self):
         return 'brave.core.admin.template.search', dict(area='admin')
     
-    print "YOLO3"
-    
     def search(self, Character=None, charMethod=None, Alliance=None, Corporation=None, group=None, KeyID=None,
                 KeyMask=None, Username=None, userMethod=None, IP=None):
-                    
+        """Handles the /admin/search page, which is the post result of /admin/."""
+        
+        # Have to be an admin to access admin pages.            
         if not is_administrator:
             raise HTTPNotFound()
-                    
+        
+        # Seed the initial results with all of the respective objects.
         chars = EVECharacter.objects()
         keys = EVECredential.objects()
         users = User.objects()
             
+        # Go through and check all of the possible posted values
+        
+        # Limit chars to the character name entered.
         if Character:
             if charMethod == 'contains':
                 chars = chars.filter(name__icontains=Character)
@@ -55,15 +56,18 @@ class AdminController(Controller):
                 chars = chars.filter(name__iexact=Character)
             else:
                 return 'json:', dict(success=False, message=_("You broke the web page. Good Job."))
-                
+        
+        # Limit to characters in the specified alliance.
         if Alliance:
             Alliance = EVEAlliance.objects(name=Alliance).first()
             chars = chars.filter(alliance=Alliance)
-            
+        
+        # Limit to characters in the specified corporation.
         if Corporation:
             Corporation = EVECorporation.objects(name=Corporation).first()
             chars = chars.filter(corporation=Corporation)
-            
+        
+        # Limit to characters in the specified group.
         if group:
             groupList = []
             for c in chars:
@@ -71,13 +75,16 @@ class AdminController(Controller):
                     groupList.append(c.id)
                     
             chars = chars.filter(id__in=groupList)
-            
+        
+        # Limit to keys with the specified ID.
         if KeyID:
             keys = keys.filter(key=KeyID)
-            
+        
+        # Limit to keys with the specified Mask.
         if KeyMask:
             keys = keys.filter(_mask=KeyMask)
-            
+        
+        # Limit to users with the specified username.
         if Username:
             if userMethod == 'contains':
                 users = users.filter(username__icontains=Username)
@@ -87,10 +94,13 @@ class AdminController(Controller):
                 users = users.filter(username__iexact=Username)
             else:
                 return 'json:', dict(success=False, message=_("You broke the web page. Good Job."))
-                
+        
+        # Limit to users with the specified IP address.
         if IP:
             users = users.filter(host=IP)
 
+        # Only one search row is returned.
+        # Choose to return characters > keys > users.
         if Character or Alliance or Corporation or group:
             kind = 'Character'
             results = chars
@@ -104,13 +114,10 @@ class AdminController(Controller):
             return 'json:', dict(success=False, message=_("You broke the web page. Good Job."))
 
         result = []
-        
         for obj in results:
             result.append(obj)
 
         return 'brave.core.admin.template.search', dict(success=True, kind=kind, result=result)
-        
-    print "YOLO4"
     
     def __lookup__(self, key, *args, **kw):
         request.path_info_pop()  # We consume a single path element.
