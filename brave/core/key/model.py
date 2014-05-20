@@ -50,10 +50,11 @@ class EVECredential(Document):
         return 'EVECredential({0}, {1}, {2}, {3!r})'.format(self.id, self.kind, self._mask, self.owner)
     
     def delete(self):
-        #Delete any character that this key provides access to, but that the owner no longer has a key for.
-        for c in self.characters:
-            if not c.credential_for(EVECharacterKeyMask.NULL):
-                c.delete()
+        # Delete any character that this key provides access to, but that the owner no longer has a key for.
+        for char in self.characters:
+            # Make sure not to include this key when checking if there are still keys for the character
+            if len([c for c in char.credentials if c.id != self.id]) == 0:
+                char.delete()
                 
         super(EVECredential, self).delete()
     

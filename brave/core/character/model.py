@@ -194,7 +194,7 @@ class EVECharacter(EVEEntity):
             bc = candidate.mask.number_of_functions()
             if lowest_count is None or bc < lowest_count:
                 lowest, lowest_count = candidate, bc
-        
+                
         return lowest
         
     def credential_multi_for(self, masks):
