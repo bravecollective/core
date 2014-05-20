@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from web.core import Controller, HTTPMethod, config, session, request
 from web.auth import user
 from web.core.http import HTTPFound, HTTPNotFound
-from web.core.locale import set_lang, LanguageError
+from web.core.locale import set_lang, LanguageError, _
 from marrow.util.convert import boolean
 from marrow.util.url import URL
 
@@ -53,9 +53,14 @@ class AuthorizeHandler(HTTPMethod):
             # TODO: We need a 'just logged in' flag in the request.
             
             characters = list(u.characters.order_by('name').all())
-            default = u.primary or characters[0]
-           
-            return 'brave.core.template.authorize', dict(ar=ar, characters=characters, default=default)
+            if len(characters):
+                default = u.primary or characters[0]
+            else:
+                return ('brave.core.template.authorize',
+                dict(success=False, message=_("This application requires that you have a character connected to your"
+                                              " account. Please <a href=\"/key/\">add an API key</a> to your account."),
+                     ar=ar))
+            return 'brave.core.template.authorize', dict(success=True, ar=ar, characters=characters, default=default)
         
         ngrant = ApplicationGrant(user=u, application=ar.application, mask=grant.mask, expires=datetime.utcnow() + timedelta(days=30), character=grant.character)
         ngrant.save()

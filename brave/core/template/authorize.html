@@ -94,6 +94,19 @@
     </script>
 </%block>
 
+% if not success:
+<div class="box">
+    <div class="content-wrap authentication clearfix">
+        <div class="auth">
+            <h6>${_("Error")}</h6>
+            
+            <p>${message}</p>
+        </div>
+    </div>
+</div>
+
+% else:
+
 <div class="box">
     <div class="content-wrap authentication clearfix">
         <div class="auth">
@@ -143,3 +156,5 @@
         
     </div>
 </div>
+
+% endif
