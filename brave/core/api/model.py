@@ -20,8 +20,8 @@ class CharacterBan(EmbeddedDocument):
     meta = dict(
             allow_inheritance = False,
             indexes = [
-                    dict(fields=['name'], unique=True),
-                    dict(fields=['enabled'])
+                    'name',
+                    '_enabled'
                 ]
         )
         
@@ -43,7 +43,23 @@ class CharacterBan(EmbeddedDocument):
             ('key')
         )))
     
-    enabled = BooleanField(db_field='enabled', default=True)
+    _enabled = BooleanField(db_field='enabled', default=True)
+    
+    def enable(self, user):
+        """Enables this ban."""
+        
+        # Don't spam logs with 'fake' enables.
+        if not self._enabled:
+            log.info("User %s enabled CharacterBan against %s (%s).".format((user.username, self.character, self.id)))
+            self._enabled = True
+            
+    def disable(self, user):
+        """Disables this ban."""
+        
+        # Don't spam logs with 'fake' disables.
+        if self._enabled:
+            log.info("User %s disabled ban against %s (%s).".format((user.username, self.host, self.id)))
+            self._enabled = False
     
     
 class IPBan(EmbeddedDocument):
@@ -53,7 +69,7 @@ class IPBan(EmbeddedDocument):
             allow_inheritance = False,
             indexes = [
                     'host',
-                    'enabled'
+                    '_enabled'
                 ]
         )
     
@@ -70,7 +86,23 @@ class IPBan(EmbeddedDocument):
             ('account')
         )))
         
-    enabled = BooleanField(db_field='enabled', default=True)
+    _enabled = BooleanField(db_field='enabled', default=True)
+    
+    def enable(self, user):
+        """Enables this ban."""
+        
+        # Don't spam logs with 'fake' enables.
+        if not self._enabled:
+            log.info("User %s enabled IPban against %s (%s).".format((user.username, self.host, self.id)))
+            self._enabled = True
+            
+    def disable(self, user):
+        """Disables this ban."""
+        
+        # Don't spam logs with 'fake' disables.
+        if self._enabled:
+            log.info("User %s disabled ban against %s (%s).".format((user.username, self.host, self.id)))
+            self._enabled = False
     
     
 class Ban(Document):
@@ -82,16 +114,53 @@ class Ban(Document):
     meta = dict(
             allow_inheritance = False,
             indexes = [
-                    dict(fields=['creator', 'enabled', 'charCreator'])
+                    'creator',
+                    '_enabled',
+                    'charCreator'
                 ]
         )
     
     characters = ListField(EmbeddedDocumentField(CharacterBan))
     IPs = ListField(EmbeddedDocumentField(IPBan))
     
-    enabled = BooleanField(db_field='enabled', default=True)
+    _enabled = BooleanField(db_field='enabled', default=True)
     creator = ReferenceField(User, required=True) # TODO: Nullify inverse deletion rule.
+    
+    # Store the character name that created the ban separately in case of account deletion.
     charCreator = StringField(db_field='charCreator', required=True)
+    
+    # Require a reason for the top-level ban. This enables better accountability.
+    reason = StringField(db_field='reason', requried=True)
+    
+    def enable(self, user):
+        """Enables this ban."""
+        
+        # Don't spam logs with 'fake' enables.
+        if not self._enabled:
+            log.info("User %s enabled ban %s.".format((user.username, self.id)))
+            self._enabled = True
+        
+        # Enable all child bans (even if this ban was previously enabled)
+        for b in characters:
+            b.enable(user)
+                
+        for b in IPs:
+            b.enable(user)
+            
+    def disable(self, user):
+        """Disables this ban."""
+        
+        # Don't spam logs with 'fake' disables.
+        if self._enabled:
+            log.info("User %s disabled ban %s.".format((user.username, self.id)))
+            self._enabled = False
+        
+        # Disable all child bans (even if this ban was previously disabled)
+        for b in characters:
+            b.disable(user)
+                
+        for b in IPs:
+            b.disable(user)
     
     
 class AuthenticationBlacklist(Document):
