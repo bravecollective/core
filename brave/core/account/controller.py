@@ -67,6 +67,10 @@ class Authenticate(HTTPMethod):
 
             return self.get(redirect)
 
+        # Check if the user is banned, if so redirect them to the banned user info page.
+        if success[1].banned:
+            return 'json:', dict(success=False, location='/account/banned')
+
         if request.is_xhr:
             return 'json:', dict(success=True, location=redirect or '/')
 
@@ -401,6 +405,10 @@ class AccountController(Controller):
     register = Register()
     settings = Settings()
     recover = Recover()
+    
+    
+    def banned(self):
+        return 'brave.core.account.template.banned', dict()
     
     def exists(self, **query):
         query.pop('ts', None)
