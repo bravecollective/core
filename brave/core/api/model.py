@@ -130,7 +130,7 @@ class Ban(Document):
     charCreator = StringField(db_field='charCreator', required=True)
     
     # Require a reason for the top-level ban. This enables better accountability.
-    reason = StringField(db_field='reason', requried=True)
+    reason = StringField(db_field='reason', required=True)
     
     def enable(self, user):
         """Enables this ban."""

@@ -139,17 +139,24 @@ class CoreAPI(SignedController):
         token = ApplicationGrant.objects.get(id=token, application=request.service)
         character = token.character
         
-        # Step 2: Update info about the character from the EVE API
+        # Step 2: Check if the character has been banned.
+        if character.banned:
+            return dict(
+                success = False,
+                reason = 'char.banned'
+            )
+        
+        # Step 3: Update info about the character from the EVE API
         mask, key = character.credential_multi_for((EVECharacterKeyMask.CHARACTER_SHEET,
          EVECharacterKeyMask.CHARACTER_INFO_PUBLIC, EVECharacterKeyMask.NULL))
         
-        #User has no keys registered.
+        # User has no keys registered.
         if not key:
             return None
             
         key.pull()
         
-        # Step 3: Match ACLs.
+        # Step 4: Match ACLs.
         tags = []
         for group in Group.objects(id__in=request.service.groups):
             if group.evaluate(token.user, character):

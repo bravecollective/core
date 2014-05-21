@@ -74,6 +74,19 @@ class User(Document):
     @property
     def recovery_keys(self):
         return PasswordRecovery.objects(user=self)
+        
+    @property
+    def banned(self):
+        """Returns true if this user account is banned."""
+        
+        for c in self.characters:
+            if Ban.objects(characters__character=self.username):
+                return true
+        
+        if Ban.objects(IPs__host=self.host):
+            return true
+            
+        return false
 
     # Functions to manage YubiKey OTP
 

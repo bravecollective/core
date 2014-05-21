@@ -182,6 +182,10 @@ class EVECharacter(EVEEntity):
             return mapping[i].title
         
         return OrderedDict((i, mapping[i]) for i in sorted(mapping.keys(), key=titlesort))
+        
+    @property
+    def banned(self):
+        return self.owner.banned
     
     def credential_for(self, mask):
         """Return the least-permissive API key that can satisfy the given mask."""
