@@ -18,12 +18,12 @@ class CharacterBan(EmbeddedDocument):
     """Stores information about character bans."""
     
     meta = dict(
-            allow_inheritance = False,
-            indexes = [
-                    'name',
-                    '_enabled'
-                ]
-        )
+        allow_inheritance=False,
+        indexes=[
+            'name',
+            '_enabled'
+        ]
+    )
         
     # The character this ban is for.
     # Uses a string rather than a reference so users can't get around
@@ -38,10 +38,10 @@ class CharacterBan(EmbeddedDocument):
     # 'account' means the (overall) ban was invoked against the account that owned this character.
     # 'key' means this character was found on the same key as another banned character.
     reason = StringField(db_field='reason', choices=((
-            ('direct'),
-            ('account'),
-            ('key')
-        )))
+        ('direct'),
+        ('account'),
+        ('key')
+    )))
     
     _enabled = BooleanField(db_field='enabled', default=True)
     
@@ -66,12 +66,12 @@ class IPBan(EmbeddedDocument):
     """Stores information about bans against an IP Address."""
     
     meta = dict(
-            allow_inheritance = False,
-            indexes = [
-                    'host',
-                    '_enabled'
-                ]
-        )
+        allow_inheritance=False,
+        indexes=[
+            'host',
+            '_enabled'
+        ]
+    )
     
     host = StringField('IP')
     
@@ -82,9 +82,9 @@ class IPBan(EmbeddedDocument):
     # 'direct' means the (overall) ban was invoked against this IP Address in particular.
     # 'account' means the (overall) ban was invoked against the account that this IP was registered against.
     reason = StringField(db_field='reason', choices=((
-            ('direct'),
-            ('account')
-        )))
+        ('direct'),
+        ('account')
+    )))
         
     _enabled = BooleanField(db_field='enabled', default=True)
     
@@ -112,19 +112,19 @@ class Ban(Document):
     one ban object."""
     
     meta = dict(
-            allow_inheritance = False,
-            indexes = [
-                    'creator',
-                    '_enabled',
-                    'charCreator'
-                ]
-        )
+        allow_inheritance=False,
+        indexes=[
+            'creator',
+            '_enabled',
+            'charCreator'
+        ]
+    )
     
     characters = ListField(EmbeddedDocumentField(CharacterBan))
     IPs = ListField(EmbeddedDocumentField(IPBan))
     
     _enabled = BooleanField(db_field='enabled', default=True)
-    creator = ReferenceField(User, required=True) # TODO: Nullify inverse deletion rule.
+    creator = ReferenceField(User, required=True)  # TODO: Nullify inverse deletion rule.
     
     # Store the character name that created the ban separately in case of account deletion.
     charCreator = StringField(db_field='charCreator', required=True)
@@ -141,10 +141,10 @@ class Ban(Document):
             self._enabled = True
         
         # Enable all child bans (even if this ban was previously enabled)
-        for b in characters:
+        for b in self.characters:
             b.enable(user)
                 
-        for b in IPs:
+        for b in self.IPs:
             b.enable(user)
             
     def disable(self, user):
@@ -156,10 +156,10 @@ class Ban(Document):
             self._enabled = False
         
         # Disable all child bans (even if this ban was previously disabled)
-        for b in characters:
+        for b in self.characters:
             b.disable(user)
                 
-        for b in IPs:
+        for b in self.IPs:
             b.disable(user)
     
     

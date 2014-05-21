@@ -22,7 +22,7 @@ class User(Document):
     # Field Definitions
     
     username = StringField(db_field='u', required=True, unique=True, regex=r'[a-z][a-z0-9_.-]+')
-    email = EmailField(db_field='e', required=True, unique=True, regex=r'[^A-Z]+')  # disallow uppercase characters
+    email = EmailField(db_field='e', required=True, unique=True, regex=r'[^A-Z]+')  # disallow uppercase characters     
     password = PasswordField(db_field='p')
     active = BooleanField(db_field='a', default=False)
     confirmed = DateTimeField(db_field='c')
@@ -79,14 +79,16 @@ class User(Document):
     def banned(self):
         """Returns true if this user account is banned."""
         
+        from brave.core.api.model import Ban
+        
         for c in self.characters:
             if Ban.objects(characters__character=self.username):
-                return true
+                return True
         
         if Ban.objects(IPs__host=self.host):
-            return true
+            return True
             
-        return false
+        return False
 
     # Functions to manage YubiKey OTP
 

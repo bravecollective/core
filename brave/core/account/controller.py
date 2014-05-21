@@ -406,7 +406,6 @@ class AccountController(Controller):
     settings = Settings()
     recover = Recover()
     
-    
     def banned(self):
         return 'brave.core.account.template.banned', dict()
     

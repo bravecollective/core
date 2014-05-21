@@ -12,7 +12,7 @@ from marrow.util.object import load_object as load
 from marrow.util.convert import boolean
 
 from brave.core.application.model import Application
-from brave.core.api.model import AuthenticationBlacklist, AuthenticationRequest
+from brave.core.api.model import AuthenticationBlacklist, AuthenticationRequest, Ban
 from brave.core.api.util import SignedController
 from brave.core.util.eve import EVECharacterKeyMask
 
@@ -197,7 +197,7 @@ class CoreAPI(SignedController):
         elif kind == 'char':
             bans = Ban.objects(characters__character__iexact=lookup)
         else:
-            bans = Bans.objects(IPs__host=lookup)
+            bans = Ban.objects(IPs__host=lookup)
             
         if not len(bans):
             return 'json:', dict(success=True, bans=None)

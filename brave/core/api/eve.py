@@ -46,7 +46,8 @@ class ProxyAPI(SignedController):
         
         # Check if the character has been banned.
         if token.character.banned:
-            return dict(success = False, reason = 'char.banned', message="The character you are making a call for has been banned from Brave IT infastructure.")
+            return dict(success=False, reason='char.banned', message="The character you are making a call "
+                                                                     "for has been banned from Brave IT infastructure.")
         
         key = None
         if anonymous is False or token or call.mask:
