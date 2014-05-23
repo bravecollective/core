@@ -2,6 +2,8 @@
 
 <%inherit file="brave.core.template.master"/>
 
+<%! from brave.core.util.filter import app_url %>
+
 <%block name="title">Available Applications</%block>
 
 <%block name="header">
@@ -56,11 +58,11 @@
                     % for record in records:
                     <tr data-id="${record.id}">
                         <td class="name">
-                            <a href=${record.site}><strong>${record.name | h}</strong></a><br>
+                            <a href=${record.site | app_url,h}><strong>${record.name | h}</strong></a><br>
                             <span class="subtext">${record.description | h}</span>
                         </td>
                         <td class="actions">
-                            <a href=${record.site | u}><button class="btn btn-small authorize">Authorize</button></a>
+                            <a href=${record.site | app_url,h}><button class="btn btn-small authorize">Authorize</button></a>
                         </td>
                     </tr>
                     % endfor
@@ -91,11 +93,11 @@
                     % for record in devRecords:
                     <tr data-id="${record.id}">
                         <td class="name">
-                            <a href=${record.site}><strong>${record.name | h}</strong></a><br>
+                            <a href=${record.site | app_url,h}><strong>${record.name | h}</strong></a><br>
                             <span class="subtext">${record.description | h}</span>
                         </td>
                         <td class="actions">
-                            <a href=${record.site | u}><button class="btn btn-small authorize">Authorize</button></a>
+                            <a href=${record.site | app_url,h}><button class="btn btn-small authorize">Authorize</button></a>
                         </td>
                     </tr>
                     % endfor

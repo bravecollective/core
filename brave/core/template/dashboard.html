@@ -2,6 +2,8 @@
 
 <%inherit file="brave.core.template.master"/>
 
+<%! from brave.core.util.filter import app_url %>
+
 <%block name="title">Dashboard</%block>
 
 <%block name="header">
@@ -107,7 +109,7 @@
                 <h4>Authorized Applications</h4>
                 <ul>
                     % for grant in web.user.grants:
-                    <li><a target="_blank" href="${grant.application.site | u}" title="${grant.application.description | u}">${grant.application.name | h}</a></li>
+                    <li><a target="_blank" href="${grant.application.site | app_url,h}" title="${grant.application.description | h}">${grant.application.name | h}</a></li>
                     % endfor
                 </ul>
                 

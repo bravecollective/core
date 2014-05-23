@@ -3,6 +3,8 @@
 <%inherit file="brave.core.template.master"/>
 <%namespace name="f" file="brave.core.template.filter"/>
 
+<%! from brave.core.util.filter import app_url %>
+
 <%block name="title">Authorized Applications</%block>
 
 <%block name="header">
@@ -84,11 +86,11 @@
                     % for record in records:
                     <tr data-id="${record.id}">
                         <td class="name">
-                            <a href="${record.application.site | u}"><strong>${record.application.name | h}</strong></a> <i class="fa fa-external-link muted"></i><br>
+                            <a href="${record.application.site | app_url,h}"><strong>${record.application.name | h}</strong></a> <i class="fa fa-external-link muted"></i><br>
                             <span class="subtext">${record.application.description | h}</span>
                         </td>
                         <td class="character hidden-tablet hidden-phone">
-                            <img src="//image.eveonline.com/Character/${record.character.identifier}_32.jpg" style="vertical-align: middle; margin-right: 5px; border-radius: 3px; width: 24px; height: 24px;" title="${record.character.name | u}"> ${record.character.name}
+                            <img src="//image.eveonline.com/Character/${record.character.identifier}_32.jpg" style="vertical-align: middle; margin-right: 5px; border-radius: 3px; width: 24px; height: 24px;" title="${record.character.name | h}"> ${record.character.name}
                         </td>
                         <td class="date">
                             <time class="relative" datetime="${record.id.generation_time |n,f.iso}">${record.id.generation_time |n,f.pretty}</time>
