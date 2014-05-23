@@ -13,8 +13,9 @@ from mongoengine import ValidationError
 from mongoengine.errors import NotUniqueError
 
 from brave.core.key.model import EVECredential
+from brave.core.account.model import User
 from brave.core.util.predicate import authorize, authenticated, is_administrator
-from brave.core.util.eve import EVECharacterKeyMask
+from brave.core.util.eve import EVECharacterKeyMask, EVECorporationKeyMask
 
 
 log = __import__('logging').getLogger(__name__)
@@ -37,6 +38,13 @@ class KeyIndex(HTTPMethod):
             return 'json:', dict(success=True)
 
         raise HTTPFound(location='/key/')
+        
+    def get(self):
+        return 'brave.core.key.template.keyDetails', dict(
+            area='admin',
+            admin=True,
+            record=self.key
+        )
 
 
 class KeyInterface(Controller):
@@ -48,7 +56,7 @@ class KeyInterface(Controller):
         except EVECredential.DoesNotExist:
             raise HTTPNotFound()
 
-        if self.key.owner.id != user.id:
+        if self.key.owner.id != user.id and not user.admin:
             raise HTTPNotFound()
         
         self.index = KeyIndex(self.key)
@@ -81,9 +89,9 @@ class KeyList(HTTPMethod):
             credentials = EVECredential.objects.only('violation', 'key', 'verified', 'owner')
 
         return 'brave.core.key.template.list', dict(
-                area = 'keys',
-                admin = admin,
-                records = credentials
+                area='keys',
+                admin=admin,
+                records=credentials
             )
 
     @authorize(authenticated)
@@ -125,17 +133,17 @@ class KeyList(HTTPMethod):
         except ValidationError:
             if request.is_xhr:
                 return 'json:', dict(
-                        success = False,
-                        message = _("Validation error: one or more fields are incorrect or missing."),
+                            success=False,
+                            message=_("Validation error: one or more fields are incorrect or missing."),
                     )
         except NotUniqueError:
             return 'json:', dict(
-                success = False,
-                message = _("This key has already been added by another account."),
+                success=False,
+                message=_("This key has already been added by another account."),
             )
 
         raise HTTPFound(location='/key/')
-
+ 
 
 class KeyController(Controller):
     """Entry point for the KEY management RESTful interface."""
