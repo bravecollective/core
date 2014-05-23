@@ -29,7 +29,9 @@
 
 <div class="container-fluid">
     <div id="pad-wrapper" class="user-profile">
-    % if web.user.primary:
+    % if not web.user.primary:
+        Select your primary character by starring it on the <a href="/character">characters page</a>.
+    % else:
         <div class="header">
             <img src="//image.eveonline.com/Character/${web.user.primary.identifier}_128.jpg" class="avatar">
             
