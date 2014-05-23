@@ -108,66 +108,6 @@
             <h3>EVE Online Characters</h3>
         </div>
         
-        <div class="row-fluid table">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        % if not admin:
-                        <th class="span3 sortable name">Name</th>
-                        <th class="span4 sortable corporation"><span class="line"></span>Corporation</th>
-                        <th class="span4 sortable alliance"><span class="line"></span>Alliance</th>
-                        % else:
-                        <th class="span2 sortable name">Name</th>
-                        <th class="span3 sortable corporation"><span class="line"></span>Corporation</th>
-                        <th class="span3 sortable alliance"><span class="line"></span>Alliance</th>
-                        % endif
-                        % if admin:
-                        <th class="span3 sortable username"><span class="line"></span>User</th>
-                        % else:
-                        <th class="span1 sortable actions"><span class="line"></span></th>
-                        % endif
-                    </tr>
-                </thead>
-                <tbody>
-                    % for record in records:
-                    <tr data-id="${record.id}">
-                        <td class="name">
-                            <span class="ellipsis">
-                            <img src="//image.eveonline.com/Character/${record.identifier}_32.jpg" style="vertical-align: -55%; margin-right: 5px; border-radius: 6px; width: 32px; height: 32px;">
-                            <strong>${record.name | h}</strong>
-                            </span>
-                        </td>
-                        <td class="corporation">
-                            <span class="ellipsis">
-                            <img src="//image.eveonline.com/Corporation/${record.corporation.identifier}_32.png" style="vertical-align: -55%; margin-right: 5px; width: 32px; height: 32px;">
-                            ${record.corporation.name | h}
-                            </span>
-                        </td>
-                        <td class="alliance">
-                            % if record.alliance:
-                            <span class="ellipsis">
-                            <img src="//image.eveonline.com/Alliance/${record.alliance.identifier}_32.png" style="vertical-align: -55%; margin-right: 5px; width: 32px; height: 32px;">
-                            ${record.alliance.name | h}
-                            </span>
-                            % else:
-                            <em>None</em>
-                            % endif
-                        </td>
-                        % if admin:
-                        <td class="username">
-                            <span class="ellipsis">
-                            ${record.owner | h}
-                            </span>
-                        </td>
-                        % else:
-                        <td class="actions">
-                            <i class="makedefault fa fa-star${'' if web.user.primary and record.id == web.user.primary.id else '-o'} fa-2x"></i>
-                        </td>
-                        % endif
-                    </tr>
-                    % endfor
-                </tbody>
-            </table>
-        </div>
+        <%include file="brave.core.character.template.charTable"/>
     </div>
 </div>
