@@ -112,7 +112,7 @@ class User(Document):
 
     def delete(self):
 
-        self.characters.delete()
+        self.characters.detach()
         self.credentials.delete()
         self.grants.delete()
         self.attempts.delete()
