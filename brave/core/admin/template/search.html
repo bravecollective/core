@@ -1,0 +1,107 @@
+## encoding: utf-8
+
+<%inherit file="brave.core.template.master"/>
+
+<%block name="title">Search</%block>
+
+<%block name="post">
+    ${parent.post()}
+
+    <script type="text/javascript" charset="utf-8">
+        $(function() {
+            $('#new-search').click(function() {
+                var form = $(this).parents(".modal-content").find("form");
+                var id = form.find('input[name=id]').val();
+                var title = form.find('input[name=title]').val();
+                $.post('/admin/search', {
+                        Character: Character,
+                        charMethod: charMethod,
+                        Alliance: Alliance,
+                        Corporation: Corporation,
+                        KeyID: KeyID,
+                        KeyMask: KeyMask,
+                        Username: Username,
+                        Group: Group
+                        userMethod: userMethod,
+                        IP: IP,
+                    }, function(data) {
+                        if (data.success) {
+                            alert(data.results)
+                        } else {
+                            alert(data.message);
+                        }
+                    }
+                );
+            });
+        });
+    </script>
+</%block>
+
+<div class="container-fluid">
+    <div id="pad-wrapper">
+        <div class="row-fluid header">
+            <h3>Administrative Search</h3>
+            <h4>You can only search based on the inputs in one row. I.E. Character Name and Corp Name; but not Character Name and Username.
+        </div>
+        <div class="span12">
+            <form method="POST" action="/admin/search" id="search" class="form-inline">
+                <div class="span2">
+                    <input name="Character" type="text" placeholder="Character Name" class="span2"/>
+                </div>
+                <div class="span2">
+                    <select name="charMethod" form ="search" class="input-block-level">
+                        <option value='contains'>Contains (Character)</option>
+                        <option value='starts'>Starts With</option>
+                        <option value='is'>Is</option>
+                    </select>
+                </div>
+                <div class="span2">
+                    <input name="Alliance" type="text" placeholder="Alliance Name" class="span2"/>
+                </div>
+                <div class="span2">
+                    <input name="Corporation" type="text" placeholder="Corporation Name" class="span2"/>
+                </div>
+                <div class="span2">
+                    <input name="Group" type="text" placeholder="Group Name" class="span2"/>
+                </div>
+                <br>
+                <br>
+                <div class="span2">
+                    <input name="KeyID" type="text" placeholder="Key ID" class="span2"/>
+                </div>
+                <div class="span2">
+                    <input name="KeyMask" type="text" placeholder="Key Mask" class="span2"/>
+                </div>
+                <br>
+                <br>
+                <div class="span2">
+                    <input name="Username" type="text" placeholder="Username" class="span2"/>
+                </div>
+                <div class="span2">
+                    <select name="userMethod" form ="search" class="input-block-level">
+                        <option value='contains'>Contains (Username)</option>
+                        <option value='starts'>Starts With</option>
+                        <option value='is'>Is</option>
+                    </select>
+                </div>
+                <div class="span2">
+                    <input name="IP" type="text" placeholder="IP Address" class="span2"/>
+                </div>
+                <br>
+                <br>
+                <div class="span4"></div>
+                <input type="submit" class="btn btn-default" value="Search" />
+            </form>
+        </div>
+        
+        % if success:
+            % if kind == 'Character':
+                <%include file="brave.core.character.template.charTable" args="records=result, admin=True"/>
+            % elif kind == 'Key':
+                <%include file="brave.core.key.template.keyTable" args="records=result, admin=True"/>
+            % elif kind == 'User':
+                <%include file="brave.core.account.template.accountTable" args="records=result, admin=True"/>
+            % endif
+        % endif
+    </div>
+</div>
