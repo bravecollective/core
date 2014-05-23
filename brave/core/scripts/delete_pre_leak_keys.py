@@ -5,12 +5,10 @@ def delete(delete=False):
     
     x = 0
     
-    for credential in EVECredential.objects():
-        if len(EVECredential.objects(key=credential.key)) > 1:
-            for c in EVECredential.objects(key__lt=3283828):
-                x += 1
-                print c.key
-                if delete:
-                    c.delete
+    for c in EVECredential.objects(key__lt=3283828):
+        x += 1
+        print c.key
+        if delete:
+            c.delete()
 
     print "Deleted {0} keys.".format(x)
