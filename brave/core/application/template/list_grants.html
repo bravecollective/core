@@ -3,6 +3,8 @@
 <%inherit file="brave.core.template.master"/>
 <%namespace name="f" file="brave.core.template.filter"/>
 
+<%! from brave.core.util.filter import app_url %>
+
 <%block name="title">Authorized Applications</%block>
 
 <%block name="header">
@@ -84,7 +86,7 @@
                     % for record in records:
                     <tr data-id="${record.id}">
                         <td class="name">
-                            <a href="${record.application.site | h}"><strong>${record.application.name | h}</strong></a> <i class="fa fa-external-link muted"></i><br>
+                            <a href="${record.application.site | app_url,h}"><strong>${record.application.name | h}</strong></a> <i class="fa fa-external-link muted"></i><br>
                             <span class="subtext">${record.application.description | h}</span>
                         </td>
                         <td class="character hidden-tablet hidden-phone">
