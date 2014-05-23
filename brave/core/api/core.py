@@ -11,10 +11,9 @@ from marrow.util.url import URL
 from marrow.util.object import load_object as load
 from marrow.util.convert import boolean
 
-from brave.core.application.model import Application
 from brave.core.api.model import AuthenticationBlacklist, AuthenticationRequest
 from brave.core.api.util import SignedController
-from brave.core.util.eve import EVECharacterKeyMask
+from brave.core.util.eve import EVECharacterKeyMask, api
 
 
 log = __import__('logging').getLogger(__name__)
@@ -140,10 +139,10 @@ class CoreAPI(SignedController):
         character = token.character
         
         # Step 2: Update info about the character from the EVE API
-        mask, key = character.credential_multi_for((EVECharacterKeyMask.CHARACTER_SHEET,
-         EVECharacterKeyMask.CHARACTER_INFO_PUBLIC, EVECharacterKeyMask.NULL))
+        mask, key = character.credential_multi_for((api.char.CharacterSheet.mask,
+                                                    api.eve.CharacterInfo.mask, EVECharacterKeyMask.NULL))
         
-        #User has no keys registered.
+        # User has no keys registered.
         if not key:
             return None
             
