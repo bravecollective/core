@@ -8,9 +8,10 @@ def delete():
     for credential in EVECredential.objects():
         if len(EVECredential.objects(key=credential.key)) > 1:
             for c in EVECredential.objects(key=credential.key):
-                dups.append(c)
+                if not c.characters:
+                    dups.append(c)
 
     print "Deleting {0} keys.".format(len(set(dups)),)
 
     for c in dups:
-        c.delete()
+        print c
