@@ -5,9 +5,9 @@ from __future__ import unicode_literals
 from datetime import datetime
 from mongoengine import Document, StringField, DateTimeField, BooleanField, ReferenceField, IntField
 from mongoengine.errors import NotUniqueError
-from marrow.util.bunch import Bunch
 from requests.exceptions import HTTPError
 
+from brave.core.account.model import User
 from brave.core.util import strip_tags
 from brave.core.util.signal import update_modified_timestamp, trigger_api_validation
 from brave.core.util.eve import api, EVECharacterKeyMask, EVECorporationKeyMask
