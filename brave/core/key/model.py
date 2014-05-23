@@ -99,6 +99,10 @@ class EVECredential(Document):
                 log.warning("Security violation detected. Multiple accounts trying to register character %s, ID %d. Actual owner is %s. User adding this character is %s.",
                     char.name, info.characterID, EVECharacter.objects(identifier = info.characterID).first().owner, self.owner)
                 self.violation = "Character"
+                
+                # Mark both accounts as duplicates of each other.
+                User.add_duplicate(self.owner, char.owner)
+        
                 return
 
         if self.mask.has_access(EVECharacterKeyMask.CHARACTER_SHEET):
