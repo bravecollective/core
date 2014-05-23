@@ -145,10 +145,60 @@ class KeyList(HTTPMethod):
         raise HTTPFound(location='/key/')
  
 
+class CorpKeyMaskController(Controller):
+    """Controller for /key/mask/corp/"""
+    
+    def __lookup__(self, mask, *args, **kw):
+        return CorpKeyMaskInterface(mask), args
+        
+        
+class CorpKeyMaskInterface(HTTPMethod):
+    """Interface for /key/mask/corp/{MASK}"""
+    
+    def __init__(self, mask):
+        super(CorpKeyMaskInterface, self).__init__()
+        self.mask = mask
+        
+    def get(self):
+        funcs = EVECorporationKeyMask(int(self.mask)).functionsAllowed()
+        return 'brave.core.key.template.maskDetails', dict(
+            mask=self.mask,
+            area='keys',
+            functions=funcs,
+            kind="o"
+        )
+        
+        
+class KeyMaskController(Controller):
+    """Controller for /key/mask/"""
+    corp = CorpKeyMaskController()
+    
+    def __lookup__(self, mask, *args, **kw):
+        return KeyMaskInterface(mask), args
+        
+        
+class KeyMaskInterface(HTTPMethod):
+    """Interface for /key/mask/{MASK}"""
+    
+    def __init__(self, mask):
+        super(KeyMaskInterface, self).__init__()
+        self.mask = mask
+        
+    def get(self):
+        funcs = EVECharacterKeyMask(int(self.mask)).functionsAllowed()
+        return 'brave.core.key.template.maskDetails', dict(
+            mask=self.mask,
+            area='keys',
+            functions=funcs,
+            kind="c"
+        )
+        
+        
 class KeyController(Controller):
     """Entry point for the KEY management RESTful interface."""
 
     index = KeyList()
+    mask = KeyMaskController()
     
     def add(self):
         # TODO: mpAjax mime/multipart this to save on escaping the HTML.
