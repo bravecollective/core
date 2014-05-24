@@ -29,5 +29,5 @@ for k in EVECredential.objects():
 for c in EVECharacter.objects():
     print("checking character {}".format(c))
     if c.credentials == []:
-        print("deleting character without keys")
-        c.delete()
+        print("detaching character without keys")
+        c.detach()

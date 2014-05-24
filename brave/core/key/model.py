@@ -50,11 +50,11 @@ class EVECredential(Document):
         return 'EVECredential({0}, {1}, {2}, {3!r})'.format(self.id, self.kind, self._mask, self.owner)
     
     def delete(self):
-        # Delete any character that this key provides access to, but that the owner no longer has a key for.
+        # Detach any character that this key provides access to, but that the owner no longer has a key for.
         for char in self.characters:
             # Make sure not to include this key when checking if there are still keys for the character
             if len([c for c in char.credentials if c.id != self.id]) == 0:
-                char.delete()
+                char.detach()
                 
         super(EVECredential, self).delete()
     
@@ -95,9 +95,11 @@ class EVECredential(Document):
         except NotUniqueError:
             char = EVECharacter.objects(identifier=info.characterID)[0]
             
-            if self.owner != char.owner:
-                log.warning("Security violation detected. Multiple accounts trying to register character %s, ID %d. Actual owner is %s. User adding this character is %s.",
-                    char.name, info.characterID, EVECharacter.objects(identifier = info.characterID).first().owner, self.owner)
+            if char.owner and self.owner != char.owner:
+                log.warning("Security violation detected. Multiple accounts trying to register character %s, ID %d. "
+                            "Actual owner is %s. User adding this character is %s.",
+                            char.name, info.characterID,
+                            EVECharacter.objects(identifier=info.characterID).first().owner, self.owner)
                 self.violation = "Character"
                 
                 # Mark both accounts as duplicates of each other.
