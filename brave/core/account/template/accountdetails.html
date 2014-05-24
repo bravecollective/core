@@ -37,6 +37,15 @@
             <div class="area">
                 Primary character: <a href="/character/${account.primary.id}">${account.primary.name | h}</a>
             </div>
+            <span class="area">
+                ${", ".join(account.primary.titles) | h}
+            </span>
+            <div class="area">
+                <a target="_blank" href="https://gate.eveonline.com/Corporation/${account.primary.corporation.name | u}">${account.primary.corporation.name | h}</a>
+                % if account.primary.alliance:
+                    <span>›</span> <a target="_blank" href="https://gate.eveonline.com/Alliance/${account.primary.alliance.name | u}">${account.primary.alliance.name | h}</a>
+                % endif
+            </div>
         </div>
     % else:
         <div class="header">
