@@ -29,24 +29,24 @@
 
 <div class="container-fluid">
     <div id="pad-wrapper" class="user-profile">
-    % if user.primary:
+    % if account.primary:
         <div class="header">
-            <img src="//image.eveonline.com/Character/${user.primary.identifier}_128.jpg" class="avatar">
+            <img src="//image.eveonline.com/Character/${account.primary.identifier}_128.jpg" class="avatar">
             
-            <h3 class="name">${user.primary.name | h} (${user})</h3>
+            <h3 class="name">${account.primary.name | h} (${account})</h3>
             <span class="area">
-            ${", ".join(user.primary.titles) | h}
+            ${", ".join(account.primary.titles) | h}
             </span>
             <div class="area">
-                <a target="_blank" href="https://gate.eveonline.com/Corporation/${user.primary.corporation.name | u}">${user.primary.corporation.name | h}</a>
-                % if user.primary.alliance:
-                <span>›</span> <a target="_blank" href="https://gate.eveonline.com/Alliance/${user.primary.alliance.name | u}">${user.primary.alliance.name | h}</a>
+                <a target="_blank" href="https://gate.eveonline.com/Corporation/${account.primary.corporation.name | u}">${account.primary.corporation.name | h}</a>
+                % if account.primary.alliance:
+                <span>›</span> <a target="_blank" href="https://gate.eveonline.com/Alliance/${account.primary.alliance.name | u}">${account.primary.alliance.name | h}</a>
                 % endif
             </div>
         </div>
     % else:
         <div class="header">
-            <h3 class="name">${user | h}</h3>
+            <h3 class="name">${account | h}</h3>
             <div class="area">
             </div>
         </div>
@@ -60,7 +60,7 @@
                             <h3>EVE Online Characters</h3>
                         </div>
         
-                        <%include file="brave.core.character.template.charTable" args="records=user.characters, admin=True"/>
+                        <%include file="brave.core.character.template.charTable" args="records=account.characters, admin=True"/>
                     </div>
     
                     <div id="pad-wrapper">
@@ -69,7 +69,7 @@
                         </div>
         
         
-                        <%include file="brave.core.key.template.keyTable" args="records=user.credentials, admin=True"/>
+                        <%include file="brave.core.key.template.keyTable" args="records=account.credentials, admin=True"/>
                     </div>
                 
 
@@ -93,7 +93,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            % for attempt in web.user.attempts.order_by('-id').limit(10):
+                            % for attempt in account.attempts.order_by('-id').limit(10):
                             <tr>
                                 <td><time datetime="${attempt.id.generation_time.isoformat().replace('+00:00', 'Z')}">${attempt.id.generation_time.isoformat(' ').replace('+00:00', '')}</time></td>
                                 <td>${attempt.location | h}</td>
@@ -113,32 +113,32 @@
             <div class="span5 pull-right">
                 <h4>Authorized Applications</h4>
                 <ul>
-                    % for grant in user.grants:
+                    % for grant in account.grants:
                     <li><a target="_blank" href="${grant.application.site | u}" title="${grant.application.description | u}">${grant.application.name | h}</a></li>
                     % endfor
                 </ul>
             
                 <hr>
-                % if user.primary:
+                % if account.primary:
                 <h4>Group Membership</h4>
                 <ul>
-                    % for id, group in user.primary.tags.iteritems():
+                    % for id, group in account.primary.tags.iteritems():
                     <li>${group.title | h}</li>
                     % endfor
                 </ul>
                 % endif
-                % if user.admin:
+                % if web.user.admin:
                 <hr>
-                % if len(user.other_accs_char_key) or len(user.other_accs_IP):
+                % if len(account.other_accs_char_key) or len(account.other_accs_IP):
                 <h4>Duplicate Accounts</h4>
                 <ul>
-                    <% other_accs = set(user.other_accs_char_key + user.other_accs_IP) %>
+                    <% other_accs = set(account.other_accs_char_key + account.other_accs_IP) %>
                     % for other_user in other_accs:
                     <%
                     method = ""
-                    if other_user in user.other_accs_char_key:
+                    if other_user in account.other_accs_char_key:
                         method += "(char) "
-                    if other_user in user.other_accs_IP:
+                    if other_user in account.other_accs_IP:
                         method += "(IP) " 
                     %>
                     <li><a href="/account/${other_user.id}">${other_user | h}</a> ${method}</li>
