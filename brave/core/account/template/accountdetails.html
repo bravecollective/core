@@ -93,7 +93,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            % for attempt in web.user.attempts.order_by('-id').limit(10):
+                            % for attempt in user.attempts.order_by('-id').limit(10):
                             <tr>
                                 <td><time datetime="${attempt.id.generation_time.isoformat().replace('+00:00', 'Z')}">${attempt.id.generation_time.isoformat(' ').replace('+00:00', '')}</time></td>
                                 <td>${attempt.location | h}</td>
@@ -127,7 +127,7 @@
                     % endfor
                 </ul>
                 % endif
-                % if user.admin:
+                % if web.user.admin:
                 <hr>
                 % if len(user.other_accs_char_key) or len(user.other_accs_IP):
                 <h4>Duplicate Accounts</h4>
