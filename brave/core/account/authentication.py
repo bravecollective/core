@@ -121,8 +121,7 @@ def authenticate(identifier, password):
     if len(User.objects(host=request.remote_addr)) > 1:
         # Quite possibly the worst code ever
         for u in User.objects(host=request.remote_addr):
-            for z in User.objects(host=request.remote_addr):
-                User.add_duplicate(u, z, True)
+                User.add_duplicate(user, u, IP=True)
 
     user.save()
     
