@@ -171,6 +171,8 @@ class APICall(Document):
     description = StringField()
     _mask = IntField(db_field="mask")
     group = IntField()
+    # Allow for the name of an APICall to be different from the URI in certain circumstances
+    uriname = StringField()
     
     @property
     def mask(self):
@@ -206,7 +208,10 @@ class APICall(Document):
             raise Exception("The only positional parameter allowed is the credentials object.")
         
         now = datetime.utcnow()
-        uri = self.uri(self.name)
+        if not self.uriname:
+            uri = self.uri(self.name)
+        else:
+            uri = self.uri(self.uriname)
         
         # Define the keyID/vCode API key arguments, if we have credentials.
         if credential:
@@ -349,11 +354,19 @@ def populate_calls(force=False):
         APIGroup(row.groupID, row.name, row.description).save()
     
     for row in result.calls.row:
-        APICall(row.type.lower()[:4] + '.' + row.name,
-            type_mapping[row.type],
-            row.description,
-            row.accessMask,
-            row.groupID).save()
+        if row.type.lower()[:4] != 'char' or row.name != 'CharacterInfo':
+            APICall(row.type.lower()[:4] + '.' + row.name,
+                type_mapping[row.type],
+                row.description,
+                row.accessMask,
+                row.groupID).save()
+        else:
+            APICall(row.type.lower()[:4] + '.' + row.name + ('Public' if row.accessMask == 8388608 else 'Private'),
+                type_mapping[row.type],
+                row.description,
+                row.accessMask,
+                row.groupID,
+                'eve.CharacterInfo').save()
             
             
     """Classes for storing, interpreting, and comparing key masks."""
