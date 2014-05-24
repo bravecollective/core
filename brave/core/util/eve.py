@@ -354,19 +354,19 @@ def populate_calls(force=False):
         APIGroup(row.groupID, row.name, row.description).save()
     
     for row in result.calls.row:
-        if row.type.lower()[:4] != 'char' or row.name != 'CharacterInfo':
-            APICall(row.type.lower()[:4] + '.' + row.name,
-                type_mapping[row.type],
-                row.description,
-                row.accessMask,
-                row.groupID).save()
-        else:
+        if row.type.lower()[:4] == 'char' and row.name == 'CharacterInfo':
             APICall(row.type.lower()[:4] + '.' + row.name + ('Public' if row.accessMask == 8388608 else 'Private'),
                 type_mapping[row.type],
                 row.description,
                 row.accessMask,
                 row.groupID,
                 'eve.CharacterInfo').save()
+        else:
+            APICall(row.type.lower()[:4] + '.' + row.name,
+                type_mapping[row.type],
+                row.description,
+                row.accessMask,
+                row.groupID).save()
             
             
     """Classes for storing, interpreting, and comparing key masks."""
