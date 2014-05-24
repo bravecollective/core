@@ -171,13 +171,14 @@ class APICall(Document):
     description = StringField()
     _mask = IntField(db_field="mask")
     group = IntField()
+    # Allow for the name of an APICall to be different from the URI in certain circumstances
+    uriname = StringField()
     
     @property
     def mask(self):
         """Returns a Key Mask object instead of just the integer."""
         
-        #Every call seems to be Meta anyways...
-        if self.kind == "Meta" or self.kind =="m":
+        if self.kind == "Meta" or self.kind == "m":
             return EVECharacterKeyMask(self._mask)
         elif self.kind == "Character" or self.kind == "c":
             return EVECharacterKeyMask(self._mask)
@@ -207,7 +208,10 @@ class APICall(Document):
             raise Exception("The only positional parameter allowed is the credentials object.")
         
         now = datetime.utcnow()
-        uri = self.uri(self.name)
+        if not self.uriname:
+            uri = self.uri(self.name)
+        else:
+            uri = self.uri(self.uriname)
         
         # Define the keyID/vCode API key arguments, if we have credentials.
         if credential:
@@ -350,11 +354,19 @@ def populate_calls(force=False):
         APIGroup(row.groupID, row.name, row.description).save()
     
     for row in result.calls.row:
-        APICall(row.type.lower()[:4] + '.' + row.name,
-            type_mapping[row.type],
-            row.description,
-            row.accessMask,
-            row.groupID).save()
+        if row.type.lower()[:4] == 'char' and row.name == 'CharacterInfo':
+            APICall(row.type.lower()[:4] + '.' + row.name + ('Public' if row.accessMask == 8388608 else 'Private'),
+                type_mapping[row.type],
+                row.description,
+                row.accessMask,
+                row.groupID,
+                'eve.CharacterInfo').save()
+        else:
+            APICall(row.type.lower()[:4] + '.' + row.name,
+                type_mapping[row.type],
+                row.description,
+                row.accessMask,
+                row.groupID).save()
             
             
     """Classes for storing, interpreting, and comparing key masks."""
@@ -371,6 +383,9 @@ class EVEKeyMask:
         return 'EVEKeyMask({0})'.format(self.mask)
         
     def has_access(self, mask):
+        if isinstance(mask, EVEKeyMask):
+            mask = mask.mask
+        
         if self.mask & mask:
             return True
             
@@ -378,7 +393,7 @@ class EVEKeyMask:
         
     def has_multiple_access(self, masks):
         for apiCall in masks:
-            if not self.mask & apiCall:
+            if not self.has_access(apiCall):
                 return False
         
         return True
@@ -388,72 +403,42 @@ class EVEKeyMask:
         """This is equivalent to the number of functions that the key provides"""
         """access to as long as the mask is a real mask."""
         return bin(self.mask).count('1')
+        
+    def functionsAllowed(self):
+        """Returns a list with the APICall object of all the functions permitted by this mask."""
+        
+        funcs = []
+        if not self.functions():
+            return funcs
+            
+        for function in self.functions():
+            if self.has_access(function.mask.mask):
+                funcs.append(function)
+        
+        return funcs
+    
+    @staticmethod
+    def functions():
+        return None
+        
 
 class EVECharacterKeyMask(EVEKeyMask):
     """Class for comparing character key masks against the required API calls."""
     
-    ACCOUNT_BALANCE = 1
-    ASSET_LIST = 2
-    CALENDAR_EVENT_ATTENDEES = 4
-    CHARACTER_SHEET = 8
-    CONTACT_LIST = 16
-    CONTACT_NOTIFICATIONS = 32
-    FAC_WAR_STATS = 64
-    INDUSTRY_JOBS = 128
-    KILL_LOG = 256
-    MAIL_BODIES = 512
-    MAILING_LISTS = 1024
-    MAIL_MESSAGES = 2048
-    MARKET_ORDERS = 4096
-    MEDALS = 8192
-    NOTIFICATIONS = 16384
-    NOTIFICATION_TEXTS = 32768
-    RESEARCH = 65536
-    SKILL_IN_TRAINING = 131072
-    SKILL_QUEUE = 262144
-    STANDINGS = 524288
-    UPCOMING_CALENDAR_EVENTS = 1048576
-    WALLET_JOURNAL = 2097152
-    WALLET_TRANSACTIONS = 4194304
-    CHARACTER_INFO_PUBLIC = 8388608
-    CHARACTER_INFO_PRIVATE = 16777216
-    ACCOUNT_STATUS = 33554432
-    CONTRACTS = 67108864
-    LOCATIONS = 134217728
-    
     def __repr__(self):
         return 'EVECharacterKeyMask({0})'.format(self.mask)
+        
+    @staticmethod
+    def functions():
+        return APICall.objects(kind='c').order_by('mask')
+    
     
 class EVECorporationKeyMask(EVEKeyMask):
     """Class for comparing corporation key masks against the required API calls."""
     
-    ACCOUNT_BALANCE = 1
-    ASSET_LIST = 2
-    MEMBER_MEDALS = 4
-    CORPORATION_SHEET = 8
-    CONTACT_LIST = 16
-    CONTAINER_LOG = 32
-    FAC_WAR_STATS = 64
-    INDUSTRY_JOBS = 128
-    KILL_LOG = 256
-    MEMBER_SECURITY = 512
-    MEMBER_SECURITY_LOG = 1024
-    MEMBER_TRACKING_LIMITED = 2048
-    MARKET_ORDERS = 4096
-    MEDALS = 8192
-    OUTPOST_LIST = 16384
-    OUTPOST_SERVICE_DETAIL = 32768
-    SHAREHOLDERS = 65536
-    STARBASE_DETAIL = 131072
-    STANDINGS = 262144
-    STARBASE_LIST = 524288
-    WALLET_JOURNAL = 1048576
-    WALLET_TRANSACTIONS = 2097152
-    TITLES = 4194304
-    CONTRACTS = 8388608
-    LOCATIONS = 16777216
-    MEMBER_TRACKING_EXTENDED = 33554432
-    
     def __repr__(self):
         return 'EVECorporationKeyMask({0})'.format(self.mask)
-
+        
+    @staticmethod
+    def functions():
+        return APICall.objects(kind='o').order_by('mask')

@@ -107,10 +107,10 @@ class EVECredential(Document):
         
                 return
 
-        if self.mask.has_access(EVECharacterKeyMask.CHARACTER_SHEET):
+        if self.mask.has_access(api.char.CharacterSheet.mask):
             info = api.char.CharacterSheet(self, characterID=info.characterID)
-        elif self.mask.has_access(EVECharacterKeyMask.CHARACTER_INFO_PUBLIC):
-            info = api.eve.CharacterInfo(self, characterID=info.characterID)
+        elif self.mask.has_access(api.char.CharacterInfoPublic.mask):
+            info = api.char.CharacterInfoPublic(self, characterID=info.characterID)
 
         char.corporation, char.alliance = self.get_membership(info)
 
