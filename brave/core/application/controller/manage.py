@@ -44,6 +44,7 @@ class ApplicationInterface(HTTPMethod):
                             description = app.description,
                             site = app.site,
                             contact = app.contact,
+                            development = app.development,
                             key = dict(
                                     public = app.key.public,
                                     private = app.key.private,
@@ -68,7 +69,7 @@ class ApplicationInterface(HTTPMethod):
         app = self.app
         valid, invalid = manage_form().native(kw)
         
-        for k in ('name', 'description', 'groups', 'site', 'contact'):
+        for k in ('name', 'description', 'groups', 'site', 'contact', 'development'):
             setattr(app, k, valid[k])
         
         if valid['key']['public'].startswith('-'):
@@ -78,11 +79,6 @@ class ApplicationInterface(HTTPMethod):
         app.key.public = valid['key']['public']
         app.mask.required = valid['required'] or 0
         app.mask.optional = valid['optional'] or 0
-        
-        if valid['development'] == "true" or valid['development'] == "True":
-            app.development = True
-        else:
-            app.development = False
         
         app.save()
         

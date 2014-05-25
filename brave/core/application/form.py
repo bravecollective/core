@@ -3,7 +3,7 @@
 from __future__ import unicode_literals
 
 from web.core.locale import L_
-from marrow.widgets import Form, TextField, TextArea, SelectField, URLField, EmailField
+from marrow.widgets import Form, TextField, TextArea, SelectField, URLField, EmailField, CheckboxField
 from marrow.widgets.transforms import TagsTransform
 from brave.core.util.form import Tab, EmbeddedDocumentTab, Paragraph
 
@@ -19,7 +19,7 @@ def manage_form(action='/application/manage/'):
                     TextArea('description', L_("Description"), rows="6", class_='input-block-level'),
                     URLField('site', L_("Primary Site"), placeholder="http://", required=True, class_='input-block-level validate'),
                     EmailField('contact', L_("Primary Contact"), placeholder="user@example.com", class_='input-block-level'),
-                    TextField('development', L_("Development"), placeholder="True or False", class_='input-block-level'),
+                    CheckboxField('development', L_("Development"), title="", class_='input-block-level'),
                 ]),
             EmbeddedDocumentTab('key', L_("ECDSA Key"), labels=False, children=[
                     Paragraph('ecdsa', L_("You must generate a 256-bit NIST ECDSA key (using SHA256 hashing), hexlify or PEM encode the raw public key and paste it below.  The result should be 128 hexidecimal characters.")),
