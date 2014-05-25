@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 
 from datetime import datetime
 
-from web.auth import user
 from web.core import Controller, HTTPMethod, request
 from web.core.locale import _
 from web.core.http import HTTPFound, HTTPNotFound
