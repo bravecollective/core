@@ -44,6 +44,7 @@ class ApplicationInterface(HTTPMethod):
                             description = app.description,
                             site = app.site,
                             contact = app.contact,
+                            development = app.development,
                             key = dict(
                                     public = app.key.public,
                                     private = app.key.private,
@@ -79,10 +80,9 @@ class ApplicationInterface(HTTPMethod):
         app.mask.required = valid['required'] or 0
         app.mask.optional = valid['optional'] or 0
         
-        if valid['development'] == "true" or valid['development'] == "True":
-            app.development = True
-        else:
-            app.development = False
+        # When unchecked, valid['development'] is equal to u'', when checked it is [u'', u'on']
+        # This is a workaround to how HTML forms work with checkboxes
+        app.development = valid['development']
         
         app.save()
         
