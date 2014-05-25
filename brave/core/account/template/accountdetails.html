@@ -2,7 +2,7 @@
 
 <%inherit file="brave.core.template.master"/>
 
-<%block name="title">Dashboard</%block>
+<%block name="title">${account.username | h} — View Account</%block>
 
 <%block name="header">
     ${parent.header()}
@@ -33,14 +33,17 @@
         <div class="header">
             <img src="//image.eveonline.com/Character/${account.primary.identifier}_128.jpg" class="avatar">
             
-            <h3 class="name">${account.primary.name | h} (${account})</h3>
+            <h3 class="name">${account | h}</h3>
+            <div class="area">
+                Primary character: <a href="/character/${account.primary.id}">${account.primary.name | h}</a>
+            </div>
             <span class="area">
-            ${", ".join(account.primary.titles) | h}
+                ${", ".join(account.primary.titles) | h}
             </span>
             <div class="area">
                 <a target="_blank" href="https://gate.eveonline.com/Corporation/${account.primary.corporation.name | u}">${account.primary.corporation.name | h}</a>
                 % if account.primary.alliance:
-                <span>›</span> <a target="_blank" href="https://gate.eveonline.com/Alliance/${account.primary.alliance.name | u}">${account.primary.alliance.name | h}</a>
+                    <span>›</span> <a target="_blank" href="https://gate.eveonline.com/Alliance/${account.primary.alliance.name | u}">${account.primary.alliance.name | h}</a>
                 % endif
             </div>
         </div>
@@ -53,28 +56,17 @@
     % endif
     
         <div class="row-fluid profile">
-            <div class="span7 bio" style="box-shadow: 4px 0px 3px -1px rgba(226,226,226,0.1); border-right: 1px solid #edeef1">
+            <div class="span9 bio" style="box-shadow: 4px 0px 3px -1px rgba(226,226,226,0.1); border-right: 1px solid #edeef1">
                 <div class="profile-box" style="padding-right: 25px;">
-                    <div id="pad-wrapper">
-                        <div class="row-fluid header">
-                            <h3>EVE Online Characters</h3>
-                        </div>
-        
-                        <%include file="brave.core.character.template.charTable" args="records=account.characters, admin=True"/>
-                    </div>
+                    <h4>EVE Online Characters</h4>
+                    <%include file="brave.core.character.template.charTable" args="records=account.characters, admin=True"/>
     
-                    <div id="pad-wrapper">
-                        <div class="row-fluid header">
-                            <h3>${_("EVE Online API Keys")}</h3>
-                        </div>
-        
-        
-                        <%include file="brave.core.key.template.keyTable" args="records=account.credentials, admin=True"/>
-                    </div>
+                    <h4>${_("EVE Online API Keys")}</h4>
+                    <%include file="brave.core.key.template.keyTable" args="records=account.credentials, admin=True"/>
                 
 
             
-                <h4>Authentication Attempts</h4>
+                    <h4>Authentication Attempts</h4>
                     
                     <style>.table td {  } .table thead th { padding-bottom: 5px; }</style>
                     <table class="table table-hover">
@@ -110,7 +102,7 @@
             </div>
     
             <!-- side address column -->
-            <div class="span5 pull-right">
+            <div class="span3 pull-right">
                 <h4>Authorized Applications</h4>
                 <ul>
                     % for grant in account.grants:

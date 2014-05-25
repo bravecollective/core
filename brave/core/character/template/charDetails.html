@@ -2,7 +2,7 @@
 
 <%inherit file="brave.core.template.master"/>
 
-<%block name="title">Dashboard</%block>
+<%block name="title">${char.name | h} — View Character</%block>
 
 <%block name="header">
     ${parent.header()}
@@ -45,20 +45,15 @@
         </div>
     
         <div class="row-fluid profile">
-            <div class="span7 bio" style="box-shadow: 4px 0px 3px -1px rgba(226,226,226,0.1); border-right: 1px solid #edeef1">
+            <div class="span9 bio" style="box-shadow: 4px 0px 3px -1px rgba(226,226,226,0.1); border-right: 1px solid #edeef1">
                 <div class="profile-box" style="padding-right: 25px;">
-                    <div id="pad-wrapper">
-                        <div class="row-fluid header">
-                            <h3>${_("EVE Online API Keys")}</h3>
-                        </div>
-        
-                        <%include file="brave.core.key.template.keyTable" args="records=char.credentials, admin=True"/>
-                    </div>
+                    <h4>${_("EVE Online API Keys")}</h4>
+                    <%include file="brave.core.key.template.keyTable" args="records=char.credentials, admin=True"/>
                 </div>
             </div>
     
             <!-- side address column -->
-            <div class="span5 pull-right">
+            <div class="span3 pull-right">
                 <h4>Group Membership</h4>
                 <ul>
                     % for id, group in char.tags.iteritems():
