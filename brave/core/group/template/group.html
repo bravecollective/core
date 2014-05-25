@@ -119,7 +119,7 @@ def selected(bool):
                 $(this).closest("li").remove();
             });
 
-            $("body").on("click", ".acllist .stringlistinput .add", function() {
+            $("body").on("click", ".stringlistinput .add", function() {
                 var $ul = $(this).closest('ul');
                 var $text_input = $(this).siblings("input[type=text]");
                 var input_name = $(this).closest('.stringlistinput').data('input-name');
