@@ -105,6 +105,7 @@ $(function(){
     $('[rel="popover"],[data-rel="popover"]').popover();
     
     // A little CSS helper.
+    // Note to other readers: we theorize this exists because the igb does not understand :first-child.
     $('tr:first-child').addClass('first');
     
     // Automatically destroy all modal dialogs.  Keep the DOM clean.
