@@ -14,7 +14,6 @@ from mongoengine.errors import NotUniqueError
 
 from brave.core.account.model import User
 from brave.core.key.model import EVECredential
-from brave.core.account.model import User
 from brave.core.util.predicate import authorize, authenticated, is_administrator
 from brave.core.util.eve import EVECharacterKeyMask, EVECorporationKeyMask
 
