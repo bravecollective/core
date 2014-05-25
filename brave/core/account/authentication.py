@@ -114,6 +114,17 @@ def authenticate(identifier, password):
     # Record the fact the user signed in.
     LoginHistory(user, True, request.remote_addr).save()
     
+    # Update the user's host
+    user.host = request.remote_addr
+    
+    # Check for other accounts with this IP address
+    if len(User.objects(host=request.remote_addr)) > 1:
+        # Quite possibly the worst code ever
+        for u in User.objects(host=request.remote_addr):
+                User.add_duplicate(user, u, IP=True)
+
+    user.save()
+    
     return user.id, user
 
 

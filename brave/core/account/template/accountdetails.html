@@ -1,0 +1,155 @@
+## encoding: utf-8
+
+<%inherit file="brave.core.template.master"/>
+
+<%block name="title">Dashboard</%block>
+
+<%block name="header">
+    ${parent.header()}
+    
+    <style>
+        .user-profile .header span.area { color: #7d848c; font-style: italic; font-size: 14px; }
+        .user-profile .header .avatar { width: 96px; height: 96px; float: left; margin-right: 25px; border: 2px solid #e9ecee; position: relative; top: 3px; border-radius: 12px; }
+        .user-profile .header .name { font-weight: 600; margin: 0 0 10px; line-height: 26px; float: none; padding-top: 12px; }
+        .user-profile .header .area span { margin: 0 5px; }
+        #pad-wrapper.user-profile h4 { margin: 0 0 10px; font-weight: 600; font-size: 14px; font-style: normal; text-indent: 0; color: black; }
+        .user-profile .profile .bio p { 
+    </style>
+</%block>
+
+<%block name="post">
+    ${parent.post()}
+
+    <script type="text/javascript" charset="utf-8">
+        $(function(){
+            $('time').timeago();
+        });
+    </script>
+</%block>
+
+<div class="container-fluid">
+    <div id="pad-wrapper" class="user-profile">
+    % if account.primary:
+        <div class="header">
+            <img src="//image.eveonline.com/Character/${account.primary.identifier}_128.jpg" class="avatar">
+            
+            <h3 class="name">${account.primary.name | h} (${account})</h3>
+            <span class="area">
+            ${", ".join(account.primary.titles) | h}
+            </span>
+            <div class="area">
+                <a target="_blank" href="https://gate.eveonline.com/Corporation/${account.primary.corporation.name | u}">${account.primary.corporation.name | h}</a>
+                % if account.primary.alliance:
+                <span>›</span> <a target="_blank" href="https://gate.eveonline.com/Alliance/${account.primary.alliance.name | u}">${account.primary.alliance.name | h}</a>
+                % endif
+            </div>
+        </div>
+    % else:
+        <div class="header">
+            <h3 class="name">${account | h}</h3>
+            <div class="area">
+            </div>
+        </div>
+    % endif
+    
+        <div class="row-fluid profile">
+            <div class="span7 bio" style="box-shadow: 4px 0px 3px -1px rgba(226,226,226,0.1); border-right: 1px solid #edeef1">
+                <div class="profile-box" style="padding-right: 25px;">
+                    <div id="pad-wrapper">
+                        <div class="row-fluid header">
+                            <h3>EVE Online Characters</h3>
+                        </div>
+        
+                        <%include file="brave.core.character.template.charTable" args="records=account.characters, admin=True"/>
+                    </div>
+    
+                    <div id="pad-wrapper">
+                        <div class="row-fluid header">
+                            <h3>${_("EVE Online API Keys")}</h3>
+                        </div>
+        
+        
+                        <%include file="brave.core.key.template.keyTable" args="records=account.credentials, admin=True"/>
+                    </div>
+                
+
+            
+                <h4>Authentication Attempts</h4>
+                    
+                    <style>.table td {  } .table thead th { padding-bottom: 5px; }</style>
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th class="span5">
+                                    Date
+                                </th>
+                                <th class="span6">
+                                    <span class="line"></span>
+                                    From
+                                </th>
+                                <th class="span1">
+                                    <span class="line"></span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            % for attempt in account.attempts.order_by('-id').limit(10):
+                            <tr>
+                                <td><time datetime="${attempt.id.generation_time.isoformat().replace('+00:00', 'Z')}">${attempt.id.generation_time.isoformat(' ').replace('+00:00', '')}</time></td>
+                                <td>${attempt.location | h}</td>
+                                % if attempt.success:
+                                <td><i class="fa fa-check-circle-o fa-lg text-success"></i></td>
+                                % else:
+                                <td><i class="fa fa-times-circle-o fa-lg text-error"></i></td>
+                                % endif
+                            </tr>
+                            % endfor
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+    
+            <!-- side address column -->
+            <div class="span5 pull-right">
+                <h4>Authorized Applications</h4>
+                <ul>
+                    % for grant in account.grants:
+                    <li><a target="_blank" href="${grant.application.site | u}" title="${grant.application.description | u}">${grant.application.name | h}</a></li>
+                    % endfor
+                </ul>
+            
+                <hr>
+                % if account.primary:
+                <h4>Group Membership</h4>
+                <ul>
+                    % for id, group in account.primary.tags.iteritems():
+                    <li>${group.title | h}</li>
+                    % endfor
+                </ul>
+                % endif
+                % if web.user.admin:
+                <hr>
+                % if len(account.other_accs_char_key) or len(account.other_accs_IP):
+                <h4>Duplicate Accounts</h4>
+                <ul>
+                    <% other_accs = set(account.other_accs_char_key + account.other_accs_IP) %>
+                    % for other_user in other_accs:
+                    <%
+                    method = ""
+                    if other_user in account.other_accs_char_key:
+                        method += "(char) "
+                    if other_user in account.other_accs_IP:
+                        method += "(IP) " 
+                    %>
+                    <li><a href="/account/${other_user.id}">${other_user | h}</a> ${method}</li>
+                    % endfor
+                % endif
+                % endif
+            </div>
+        </div>
+        
+            </div>
+        </div>
+        
+    </div>
+</div>
