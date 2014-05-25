@@ -209,7 +209,8 @@ class EVECharacter(EVEEntity):
     def delete(self):
         """Deletes the character. This is not recommended for typical use."""
         
-        self.detach()
+        if self.owner:
+            self.detach()
                 
         super(EVECharacter, self).delete()
         
