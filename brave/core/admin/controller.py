@@ -140,7 +140,3 @@ class AdminController(Controller):
 
     def index(self):
         return 'brave.core.admin.template.search', dict(area='admin')
-    
-    def __lookup__(self, key, *args, **kw):
-        request.path_info_pop()  # We consume a single path element.
-        return AdminInterface(key), args
