@@ -304,18 +304,14 @@ def selected(bool):
             <h3>${group.id | h} - ${group.title | h}</h3>
         </div>
         <div class="row-fluid table">
-            % if not len(group.rules):
-                <p class="subtext" style="text-transform: uppercase;"><strong>This group has no ACL rules.</strong></p>
-            % else:
-                Rules:
-                <table id="acl-rules" data-action="/group/${group.id}/set_rules">
-                    <tbody class="sortable">
-                    % for rule in group.rules:
-                        ${rule_row(rule)}
-                    % endfor
-                    </tbody>
-                </table>
-            % endif
+            Rules:
+            <table id="acl-rules" data-action="/group/${group.id}/set_rules">
+                <tbody class="sortable">
+                % for rule in group.rules:
+                    ${rule_row(rule)}
+                % endfor
+                </tbody>
+            </table>
         </div>
         <div>
             Add new rule:
