@@ -69,7 +69,7 @@ class ApplicationInterface(HTTPMethod):
         app = self.app
         valid, invalid = manage_form().native(kw)
         
-        for k in ('name', 'description', 'groups', 'site', 'contact'):
+        for k in ('name', 'description', 'groups', 'site', 'contact', 'development'):
             setattr(app, k, valid[k])
         
         if valid['key']['public'].startswith('-'):
@@ -79,10 +79,6 @@ class ApplicationInterface(HTTPMethod):
         app.key.public = valid['key']['public']
         app.mask.required = valid['required'] or 0
         app.mask.optional = valid['optional'] or 0
-        
-        # When unchecked, valid['development'] is equal to u'', when checked it is [u'', u'on']
-        # This is a workaround to how HTML forms work with checkboxes
-        app.development = valid['development']
         
         app.save()
         
