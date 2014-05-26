@@ -57,8 +57,7 @@ class GrantInterface(HTTPMethod):
                 character = EVECharacter.objects.get(identifier=int(key))
             except EVECharacter.DoesNotExist:
                 continue
-            if character in grant.user.characters and value:
-                new_characters.append(character)
+            new_characters.append(character)
 
         if new_characters:
             grant.characters = new_characters

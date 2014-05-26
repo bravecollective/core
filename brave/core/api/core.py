@@ -6,7 +6,7 @@ from operator import __or__
 
 from web.core import request, response, url, config
 from web.auth import user
-from mongoengine import Q, DoesNotExist
+from mongoengine import Q
 from marrow.util.url import URL
 from marrow.util.object import load_object as load
 from marrow.util.convert import boolean
@@ -134,33 +134,38 @@ class CoreAPI(SignedController):
         from brave.core.application.model import ApplicationGrant
         from brave.core.group.model import Group
         
-        # Step 1: Get the appropraite grant.
+        # Step 1: Get the appropriate grant.
         token = ApplicationGrant.objects.get(id=token, application=request.service)
 
         # Step 2: Update info about the characters from the EVE API
+        for char in token.characters:
+            mask, key = char.credential_multi_for((api.char.CharacterSheet.mask,
+                                                        api.char.CharacterInfoPublic.mask, EVECharacterKeyMask.NULL))
+            if not key:
+                continue
+            key.pull()
+        try:
+            token.reload()
+        except ApplicationGrant.DoesNotExist:
+            return
+
+        # Step 3: Assemble the information for each character
         characters_info = []
         tags = None
         character = None
         index = 0
         while index < len(token.characters):
             char = token.characters[index]
+
             # Ensure that this character still belongs to this user
             if char.owner != token.user:
                 token.remove_character(char)
                 try:
                     token.reload()
-                except DoesNotExist:
+                except ApplicationGrant.DoesNotExist:
                     break
             else:
                 index += 1
-
-            mask, key = char.credential_multi_for((api.char.CharacterSheet.mask,
-                                                        api.char.CharacterInfoPublic.mask, EVECharacterKeyMask.NULL))
-
-            # Character has no keys registered.
-            if not key:
-                continue
-            key.pull()
 
             # Fill in the character info
             character_info = {
@@ -180,7 +185,7 @@ class CoreAPI(SignedController):
                     'name': char.alliance.name,
                 }
 
-            # Step 3: Match ACLs.
+            # Step 3.5: Match ACLs.
             char_tags = []
             for group in Group.objects(id__in=request.service.groups):
                 if group.evaluate(token.user, char):
@@ -192,7 +197,7 @@ class CoreAPI(SignedController):
 
             characters_info.append(character_info)
         else:
-            # Backwards compatibility for apps using the old API
+            # Step 4: Backwards compatibility for apps using the old API
             if character is None:
                 # There are multiple characters, and none of them are the primary character. Just picking one now.
                 character = token.characters[0]
