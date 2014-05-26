@@ -10,6 +10,8 @@ from web.core.http import HTTPFound, HTTPNotFound
 from brave.core.application.controller.browse import BrowseController
 from brave.core.application.controller.manage import ManagementController
 from brave.core.application.model import ApplicationGrant
+from brave.core.application.form import edit_grant
+from brave.core.character.model import EVECharacter
 from brave.core.util.predicate import authorize, authenticated
 
 
@@ -28,6 +30,49 @@ class GrantInterface(HTTPMethod):
         if self.grant.user.id != user.id:
             raise HTTPNotFound()
 
+    @authorize(authenticated)
+    def get(self):
+        if not request.is_xhr:
+            raise HTTPNotFound()
+
+        grant = self.grant
+        user = grant.user
+        return 'brave.core.template.form', dict(
+                kind = _('Application Grant'),
+                form = edit_grant(grant),
+                data = {str(c.identifier):(c in grant.characters) for c in user.characters},
+            )
+
+    @authorize(authenticated)
+    def post(self, **kwargs):
+        if not request.is_xhr:
+            raise HTTPNotFound()
+
+        grant = self.grant
+        valid, invalid = edit_grant(grant).native(kwargs)
+
+        new_characters = []
+        print grant.user.characters
+        for key, value in valid.items():
+            try:
+                character = EVECharacter.objects.get(identifier=int(key))
+            except EVECharacter.DoesNotExist:
+                continue
+            if character in grant.user.characters and value:
+                print 'adding', character
+                new_characters.append(character)
+            else:
+                print 'not adding', character, value
+
+        if new_characters:
+            grant.characters = new_characters
+            grant.save()
+        else:
+            grant.delete()
+
+        return 'json:', {'success': True}
+
+    @authorize(authenticated)
     def delete(self):
         log.info("REVOKE %r %r", self.grant.user, self.grant.application)
         

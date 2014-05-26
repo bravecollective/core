@@ -32,3 +32,12 @@ def manage_form(action='/application/manage/'):
                     TextArea('groups', L_("Group Identifiers"), transform=TagsTransform(), placeholder="E.g.: fc diplo myapp myapp.special", rows=3, class_="input-block-level")
                 ])
         ])
+
+
+def edit_grant(grant):
+    boxes = []
+    for character in grant.user.characters:
+        boxes.append(CheckboxField(str(character.identifier), character.name, title=''))
+    return Form('grant', action='/application/{}'.format(grant.id), method='post',
+            class_='modal-body tab-content form-horizontal', children=[
+                Tab('characters', L_('Characters'), class_='active', children=boxes),])
