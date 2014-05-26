@@ -6,7 +6,7 @@ from operator import __or__
 
 from web.core import request, response, url, config
 from web.auth import user
-from mongoengine import Q
+from mongoengine import Q, DoesNotExist
 from marrow.util.url import URL
 from marrow.util.object import load_object as load
 from marrow.util.convert import boolean
@@ -138,11 +138,22 @@ class CoreAPI(SignedController):
         token = ApplicationGrant.objects.get(id=token, application=request.service)
 
         # Step 2: Update info about the characters from the EVE API
-        characters = token.characters
         characters_info = []
         tags = None
         character = None
-        for char in characters:
+        index = 0
+        while index < len(token.characters):
+            char = token.characters[index]
+            # Ensure that this character still belongs to this user
+            if char.owner != token.user:
+                token.remove_character(char)
+                try:
+                    token.reload()
+                except DoesNotExist:
+                    break
+            else:
+                index += 1
+
             mask, key = char.credential_multi_for((api.char.CharacterSheet.mask,
                                                         api.char.CharacterInfoPublic.mask, EVECharacterKeyMask.NULL))
 
@@ -180,19 +191,19 @@ class CoreAPI(SignedController):
                 tags = char_tags
 
             characters_info.append(character_info)
+        else:
+            # Backwards compatibility for apps using the old API
+            if character is None:
+                # There are multiple characters, and none of them are the primary character. Just picking one now.
+                character = token.characters[0]
+                tags = characters_info[0]['tags']
 
-        # Backwards compatibility for apps using the old API
-        if character is None:
-            # There are multiple characters, and none of them are the primary character. Just picking one now.
-            character = characters[0]
-            tags = characters_info[0]['tags']
-
-        return dict(
-                character = dict(id=character.identifier, name=character.name),
-                corporation = dict(id=character.corporation.identifier, name=character.corporation.name),
-                alliance = dict(id=character.alliance.identifier, name=character.alliance.name) if character.alliance else None,
-                characters = characters_info,
-                tags = tags,
-                expires = None,
-                mask = token.mask
-            )
+            return dict(
+                    character = dict(id=character.identifier, name=character.name),
+                    corporation = dict(id=character.corporation.identifier, name=character.corporation.name),
+                    alliance = dict(id=character.alliance.identifier, name=character.alliance.name) if character.alliance else None,
+                    characters = characters_info,
+                    tags = tags,
+                    expires = None,
+                    mask = token.mask
+                )

@@ -111,3 +111,14 @@ class ApplicationGrant(Document):
     
     def __repr__(self):
         return 'Grant({0}, "{1}", "{2}", {3})'.format(self.id, self.user, self.application, self.mask).encode('ascii', 'backslashreplace')
+
+    def remove_character(self, character):
+        """Removes the given character from the list of characters this grant applies to.
+
+        If there are no other characters for this grant, the grant is removed.
+        """
+        if len(self.characters) == 1:
+            self.delete()
+        else:
+            self.characters.remove(character)
+            self.save()

@@ -218,14 +218,16 @@ class EVECharacter(EVEEntity):
         """Removes all references to this character that imply ownership of the character."""
         
         # If this character is the primary character for the account, wipe that field for the user.
-        if self == self.owner.primary:
-            self.owner.primary = None
-            self.owner.save()
-                    
-        # Delete any application grants associated with the character.
-        for grant in self.owner.grants:
-            if self == grant.character:
-                grant.delete()
-        
-        self.owner = None
+        if self.owner:
+            if self == self.owner.primary:
+                self.owner.primary = None
+                self.owner.save()
+
+            # Delete any application grants associated with the character.
+            for grant in self.owner.grants:
+                if self in grant.characters:
+                    grant.remove_character(self)
+
+            self.owner = None
+
         self.save()
