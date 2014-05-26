@@ -140,6 +140,7 @@ class CoreAPI(SignedController):
         # Step 2: Update info about the characters from the EVE API
         characters = token.characters
         characters_info = []
+        tags = []
         for character in characters:
             mask, key = character.credential_multi_for((api.char.CharacterSheet.mask,
                                                         api.char.CharacterInfoPublic.mask, EVECharacterKeyMask.NULL))
@@ -168,6 +169,11 @@ class CoreAPI(SignedController):
                 }
             characters_info.append(character_info)
 
+            # Step 3: Match ACLs.
+            for group in Group.objects(id__in=request.service.groups):
+                if group.evaluate(token.user, character):
+                    tags.append(group.id)
+
         # Backwards compatibility for apps using the old API
         if len(characters) == 1:
             character = characters[0]
@@ -177,12 +183,6 @@ class CoreAPI(SignedController):
             # LOL, pick one!
             character = characters[0]
 
-        # Step 3: Match ACLs.
-        tags = []
-        for group in Group.objects(id__in=request.service.groups):
-            if group.evaluate(token.user, character):
-                tags.append(group.id)
-        
         return dict(
                 character = dict(id=character.identifier, name=character.name),
                 corporation = dict(id=character.corporation.identifier, name=character.corporation.name),
