@@ -17,3 +17,5 @@ ad709e0: It is highly recommended that admins remove all characters whose owners
     Commands: 
         from brave.core.util.eve import populate_calls
         populate_calls(True)                    
+1b58513: Changes were made to the structure of external application permissions grants.
+    brave/core/scripts/multiple_characters_grant_migration.py should migrate old grants to the new format.

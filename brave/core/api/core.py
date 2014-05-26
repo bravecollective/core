@@ -138,13 +138,7 @@ class CoreAPI(SignedController):
         token = ApplicationGrant.objects.get(id=token, application=request.service)
 
         # Step 2: Update info about the characters from the EVE API
-        # Support old grants that only have a single character.
-        # Could be removed after performing a database migration.
-        try:
-            characters = token.characters
-        except AttributeError:
-            characters = [token.character]
-
+        characters = token.characters
         characters_info = []
         for character in characters:
             mask, key = character.credential_multi_for((api.char.CharacterSheet.mask,
