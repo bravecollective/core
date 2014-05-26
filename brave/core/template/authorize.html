@@ -50,6 +50,7 @@
                 // Fade to the progress spinner.
                 $('.auth').animate({opacity: 0.25}, 250);
                 $('.btn').addClass('disabled').attr('disabled', true);
+                $('#alerts').empty();
                 $('.overlay.wait').fadeIn(250);
 
                 // Submit XHR request.
@@ -76,6 +77,7 @@
                                 $('.overlay.fail').fadeOut(250);
                                 $('.auth').animate({opacity: 1}, 250);
                                 $('.btn').removeClass('disabled').attr('disabled', false);
+                                $('#alerts').append("<div class='alert alert-error'>" + data.message +"</div>");
                             });
                         }
                     });
@@ -145,6 +147,8 @@
                 <li>permission</li>
                 </ul>
                 -->
+                <div id="alerts">
+                </div>
             </div>
             <div class="span3">
                 <div class="btn-group btn-group-vertical" data-toggle="buttons-checkbox">

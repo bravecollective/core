@@ -87,7 +87,7 @@ class ApplicationGrant(Document):
     application = ReferenceField(Application, db_field='a')
     
     character = ReferenceField('EVECharacter', db_field='c')
-    characters = ListField(ReferenceField('EVECharacter'), db_field='chars')
+    characters = ListField(ReferenceField('EVECharacter'), db_field='chars', required=True)
     _mask = IntField(db_field='m', default=0)
     
     immutable = BooleanField(db_field='i', default=False)  # Onboarding is excempt from removal by the user.

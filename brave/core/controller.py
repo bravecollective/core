@@ -97,6 +97,9 @@ class AuthorizeHandler(HTTPMethod):
             return 'json:', dict(success=True, location=str(target))
         
         characters = []
+        # Require at least one character
+        if 'characters[]' not in kwargs:
+            return 'json:', dict(success=False, message="Select at least one character.")
         character_ids = kwargs['characters[]']
         # Handle only one character being authorized
         if not isinstance(character_ids, list):
