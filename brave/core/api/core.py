@@ -136,18 +136,53 @@ class CoreAPI(SignedController):
         
         # Step 1: Get the appropraite grant.
         token = ApplicationGrant.objects.get(id=token, application=request.service)
-        character = token.character
-        
-        # Step 2: Update info about the character from the EVE API
-        mask, key = character.credential_multi_for((api.char.CharacterSheet.mask,
-                                                    api.char.CharacterInfoPublic.mask, EVECharacterKeyMask.NULL))
-        
-        # User has no keys registered.
-        if not key:
-            return None
-            
-        key.pull()
-        
+
+        # Step 2: Update info about the characters from the EVE API
+        # Support old grants that only have a single character.
+        # Could be removed after performing a database migration.
+        try:
+            characters = token.characters
+        except AttributeError:
+            characters = [token.character]
+
+        characters_info = []
+        for character in characters:
+            mask, key = character.credential_multi_for((api.char.CharacterSheet.mask,
+                                                        api.char.CharacterInfoPublic.mask, EVECharacterKeyMask.NULL))
+
+            # Character has no keys registered.
+            if not key:
+                continue
+            key.pull()
+
+            # Fill in the character info
+            character_info = {
+                'character': {
+                    'id': character.identifier,
+                    'name': character.name,
+                },
+                'corporation': {
+                    'id': character.corporation.identifier,
+                    'name': character.corporation.name,
+                },
+                'primary': token.user.primary == character,
+            }
+            if character.alliance:
+                character_info['alliance'] = {
+                    'id': character.alliance.identifier,
+                    'name': character.alliance.name,
+                }
+            characters_info.append(character_info)
+
+        # Backwards compatibility for apps using the old API
+        if len(characters) == 1:
+            character = characters[0]
+        elif token.user.primary in characters:
+            character = token.user.primary
+        else:
+            # LOL, pick one!
+            character = characters[0]
+
         # Step 3: Match ACLs.
         tags = []
         for group in Group.objects(id__in=request.service.groups):
@@ -158,6 +193,7 @@ class CoreAPI(SignedController):
                 character = dict(id=character.identifier, name=character.name),
                 corporation = dict(id=character.corporation.identifier, name=character.corporation.name),
                 alliance = dict(id=character.alliance.identifier, name=character.alliance.name) if character.alliance else None,
+                characters = characters_info,
                 tags = tags,
                 expires = None,
                 mask = token.mask

@@ -76,7 +76,8 @@ class AuthorizeHandler(HTTPMethod):
         target.query.update(dict(token=str(ngrant.id)))
         raise HTTPFound(location=str(target))
     
-    def post(self, ar, grant=None, character=None):
+    # **kwargs as jQuery form encodes 'characters' to 'characters[]'
+    def post(self, ar, grant=None, **kwargs):
         from brave.core.character.model import EVECharacter
         from brave.core.application.model import ApplicationGrant
         
@@ -95,16 +96,22 @@ class AuthorizeHandler(HTTPMethod):
             
             return 'json:', dict(success=True, location=str(target))
         
-        try:
-            character = EVECharacter.objects.get(owner=u, id=character)
-        except EVECharacter.DoesNotExist:
-            return 'json:', dict(success=False, message="Unknown character ID.")
-        except:
-            log.exception("Error loading character.")
-            return 'json:', dict(success=False, message="Error loading character.")
+        characters = []
+        character_ids = kwargs['characters[]']
+        # Handle only one character being authorized
+        if not isinstance(character_ids, list):
+            character_ids = [character_ids]
+        for character in character_ids:
+            try:
+                characters.append(EVECharacter.objects.get(owner=u, id=character))
+            except EVECharacter.DoesNotExist:
+                return 'json:', dict(success=False, message="Unknown character ID.")
+            except:
+                log.exception("Error loading character.")
+                return 'json:', dict(success=False, message="Error loading character.")
         
         # TODO: Non-zero grants.
-        grant = ApplicationGrant(user=u, application=ar.application, mask=0, expires=datetime.utcnow() + timedelta(days=30), character=character)
+        grant = ApplicationGrant(user=u, application=ar.application, mask=0, expires=datetime.utcnow() + timedelta(days=30), characters=characters)
         grant.save()
         
         ar.user = u

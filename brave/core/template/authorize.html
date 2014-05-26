@@ -19,8 +19,25 @@
         p, ul { text-align: left; }
         li { line-height: 1.2em; }
         
-        .login-wrapper .box { width: 500px; }
-        .login-wrapper .box .content-wrap { width: 440px; }
+        .login-wrapper .box { width: 575px; }
+        .login-wrapper .box .content-wrap { width: 515px; }
+        .btn-group-vertical button { width: 100%; }
+        .btn-checkbox.active {
+            border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+            color: #ffffff;
+            background-color: #0044cc;
+            text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+            background-image: -moz-linear-gradient(top, #0088cc, #0044cc);
+            background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#0088cc), to(#0044cc));
+            background-image: -webkit-linear-gradient(top, #0088cc, #0044cc);
+            background-image: -o-linear-gradient(top, #0088cc, #0044cc);
+            background-image: linear-gradient(to bottom, #0088cc, #0044cc);
+            background-repeat: repeat-x;
+            filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff0088cc', endColorstr='#ff0044cc', GradientType=0);
+            filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
+        }
+        figure { margin: 0px; }
+         .row { margin-left: initial;}
     </style>
 </%block>
 
@@ -30,16 +47,15 @@
     <script type="text/javascript" charset="utf-8">
         $(function(){
             function process(){
-                var self = $(this),
-                    id = self.data('id');
-                
                 // Fade to the progress spinner.
                 $('.auth').animate({opacity: 0.25}, 250);
                 $('.btn').addClass('disabled').attr('disabled', true);
                 $('.overlay.wait').fadeIn(250);
-                
+
                 // Submit XHR request.
-                var receipt = $.post(window.location, {grant: true, character: id});
+                var chars = $('button.active').map(function (i, val){ return $(val).data('id');}).get();
+                var data = {grant: true, 'characters': chars};
+                var receipt = $.post(window.location, data);
                 receipt.fail(function(jqXHR, textStatus, errorThrown){
                     // Something went wrong.
                     console.log(jqXHR, textStatus, errorThrown);
@@ -109,41 +125,42 @@
 
 <div class="box">
     <div class="content-wrap authentication clearfix">
-        <div class="auth">
-            <h6>${_("Granting Authorization")}</h6>
-            
-            <blockquote data-application="${ar.application.name | h}"></blockquote>
-            
-            <p>This application wishes to know certain information about your character.  All applications are given access to the following information:</p>
-            
-            <ul>
-                <li><strong>Public Character Information</strong><span class="pull-right">Name, Corporation, Alliance</span></li>
-            </ul>
-            
-            <!--
-            <p>Additionally, this application requires the following additional information:</p>
-            
-            <ul>
+        <div class="auth row">
+            <div class="span9">
+                <h6>${_("Granting Authorization")}</h6>
+
+                <blockquote data-application="${ar.application.name | h}"></blockquote>
+
+                <p>This application wishes to know certain information about your character.  All applications are given access to the following information:</p>
+
+                <ul>
+                    <li><strong>Public Character Information</strong><span class="pull-right">Name, Corporation, Alliance</span></li>
+                </ul>
+
+                <!--
+                <p>Additionally, this application requires the following additional information:</p>
+
+                <ul>
                 <li>permission</li>
                 <li>permission</li>
-            </ul>
-            -->
-            
-            <div style="text-align: right; margin-top: 30px;">
-                <div class="btn-group dropup">
-                    <a class="btn btn-success btn-large allow" style="padding-left: 50px;" href="#" data-id="${default.id}"><img src="//image.eveonline.com/Character/${default.identifier}_32.jpg" style="border-radius: 4px; position: absolute; left: 4px; top: 4px; border: 1px inset rgba(127,127,127,0.5);"> Authorize</a>
-                    <a class="btn btn-success btn-large dropdown-toggle" data-toggle="dropdown" href="#"><i class="fa fa-caret-up"></i></a>
-                    <ul class="dropdown-menu" style="width: 300px; left: auto; right: 0px;">
-                        % for record in characters:
-                        <li><a tabindex="-1" href="#" data-id="${record.id}" class="allow"><span class="ellipsis">
-                            <img src="//image.eveonline.com/Character/${record.identifier}_32.jpg" style="vertical-align: -60%; margin-right: 5px; border-radius: 6px; width: 32px; height: 32px;">
-                            <strong>${record.name | h}</strong>
-                            % if default == record:
-                            <span class="label label-inverse" style="margin-left: 5px;">Default</span>
-                            % endif
-                        </span></a></li>
-                        % endfor
-                    </ul>
+                </ul>
+                -->
+            </div>
+            <div class="span3">
+                <div class="btn-group btn-group-vertical" data-toggle="buttons-checkbox">
+                    % for record in characters:
+                    % if record == default:
+                    <button class="btn btn-checkbox active" data-id="${record.id}">
+                    % else:
+                    <button class="btn btn-checkbox" data-id="${record.id}">
+                    % endif
+                    <figure>
+                        <img src="//image.eveonline.com/Character/${record.identifier}_32.jpg">
+                        <figcaption><small>${record.name}</small><figcaption>
+                    </figure>
+                    </button>
+                    % endfor
+                    <button class="btn btn-success allow">Authorize</button>
                 </div>
                 <a class="btn btn-inverse pull-left" style="margin-top: 15px;">Deny Authorization</a>
             </div>
@@ -153,7 +170,6 @@
         <div class="overlay fa-4x result fail"><i class="fa fa-times fa-4x"></i></div>
         <div class="overlay fa-4x result success"><i class="fa fa-check fa-4x"></i></div>
         <div class="overlay fa-4x result bad"><i class="fa fa-exclamation-triangle fa-4x"></i></div>
-        
     </div>
 </div>
 

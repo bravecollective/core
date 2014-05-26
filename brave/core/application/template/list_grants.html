@@ -77,7 +77,7 @@
                 <thead>
                     <tr>
                         <th class="span5 sortable name">Name</th>
-                        <th class="span3 sortable character hidden-tablet hidden-phone"><span class="line"></span>Character</th>
+                        <th class="span3 sortable character hidden-tablet hidden-phone"><span class="line"></span>Characters</th>
                         <th class="span3 sortable date"><span class="line"></span>Authorized</th>
                         <th class="span1 actions"><span class="line"></span></th>
                     </tr>
@@ -90,7 +90,9 @@
                             <span class="subtext">${record.application.description | h}</span>
                         </td>
                         <td class="character hidden-tablet hidden-phone">
-                            <img src="//image.eveonline.com/Character/${record.character.identifier}_32.jpg" style="vertical-align: middle; margin-right: 5px; border-radius: 3px; width: 24px; height: 24px;" title="${record.character.name | h}"> ${record.character.name}
+                            % for character in record.characters:
+                            <img src="//image.eveonline.com/Character/${character.identifier}_32.jpg" style="vertical-align: middle; margin-right: 5px; border-radius: 3px; width: 24px; height: 24px;" title="${character.name | h}">
+                            % endfor
                         </td>
                         <td class="date">
                             <time class="relative" datetime="${record.id.generation_time |n,f.iso}">${record.id.generation_time |n,f.pretty}</time>
