@@ -140,8 +140,9 @@ class CoreAPI(SignedController):
         # Step 2: Update info about the characters from the EVE API
         characters = token.characters
         characters_info = []
-        tags = []
-        for character in characters:
+        tags = None
+        character = None
+        for char in characters:
             mask, key = character.credential_multi_for((api.char.CharacterSheet.mask,
                                                         api.char.CharacterInfoPublic.mask, EVECharacterKeyMask.NULL))
 
@@ -153,35 +154,38 @@ class CoreAPI(SignedController):
             # Fill in the character info
             character_info = {
                 'character': {
-                    'id': character.identifier,
-                    'name': character.name,
+                    'id': char.identifier,
+                    'name': char.name,
                 },
                 'corporation': {
-                    'id': character.corporation.identifier,
-                    'name': character.corporation.name,
+                    'id': char.corporation.identifier,
+                    'name': char.corporation.name,
                 },
-                'primary': token.user.primary == character,
+                'primary': token.user.primary == char,
             }
             if character.alliance:
                 character_info['alliance'] = {
                     'id': character.alliance.identifier,
                     'name': character.alliance.name,
                 }
-            characters_info.append(character_info)
 
             # Step 3: Match ACLs.
+            char_tags = []
             for group in Group.objects(id__in=request.service.groups):
                 if group.evaluate(token.user, character):
-                    tags.append(group.id)
+                    char_tags.append(group.id)
+            character_info['tags'] = char_tags
+            if character_info['primary']:
+                character = char
+                tags = char_tags
+
+            characters_info.append(character_info)
 
         # Backwards compatibility for apps using the old API
-        if len(characters) == 1:
+        if character is None:
+            # There are multiple characters, and none of them are the primary character. Just picking one now.
             character = characters[0]
-        elif token.user.primary in characters:
-            character = token.user.primary
-        else:
-            # LOL, pick one!
-            character = characters[0]
+            tags = character_info[0]['tags']
 
         return dict(
                 character = dict(id=character.identifier, name=character.name),
