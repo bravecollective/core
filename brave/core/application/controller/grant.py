@@ -52,17 +52,13 @@ class GrantInterface(HTTPMethod):
         valid, invalid = edit_grant(grant).native(kwargs)
 
         new_characters = []
-        print grant.user.characters
         for key, value in valid.items():
             try:
                 character = EVECharacter.objects.get(identifier=int(key))
             except EVECharacter.DoesNotExist:
                 continue
             if character in grant.user.characters and value:
-                print 'adding', character
                 new_characters.append(character)
-            else:
-                print 'not adding', character, value
 
         if new_characters:
             grant.characters = new_characters
