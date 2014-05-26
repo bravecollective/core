@@ -143,7 +143,7 @@ class CoreAPI(SignedController):
         tags = None
         character = None
         for char in characters:
-            mask, key = character.credential_multi_for((api.char.CharacterSheet.mask,
+            mask, key = char.credential_multi_for((api.char.CharacterSheet.mask,
                                                         api.char.CharacterInfoPublic.mask, EVECharacterKeyMask.NULL))
 
             # Character has no keys registered.
@@ -163,16 +163,16 @@ class CoreAPI(SignedController):
                 },
                 'primary': token.user.primary == char,
             }
-            if character.alliance:
+            if char.alliance:
                 character_info['alliance'] = {
-                    'id': character.alliance.identifier,
-                    'name': character.alliance.name,
+                    'id': char.alliance.identifier,
+                    'name': char.alliance.name,
                 }
 
             # Step 3: Match ACLs.
             char_tags = []
             for group in Group.objects(id__in=request.service.groups):
-                if group.evaluate(token.user, character):
+                if group.evaluate(token.user, char):
                     char_tags.append(group.id)
             character_info['tags'] = char_tags
             if character_info['primary']:
@@ -185,7 +185,7 @@ class CoreAPI(SignedController):
         if character is None:
             # There are multiple characters, and none of them are the primary character. Just picking one now.
             character = characters[0]
-            tags = character_info[0]['tags']
+            tags = characters_info[0]['tags']
 
         return dict(
                 character = dict(id=character.identifier, name=character.name),
