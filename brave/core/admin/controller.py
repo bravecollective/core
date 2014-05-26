@@ -20,8 +20,13 @@ class SearchCharInterface(HTTPMethod):
     """Handles /admin/search/char"""
     
     def get(self):
-        return 'brave.core.admin.template.searchChar', dict(area='admin')
         
+        # Have to be an admin to access admin pages.            
+        if not is_administrator:
+            raise HTTPNotFound()
+        
+        return 'brave.core.admin.template.searchChar', dict(area='admin')
+    
     def post(self, character=None, charMethod=None, alliance=None, corporation=None, group=None):
         
         # Have to be an admin to access admin pages.            
@@ -69,9 +74,19 @@ class SearchCharInterface(HTTPMethod):
 class SearchKeyInterface(HTTPMethod):
     """Handles /admin/search/key"""
     def get(self):
-        return 'brave.core.admin.template.searchKey', dict(area='admin')
         
+        # Have to be an admin to access admin pages.            
+        if not is_administrator:
+            raise HTTPNotFound()
+        
+        return 'brave.core.admin.template.searchKey', dict(area='admin')
+    
     def post(self, keyID=None, keyMask=None, violation=None):
+        
+        # Have to be an admin to access admin pages.            
+        if not is_administrator:
+            raise HTTPNotFound()
+        
         # Seed the initial results.
         keys = EVECredential.objects()
         
@@ -95,10 +110,19 @@ class SearchKeyInterface(HTTPMethod):
 class SearchUserInterface(HTTPMethod):
     """Handles /admin/search/user"""
     def get(self):
-        return 'brave.core.admin.template.searchUser', dict(area='admin')
         
+        # Have to be an admin to access admin pages.            
+        if not is_administrator:
+            raise HTTPNotFound()
+        
+        return 'brave.core.admin.template.searchUser', dict(area='admin')
+    
     def post(self, username=None, userMethod=None, ip=None, duplicate=None):
         
+        # Have to be an admin to access admin pages.            
+        if not is_administrator:
+            raise HTTPNotFound()
+            
         # Seed the initial results.
         users = User.objects()
         

@@ -38,6 +38,9 @@ class CharacterInterface(HTTPMethod):
         
     @authorize(authenticated)
     def get(self):
+        if self.char.owner.id != user.id and not user.admin:
+            raise HTTPNotFound()
+        
         return 'brave.core.character.template.charDetails', dict(
             char=self.char,
             area='admin'
