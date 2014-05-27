@@ -19,12 +19,12 @@ class CharacterInterface(HTTPMethod):
         except EVECharacter.DoesNotExist:
             raise HTTPNotFound()
 
-        if self.char.owner.id != user.id and not user.admin:
+        if (not self.char.owner or self.char.owner.id != user.id) and not user.admin:
             raise HTTPNotFound()
 
     @authorize(authenticated)
     def put(self):
-        if self.char.owner.id != user.id:
+        if not self.char.owner or self.char.owner.id != user.id:
             raise HTTPNotFound()
         
         u = user._current_obj()
@@ -38,7 +38,7 @@ class CharacterInterface(HTTPMethod):
         
     @authorize(authenticated)
     def get(self):
-        if self.char.owner.id != user.id and not user.admin:
+        if (not self.char.owner or self.char.owner.id != user.id) and not user.admin:
             raise HTTPNotFound()
         
         return 'brave.core.character.template.charDetails', dict(
