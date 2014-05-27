@@ -245,7 +245,8 @@ class APICall(Document):
         if prefix.strip() != "<?xml version='1.0' encoding='UTF-8'?>":
             raise Exception("Data returned doesn't seem to be XML!")
         
-        data = xml(data)['eveapi']
+        log.warn(type(data))
+        data = xml(data.decode('utf-8'))['eveapi']
         result = bunchify(data['result'], 'result')
         data = Bunch(data)
         
