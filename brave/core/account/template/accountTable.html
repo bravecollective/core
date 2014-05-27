@@ -1,0 +1,69 @@
+<%page args="records, admin"/>
+
+<div class="row-fluid table">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                % if not admin:
+                <th class="span3 sortable name">Name</th>
+                <th class="span3 sortable corporation"><span class="line"></span>Corporation</th>
+                <th class="span4 sortable alliance"><span class="line"></span>Alliance</th>
+                % else:
+                <th class="span2 sortable name">Name</th>
+                <th class="span3 sortable corporation"><span class="line"></span>Corporation</th>
+                <th class="span3 sortable alliance"><span class="line"></span>Alliance</th>
+                % endif
+                <th class="span2 sortable characters"><span class="line"></span>Characters</th>
+            </tr>
+        </thead>
+        <tbody>
+            % for record in records:
+            <tr data-id="${record.id}">
+                <td class="name">
+                    <span class="ellipsis">
+                    <a href="/account/${record.id}">
+                    <strong>${record.username | h}</strong>
+                    </a>
+                    </span>
+                </td>
+                % if record.primary:
+                <td class="corporation">
+                    <span class="ellipsis">
+                    <img src="//image.eveonline.com/Corporation/${record.primary.corporation.identifier}_32.png" style="vertical-align: -55%; margin-right: 5px; width: 32px; height: 32px;" />
+                    ${record.primary.corporation.name | h}
+                    </span>
+                </td>
+                <td class="alliance">
+                    % if record.primary.alliance:
+                    <span class="ellipsis">
+                    <img src="//image.eveonline.com/Alliance/${record.primary.alliance.identifier}_32.png" style="vertical-align: -55%; margin-right: 5px; width: 32px; height: 32px;" />
+                    ${record.primary.alliance.name | h}
+                    </span>
+                    % else:
+                    <em>None</em>
+                    % endif
+                </td>
+                % else:
+                <td class="corporation">
+                    <span class="ellipsis">
+                    User has no primary character.
+                    </span>
+                </td>
+                <td class="alliance">
+                    User has no primary character.
+                </td>
+                % endif
+                <td class="characters">
+                    <span class="ellipsis">
+                    % for c in record.characters:
+                    <a href="/character/${c.id}">
+                    <img src="//image.eveonline.com/Character/${c.identifier}_32.jpg" style="vertical-align: -55%; margin-right: 5px; border-radius: 6px; width: 32px; height: 32px;" />
+                    </a>
+                    % endfor
+                    </span>
+                </td>
+            </tr>
+            % endfor
+        </tbody>
+    </table>
+</div>
