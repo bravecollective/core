@@ -161,14 +161,14 @@ class User(Document):
         other.save()
         
     @staticmethod
-    def remove_duplicate(acc, other, **kw):
+    def remove_duplicate(acc, other, IP=False):
         """Removes a duplicate account connection for both accounts."""
         
         # If the 2 accounts supplied are the same, do nothing
         if acc.id == other.id:
             return
         
-        if not kw.get('IP'):
+        if not IP:
             if other in acc.other_accs_char_key:
                 acc.other_accs_char_key.remove(other)
             if acc in other.other_accs_char_key:
