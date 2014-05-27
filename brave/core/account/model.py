@@ -127,16 +127,15 @@ class User(Document):
         super(User, self).delete()
         
     @staticmethod
-    def add_duplicate(acc, other, **kw):
+    def add_duplicate(acc, other, IP=False):
         """Marks other as a duplicate account to this account.
-        And marks this account as duplicate to other.
+        And marks this account as duplicate to other."""
         
-        kw should include an argument IP, which defaults to False"""
         # If the 2 accounts supplied are the same, do nothing
         if acc.id == other.id:
             return
         
-        if not kw.get('IP'):
+        if not IP:
             if other not in acc.other_accs_char_key:
                 acc.other_accs_char_key.append(other)
             if acc not in other.other_accs_char_key:
