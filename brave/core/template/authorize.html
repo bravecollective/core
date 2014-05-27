@@ -19,25 +19,8 @@
         p, ul { text-align: left; }
         li { line-height: 1.2em; }
         
-        .login-wrapper .box { width: 575px; }
-        .login-wrapper .box .content-wrap { width: 515px; }
-        .btn-group-vertical button { width: 100%; }
-        .btn-checkbox.active {
-            border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
-            color: #ffffff;
-            background-color: #0044cc;
-            text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
-            background-image: -moz-linear-gradient(top, #0088cc, #0044cc);
-            background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#0088cc), to(#0044cc));
-            background-image: -webkit-linear-gradient(top, #0088cc, #0044cc);
-            background-image: -o-linear-gradient(top, #0088cc, #0044cc);
-            background-image: linear-gradient(to bottom, #0088cc, #0044cc);
-            background-repeat: repeat-x;
-            filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff0088cc', endColorstr='#ff0044cc', GradientType=0);
-            filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
-        }
-        figure { margin: 0px; }
-         .row { margin-left: initial;}
+        .login-wrapper .box { width: 500px; }
+        .login-wrapper .box .content-wrap { width: 440px; }
     </style>
 </%block>
 
@@ -80,7 +63,6 @@
                                 $('.overlay.fail').fadeOut(250);
                                 $('.auth').animate({opacity: 1}, 250);
                                 $('.btn').removeClass('disabled').attr('disabled', false);
-                                $('#alerts').append("<div class='alert alert-error'>" + data.message +"</div>");
                             });
                         }
                     });
@@ -88,6 +70,17 @@
 
                 return false;
             }
+
+            $('#character-toggles button').click(function() {
+                var old_state = $(this).hasClass("active");
+                $(this).toggleClass('btn-info', !old_state);
+                $(this).find('input[type=checkbox]').prop('checked', !old_state);
+            });
+
+            $('#character-toggles').on('show.bs.collapsible', function() {
+                $(this).siblings('.btn-group').hide();
+                $(this).siblings('#authorize-button-2').show();
+            });
 
             $('.allow').click(process);
             
@@ -130,7 +123,6 @@
 
 <div class="box">
     <div class="content-wrap authentication clearfix">
-        <div class="auth row">
         <div class="auth">
             <h6>${_("Granting Authorization")}</h6>
             
@@ -155,38 +147,23 @@
                 % endfor
             </ul>
             % endif
-            <div class="span6">
-                <div class="btn-group btn-group-vertical" data-toggle="buttons-checkbox">
-                    % if default == 'all':
-                        <button class="btn btn-checkbox active" data-id="all">
-                    % else:
-                        <button class="btn btn-checkbox" data-id="all">
-                    % endif
-                    <figure>
-                        <figcaption><small>${"All Characters"}</small><figcaption>
-                    </figure>
-                    
-                    % if default != 'all':
-                        % for record in characters:
-                            % if record == default:
-                                <button class="btn btn-checkbox active" data-id="${record.id}">
-                            % else:
-                                <button class="btn btn-checkbox" data-id="${record.id}">
-                            % endif
-                            <figure>
-                                <img src="//image.eveonline.com/Character/${record.identifier}_32.jpg">
-                                <figcaption><small>${record.name}</small><figcaption>
-                            </figure>
-                            </button>
-                        % endfor
-                    % endif
-                    <button class="btn btn-success allow">Authorize</button>
-                </div>
-            </div>
             
-            <div class="span3">
+            <!-- TODO: all-characters-required -->
             <div style="text-align: right; margin-top: 30px;">
-            
+                <div id="character-toggles" data-toggle="buttons-checkbox" class="collapse">
+                    % for record in characters:
+                        <button class="btn ${'active btn-info' if record == default else ''}" data-id="${record.id}" style="width: 100%; text-align: left;">
+                            <input type="checkbox" data-id="${record.id}" ${'checked' if record == default else ''} style="vertical-align: middle" />
+                            <img src="//image.eveonline.com/Character/${record.identifier}_32.jpg" style="vertical-align: -60%; margin-right: 5px; border-radius: 6px; width: 32px; height: 32px;">
+                            <strong>${record.name | h}</strong>
+                        </button>
+                    % endfor
+                </div>
+                <div class="btn-group">
+                    <a class="btn btn-success btn-large allow" style="padding-left: 50px;" href="#" data-id="${default.id}"><img src="//image.eveonline.com/Character/${default.identifier}_32.jpg" style="border-radius: 4px; position: absolute; left: 4px; top: 4px; border: 1px inset rgba(127,127,127,0.5);"> Authorize</a>
+                    <a class="btn btn-success btn-large dropdown-toggle" data-toggle="collapse" data-target="#character-toggles"><i class="fa fa-caret-up"></i></a>
+                </div>
+                <a id="authorize-button-2" class="btn btn-success btn-large allow" href="#" style="display: none">Authorize</a>
                 <a class="btn btn-inverse pull-left" style="margin-top: 15px;">Deny Authorization</a>
             </div>
         </div>
