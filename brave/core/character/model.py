@@ -185,7 +185,12 @@ class EVECharacter(EVEEntity):
         
     @property
     def banned(self):
-        return self.owner.banned
+        """Returns true if this character is banned."""
+        
+        from brave.core.api.model import Ban
+        
+        if Ban.objects(characters__character=self.name):
+            return True
     
     def credential_for(self, mask):
         """Return the least-permissive API key that can satisfy the given mask."""

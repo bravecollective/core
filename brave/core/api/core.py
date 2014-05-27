@@ -174,7 +174,7 @@ class CoreAPI(SignedController):
     def blacklist(self, kind=None, lookup=None):
         """Check if lookup of type kind (char or IP) is banned.
         
-        Returns all bans that match lookup using a contains filter, unless lookup < 5 characters,
+        Returns all bans that match lookup using a contains filter, unless lookup < 9 characters,
         in which case it will do an exact match (to prevent people from just getting the entire ban list.
         If the queried ban is an IP address, it will return only exact matches. Wildcards are not supported
         for security and privacy reasons."""
@@ -192,7 +192,7 @@ class CoreAPI(SignedController):
             return 'json:', dict(success=False, reason='lookup.missing', message='Argument lookup is required.')
         
         # Search for bans that meet the specified characteristics.
-        if kind == 'char' and len(lookup) > 4:
+        if kind == 'char' and len(lookup) > 8:
             bans = Ban.objects(characters__character__contains=lookup)
         elif kind == 'char':
             bans = Ban.objects(characters__character__iexact=lookup)

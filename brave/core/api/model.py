@@ -20,30 +20,28 @@ class CharacterBan(EmbeddedDocument):
     meta = dict(
         allow_inheritance=False,
         indexes=[
-            'name',
+            'n',
             '_enabled'
         ]
     )
         
     # The character this ban is for.
-    # Uses a string rather than a reference so users can't get around
-    # the blacklist by deleting the banned character or account
-    character = StringField(db_field='name')
+    character = ReferenceField('EVECharacter', db_field='n', required=True)
     
     # The date at which this character was banned.
-    date = DateTimeField(db_field='created', default=datetime.utcnow)
+    date = DateTimeField(db_field='c', default=datetime.utcnow)
     
     # The reason indicates how this character came to be banned.
     # 'direct' means the (overall) ban was invoked against this character in particular.
     # 'account' means the (overall) ban was invoked against the account that owned this character.
     # 'key' means this character was found on the same key as another banned character.
-    reason = StringField(db_field='reason', choices=((
+    reason = StringField(db_field='r', choices=((
         ('direct'),
         ('account'),
         ('key')
     )))
     
-    _enabled = BooleanField(db_field='enabled', default=True)
+    _enabled = BooleanField(db_field='e', default=True)
     
     def enable(self, user):
         """Enables this ban."""
@@ -73,15 +71,15 @@ class IPBan(EmbeddedDocument):
         ]
     )
     
-    host = StringField('IP')
+    host = StringField(db_field='IP', required=True)
     
     # The date at which this character was banned.
-    date = DateTimeField(db_field='created', default=datetime.utcnow)
+    date = DateTimeField(db_field='d', default=datetime.utcnow)
     
     # The reason indicates how this character came to be banned.
     # 'direct' means the (overall) ban was invoked against this IP Address in particular.
     # 'account' means the (overall) ban was invoked against the account that this IP was registered against.
-    reason = StringField(db_field='reason', choices=((
+    reason = StringField(db_field='r', choices=((
         ('direct'),
         ('account')
     )))
@@ -120,17 +118,17 @@ class Ban(Document):
         ]
     )
     
-    characters = ListField(EmbeddedDocumentField(CharacterBan))
+    characters = ListField(EmbeddedDocumentField(CharacterBan), db_field='c')
     IPs = ListField(EmbeddedDocumentField(IPBan))
     
-    _enabled = BooleanField(db_field='enabled', default=True)
-    creator = ReferenceField(User, required=True)  # TODO: Nullify inverse deletion rule.
+    _enabled = BooleanField(db_field='e', default=True)
+    creator = ReferenceField(User, required=True, db_field='a')  # TODO: Nullify inverse deletion rule.
     
-    # Store the character name that created the ban separately in case of account deletion.
-    charCreator = StringField(db_field='charCreator', required=True)
+    # Store the character that created the ban separately in case of account deletion.
+    charCreator = ReferenceField(EVECharacter, db_field='cc', required=True, db_field=True)
     
     # Require a reason for the top-level ban. This enables better accountability.
-    reason = StringField(db_field='reason', required=True)
+    reason = StringField(db_field='r', required=True)
     
     def enable(self, user):
         """Enables this ban."""
