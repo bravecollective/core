@@ -29,14 +29,14 @@
                 % if record.primary:
                 <td class="corporation">
                     <span class="ellipsis">
-                    <img src="//image.eveonline.com/Corporation/${record.primary.corporation.identifier}_32.png" style="vertical-align: -55%; margin-right: 5px; width: 32px; height: 32px;">
+                    <img src="//image.eveonline.com/Corporation/${record.primary.corporation.identifier}_32.png" style="vertical-align: -55%; margin-right: 5px; width: 32px; height: 32px;" />
                     ${record.primary.corporation.name | h}
                     </span>
                 </td>
                 <td class="alliance">
                     % if record.primary.alliance:
                     <span class="ellipsis">
-                    <img src="//image.eveonline.com/Alliance/${record.primary.alliance.identifier}_32.png" style="vertical-align: -55%; margin-right: 5px; width: 32px; height: 32px;">
+                    <img src="//image.eveonline.com/Alliance/${record.primary.alliance.identifier}_32.png" style="vertical-align: -55%; margin-right: 5px; width: 32px; height: 32px;" />
                     ${record.primary.alliance.name | h}
                     </span>
                     % else:
@@ -57,7 +57,7 @@
                     <span class="ellipsis">
                     % for c in record.characters:
                     <a href="/character/${c.id}">
-                    <img src="//image.eveonline.com/Character/${c.identifier}_32.jpg" style="vertical-align: -55%; margin-right: 5px; border-radius: 6px; width: 32px; height: 32px;">
+                    <img src="//image.eveonline.com/Character/${c.identifier}_32.jpg" style="vertical-align: -55%; margin-right: 5px; border-radius: 6px; width: 32px; height: 32px;" />
                     </a>
                     % endfor
                     </span>
