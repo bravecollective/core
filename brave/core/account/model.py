@@ -202,7 +202,7 @@ class LoginHistory(Document):
         return 'LoginHistory({0}, {1}, {2}, {3})'.format(
                 self.id.generation_time.isoformat(),
                 'PASS' if self.success else 'FAIL',
-                self.user_id,
+                self.user.username,
                 self.location
             )
 
@@ -228,6 +228,6 @@ class PasswordRecovery(Document):
     def __repr__(self):
         return 'PasswordRecovery({0}, {1}, {2})'.format(
             self.id.generation_time.isoformat(),
-            self.user_id,
+            self.user.username,
             self.recovery_key
         )
