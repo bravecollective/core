@@ -9,6 +9,7 @@ from brave.core.util.signal import update_modified_timestamp
 from brave.core.application.signal import trigger_private_key_generation
 from brave.core.util.field import PasswordField, IPAddressField
 from brave.core.account.model import User
+from brave.core.character.model import EVECharacter
 
 
 log = __import__('logging').getLogger(__name__)
@@ -125,7 +126,7 @@ class Ban(Document):
     creator = ReferenceField(User, required=True, db_field='a')  # TODO: Nullify inverse deletion rule.
     
     # Store the character that created the ban separately in case of account deletion.
-    charCreator = ReferenceField(EVECharacter, db_field='cc', required=True, db_field=True)
+    charCreator = ReferenceField(EVECharacter, db_field='cc', required=True)
     
     # Require a reason for the top-level ban. This enables better accountability.
     reason = StringField(db_field='r', required=True)

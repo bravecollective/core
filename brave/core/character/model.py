@@ -189,7 +189,7 @@ class EVECharacter(EVEEntity):
         
         from brave.core.api.model import Ban
         
-        if Ban.objects(characters__character=self.name):
+        if Ban.objects(characters__character=self.id):
             return True
     
     def credential_for(self, mask):
