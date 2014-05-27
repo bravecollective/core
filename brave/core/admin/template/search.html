@@ -1,0 +1,24 @@
+## encoding: utf-8
+
+<%inherit file="brave.core.template.master"/>
+
+<%block name="title">Search</%block>
+<% 
+from web.core.http import HTTPNotFound
+
+if not web.user.admin:
+    raise HTTPNotFound()
+%>
+
+<div class="container-fluid">
+    <div id="pad-wrapper">
+        <div class="row-fluid header">
+            <h3>Administrative Search</h3>
+        </div>
+        <div class="span12">
+            <a href="/admin/search/char"><button>Search Characters</button></a>
+            <a href="/admin/search/key"><button>Search Keys</button></a>
+            <a href="/admin/search/user"><button>Search Users</button></a>
+        </div>
+    </div>
+</div>

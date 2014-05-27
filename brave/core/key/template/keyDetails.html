@@ -1,0 +1,110 @@
+## encoding: utf-8
+
+<%inherit file="brave.core.template.master"/>
+
+<%block name="title">${_("EVE API Keys")}</%block>
+
+<%block name="header">
+    ${parent.header()}
+    
+    <style>
+        .modal-body form { margin-bottom: 0; }
+        .modal-body form input.input-block-level:last-child { margin-bottom: 0; }
+        table.table { table-layout: fixed; width: 100%; }
+        span.ellipsis { display: inline-block; width: 100%; overflow: hidden !important; white-space: nowrap !important; text-overflow: ellipsis !important; word-break: break-all !important; word-wrap: break-word !important; }
+    </style>
+</%block>
+
+<%block name="post">
+    ${parent.post()}
+    
+    <script type="text/javascript" charset="utf-8">
+        $(function()
+        {
+
+            $('time').timeago();
+
+            $(document).on('click', '.delete', function() {
+                confirm(
+                    "Are you really, <em>really</em> sure?",
+                    "By removing API keys you may lose access to services you would ordinarily have access to.<br/>" +
+                        "It may even make pandas cry. Please, think of the high-altitude melting pandas.",
+                    {
+                        label: "Remove Key",
+                        kind: 'btn-danger'
+                    },
+                    function()
+                    {
+                        $.ajax('/key/${record.id}',
+                        {
+                            type: 'DELETE'
+                        }).
+                        done(function()
+                        {
+                            window.location = "/account/${record.owner.id}"
+                        });
+                    }
+                );
+            });
+            
+            $(document).on('click', '.refresh', function() {
+                $('i', this).addClass('fa-spin');
+                $.ajax('/key/${record.id}/refresh', {
+                        type: 'POST'
+                    }).done(function() {
+                        window.location = window.location;
+                    });
+            });
+        });
+    </script>
+</%block>
+
+<div class="container-fluid">
+    <div id="pad-wrapper">
+        <div class="row-fluid header">
+            <h3>${_("EVE Online API Key")}</h3>
+        </div>
+        
+        <b>Key ID:</b> <a href="/key/${record.id}">${record.key}</a><br/>
+        <b>Key Code:</b> Redacted.<br/>
+        <b>Key Mask:</b> <a href="/key/mask/${record.mask.mask}">${record.mask.mask}</a><br/>
+        <b>Added:</b> <time datetime="${record.id.generation_time.isoformat().replace('+00:00', 'Z')}">${record.id.generation_time.isoformat(' ').replace('+00:00', '')}</time><br/>
+        <b>User:</b> <a href="/account/${record.owner.id}">${record.owner.username}</a><br/>
+        <b>Type:</b> ${record.kind}<br/>
+        % if record.kind == 'Character' or record.kind == 'c':
+        <b>Characters:</b> 
+        <% 
+        x = 1 
+        char_line = ""
+
+        for c in record.characters:
+            if c.alliance:
+                char_line += "<a href=\"/character/" + str(c.id) + "\">[" + c.alliance.short + "] " + c.name + "</a>"
+            else:
+                char_line += "<a href=\"/character/" + str(c.id) + "\">" + c.name + "</a>"
+            if x < len(record.characters):
+                x += 1
+                char_line += ", "
+                
+        if not char_line.strip():
+            char_line = "None"
+        %>
+        ${char_line}
+        % endif
+        <br/>
+        <b>Violation:</b> 
+        % if record.violation == "Character":
+        <text class="security-violation" title="One or more characters associated with this key was found on another account. Join the 'Brave IT Team' channel in game for assistance."><font color="red">Character Security Violation.</font></text></td>
+        % else:
+        <text class="security-violation" title="All clear!"><font color="green">The BIA is always watching...</font></text></td>
+        % endif
+        <br/>
+        <b>Actions:</b>
+        <button class="btn btn-default btn-small refresh" title="Refresh API Key" rel="tooltip" data-placement="bottom"><i class="fa fa-refresh"></i></button>
+        <button class="btn btn-danger btn-small delete" title="Remove API Key" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i></button>
+        <br/>
+        <br/>
+        <h3>API Calls Enabled:</h3>
+        <%include file="brave.core.key.template.maskTable" args="type=record.kind, functions=record.mask.functionsAllowed()"/>
+    </div>
+</div>

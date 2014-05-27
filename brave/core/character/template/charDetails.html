@@ -1,0 +1,66 @@
+## encoding: utf-8
+
+<%inherit file="brave.core.template.master"/>
+
+<%block name="title">${char.name | h} — View Character</%block>
+
+<%block name="header">
+    ${parent.header()}
+    
+    <style>
+        .user-profile .header span.area { color: #7d848c; font-style: italic; font-size: 14px; }
+        .user-profile .header .avatar { width: 96px; height: 96px; float: left; margin-right: 25px; border: 2px solid #e9ecee; position: relative; top: 3px; border-radius: 12px; }
+        .user-profile .header .name { font-weight: 600; margin: 0 0 10px; line-height: 26px; float: none; padding-top: 12px; }
+        .user-profile .header .area span { margin: 0 5px; }
+        #pad-wrapper.user-profile h4 { margin: 0 0 10px; font-weight: 600; font-size: 14px; font-style: normal; text-indent: 0; color: black; }
+        .user-profile .profile .bio p { 
+    </style>
+</%block>
+
+<%block name="post">
+    ${parent.post()}
+
+    <script type="text/javascript" charset="utf-8">
+        $(function(){
+            $('time').timeago();
+        });
+    </script>
+</%block>
+
+<div class="container-fluid">
+    <div id="pad-wrapper" class="user-profile">
+        <div class="header">
+            <img src="//image.eveonline.com/Character/${char.identifier}_128.jpg" class="avatar">
+            
+            <h3 class="name">${char.name | h} (<a href="/account/${char.owner.id}">${char.owner}</a>)</h3>
+            <span class="area">
+            ${", ".join(char.titles) | h}
+            </span>
+            <div class="area">
+                <a target="_blank" href="https://gate.eveonline.com/Corporation/${char.corporation.name | u}">${char.corporation.name | h}</a>
+                % if char.alliance:
+                <span>›</span> <a target="_blank" href="https://gate.eveonline.com/Alliance/${char.alliance.name | u}">${char.alliance.name | h}</a>
+                % endif
+            </div>
+        </div>
+    
+        <div class="row-fluid profile">
+            <div class="span9 bio" style="box-shadow: 4px 0px 3px -1px rgba(226,226,226,0.1); border-right: 1px solid #edeef1">
+                <div class="profile-box" style="padding-right: 25px;">
+                    <h4>${_("EVE Online API Keys")}</h4>
+                    <%include file="brave.core.key.template.keyTable" args="records=char.credentials, admin=True"/>
+                </div>
+            </div>
+    
+            <!-- side address column -->
+            <div class="span3 pull-right">
+                <h4>Group Membership</h4>
+                <ul>
+                    % for id, group in char.tags.iteritems():
+                    <li>${group.title | h}</li>
+                        % endfor
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

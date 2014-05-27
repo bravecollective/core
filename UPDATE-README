@@ -2,6 +2,7 @@
 #updating their core installations to a new version.
 #WARNING: Backup your database regularly and before making any changes to it.
 
+***v0.5:***
 5ec0143: All usernames and email addresses in the database need to be lowercased.
     brave/core/scripts/case_migration.py should resolve this for you.
 ad709e0: It is highly recommended that admins remove all characters whose owners no longer have a valid API key for them.
@@ -9,3 +10,10 @@ ad709e0: It is highly recommended that admins remove all characters whose owners
 3016b8b: KeyID is made unique in the Credentials collection; all duplicate keys must be 
     purged from the database prior to upgrading. brave/core/scripts/fix_key_duplicates.py should resolve this for you.
     Removal of orphaned characters (see ad709e0) is now required.
+
+***v0.5.2+***
+6b3c4a5: Changes were made to the populate_calls function. Admins must run populate_calls(True) from paster shell after
+    updating to this version. 
+    Commands: 
+        from brave.core.util.eve import populate_calls
+        populate_calls(True)                    

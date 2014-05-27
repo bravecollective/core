@@ -203,7 +203,7 @@ class EVECharacter(EVEEntity):
             bc = candidate.mask.number_of_functions()
             if lowest_count is None or bc < lowest_count:
                 lowest, lowest_count = candidate, bc
-        
+                
         return lowest
         
     def credential_multi_for(self, masks):
@@ -216,14 +216,25 @@ class EVECharacter(EVEEntity):
         return None, None
         
     def delete(self):
-        #If this character is the primary character for the account, wipe that field for the user
+        """Deletes the character. This is not recommended for typical use."""
+        
+        if self.owner:
+            self.detach()
+                
+        super(EVECharacter, self).delete()
+        
+    def detach(self):
+        """Removes all references to this character that imply ownership of the character."""
+        
+        # If this character is the primary character for the account, wipe that field for the user.
         if self == self.owner.primary:
             self.owner.primary = None
             self.owner.save()
                     
-        #Delete any application grants associated with the character.
+        # Delete any application grants associated with the character.
         for grant in self.owner.grants:
             if self == grant.character:
                 grant.delete()
-                
-        super(EVECharacter, self).delete()
+        
+        self.owner = None
+        self.save()

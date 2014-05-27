@@ -14,7 +14,7 @@ from marrow.util.convert import boolean
 from brave.core.application.model import Application
 from brave.core.api.model import AuthenticationBlacklist, AuthenticationRequest, Ban
 from brave.core.api.util import SignedController
-from brave.core.util.eve import EVECharacterKeyMask
+from brave.core.util.eve import EVECharacterKeyMask, api
 
 
 log = __import__('logging').getLogger(__name__)
@@ -147,14 +147,16 @@ class CoreAPI(SignedController):
             )
         
         # Step 3: Update info about the character from the EVE API
-        mask, key = character.credential_multi_for((EVECharacterKeyMask.CHARACTER_SHEET,
-         EVECharacterKeyMask.CHARACTER_INFO_PUBLIC, EVECharacterKeyMask.NULL))
+        mask, key = character.credential_multi_for((api.char.CharacterSheet.mask,
+                                                    api.char.CharacterInfoPublic.mask, EVECharacterKeyMask.NULL))
         
         # User has no keys registered.
         if not key:
             return None
-            
-        key.pull()
+        
+        # Update key info, and if something goes wrong, abort the call.
+        if not key.pull():
+            return None
         
         # Step 4: Match ACLs.
         tags = []

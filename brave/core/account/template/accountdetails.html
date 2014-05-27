@@ -2,9 +2,7 @@
 
 <%inherit file="brave.core.template.master"/>
 
-<%! from brave.core.util.filter import app_url %>
-
-<%block name="title">Dashboard</%block>
+<%block name="title">${account.username | h} — View Account</%block>
 
 <%block name="header">
     ${parent.header()}
@@ -31,40 +29,43 @@
 
 <div class="container-fluid">
     <div id="pad-wrapper" class="user-profile">
-    % if not web.user.primary:
-        Select your primary character by starring it on the <a href="/character">characters page</a>.
-    % else:
+    % if account.primary:
         <div class="header">
-            <img src="//image.eveonline.com/Character/${web.user.primary.identifier}_128.jpg" class="avatar">
+            <img src="//image.eveonline.com/Character/${account.primary.identifier}_128.jpg" class="avatar">
             
-            <h3 class="name">${web.user.primary.name | h}</h3>
+            <h3 class="name">${account | h}</h3>
+            <div class="area">
+                Primary character: <a href="/character/${account.primary.id}">${account.primary.name | h}</a>
+            </div>
             <span class="area">
-            ${", ".join(web.user.primary.titles) | h}
+                ${", ".join(account.primary.titles) | h}
             </span>
             <div class="area">
-                <a target="_blank" href="https://gate.eveonline.com/Corporation/${web.user.primary.corporation.name | u}">${web.user.primary.corporation.name | h}</a>
-                % if web.user.primary.alliance:
-                <span>›</span> <a target="_blank" href="https://gate.eveonline.com/Alliance/${web.user.primary.alliance.name | u}">${web.user.primary.alliance.name | h}</a>
+                <a target="_blank" href="https://gate.eveonline.com/Corporation/${account.primary.corporation.name | u}">${account.primary.corporation.name | h}</a>
+                % if account.primary.alliance:
+                    <span>›</span> <a target="_blank" href="https://gate.eveonline.com/Alliance/${account.primary.alliance.name | u}">${account.primary.alliance.name | h}</a>
                 % endif
             </div>
         </div>
-        
+    % else:
+        <div class="header">
+            <h3 class="name">${account | h}</h3>
+            <div class="area">
+            </div>
+        </div>
+    % endif
+    
         <div class="row-fluid profile">
             <div class="span9 bio" style="box-shadow: 4px 0px 3px -1px rgba(226,226,226,0.1); border-right: 1px solid #edeef1">
                 <div class="profile-box" style="padding-right: 25px;">
-                    <h4>Welcome</h4>
-                    <p>
-                        Welcome to the Brave Collective Core service.  This site provides a way for you to securely provide EVE API keys and manage the applications you can use Core to authenticate.
-                    </p>
-                    <p>
-                        Use the <em>Authorized Applications</em> links on the right-hand side to quickly jump to the application of your choice.
-                    </p>
-                    <p>
-                        The listing of <em>Authentication Attempts</em> below will list all successful and unsuccessful attempts made to log into your account.  If you notice suspicious activity please <a href="https://github.com/bravecollective/core/issues" target="_blank">open a ticket</a>.
-                    </p>
-                    
-                    <hr>
-                    
+                    <h4>EVE Online Characters</h4>
+                    <%include file="brave.core.character.template.charTable" args="records=account.characters, admin=True"/>
+    
+                    <h4>${_("EVE Online API Keys")}</h4>
+                    <%include file="brave.core.key.template.keyTable" args="records=account.credentials, admin=True"/>
+                
+
+            
                     <h4>Authentication Attempts</h4>
                     
                     <style>.table td {  } .table thead th { padding-bottom: 5px; }</style>
@@ -84,7 +85,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            % for attempt in web.user.attempts.order_by('-id').limit(10):
+                            % for attempt in account.attempts.order_by('-id').limit(10):
                             <tr>
                                 <td><time datetime="${attempt.id.generation_time.isoformat().replace('+00:00', 'Z')}">${attempt.id.generation_time.isoformat(' ').replace('+00:00', '')}</time></td>
                                 <td>${attempt.location | h}</td>
@@ -96,36 +97,51 @@
                             </tr>
                             % endfor
                         </tbody>
-##                        <tfoot>
-##                            <tr>
-##                                <th colspan="5" style="text-align: center;"><a href="">View Full Authentication History</a></th>
-##                            </tr>
-##                        </tfoot>
                     </table>
-        
                 </div>
             </div>
-        
+    
             <!-- side address column -->
             <div class="span3 pull-right">
                 <h4>Authorized Applications</h4>
                 <ul>
-                    % for grant in web.user.grants:
-                    <li><a target="_blank" href="${grant.application.site | app_url,h}" title="${grant.application.description | h}">${grant.application.name | h}</a></li>
+                    % for grant in account.grants:
+                    <li><a target="_blank" href="${grant.application.site | u}" title="${grant.application.description | u}">${grant.application.name | h}</a></li>
                     % endfor
                 </ul>
-                
+            
                 <hr>
-                
+                % if account.primary:
                 <h4>Group Membership</h4>
                 <ul>
-                    % for id, group in web.user.primary.tags.iteritems():
+                    % for id, group in account.primary.tags.iteritems():
                     <li>${group.title | h}</li>
                     % endfor
                 </ul>
+                % endif
+                % if web.user.admin:
+                <hr>
+                % if len(account.other_accs_char_key) or len(account.other_accs_IP):
+                <h4>Duplicate Accounts</h4>
+                <ul>
+                    <% other_accs = set(account.other_accs_char_key + account.other_accs_IP) %>
+                    % for other_user in other_accs:
+                    <%
+                    method = ""
+                    if other_user in account.other_accs_char_key:
+                        method += "(char) "
+                    if other_user in account.other_accs_IP:
+                        method += "(IP) " 
+                    %>
+                    <li><a href="/account/${other_user.id}">${other_user | h}</a> ${method}</li>
+                    % endfor
+                % endif
+                % endif
             </div>
         </div>
-
-    % endif
+        
+            </div>
+        </div>
+        
     </div>
 </div>

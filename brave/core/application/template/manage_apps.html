@@ -2,6 +2,8 @@
 
 <%inherit file="brave.core.template.master"/>
 
+<%! from brave.core.util.filter import app_url %>
+
 <%block name="title">Your Applications</%block>
 
 <%block name="header">
@@ -91,7 +93,7 @@
                             ${record.grants.count()}
                         </td>
                         <td class="actions">
-                            <button class="btn btn-small authorize">Authorize</button>
+                            <a href="${record.site | app_url,h}"><button class="btn btn-small authorize">Authorize</button></a>
                             <a class="btn btn-small" href="/application/manage/${record.id}" rel="modal" data-trigger="genericform"><i class="fa fa-pencil"></i></a>
                             <button class="btn btn-danger btn-small delete"><i class="fa fa-times"></i></button>
                         </td>
@@ -134,13 +136,13 @@
                             ${record.owner | h}
                         </td>
                         <td class="url">
-                            <a href="${record.site | u}">${record.site | h}</a>
+                            <a href="${record.site | app_url,h}">${record.site | h}</a>
                         </td>
                         <td class="tr">
                             ${record.grants.count()}
                         </td>
                         <td class="actions">
-                            <button class="btn btn-small authorize">Authorize</button>
+                            <a href="${record.site | app_url,h}"><button class="btn btn-small authorize">Authorize</button></a>
                             <a class="btn btn-small" href="/application/manage/${record.id}" rel="modal" data-trigger="genericform"><i class="fa fa-pencil"></i></a>
                             <button class="btn btn-danger btn-small delete"><i class="fa fa-times"></i></button>
                         </td>

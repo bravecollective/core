@@ -2,7 +2,7 @@
 
 from marrow.util.bunch import Bunch
 from marrow.mailer.validator import EmailValidator
-from web.auth import authenticate, deauthenticate
+from web.auth import authenticate, deauthenticate, user
 from web.core import Controller, HTTPMethod, request, config
 from web.core.http import HTTPFound, HTTPSeeOther, HTTPForbidden, HTTPNotFound
 from web.core.locale import _
@@ -206,9 +206,10 @@ class Register(HTTPMethod):
         try:
             user.save()
         except ValidationError:
-            return 'json:', dict(success=False, message=_("Invalid email address provided."), data=data)
+            return 'json:', dict(success=False, message=_("Invalid email address or username provided."), data=data)
         except NotUniqueError:
-            return 'json:', dict(success=False, message=_("Either the username or email address provided is already taken."), data=data)
+            return 'json:', dict(success=False, message=_("Either the username or email address provided is "
+                                                          "already taken."), data=data)
         
         authenticate(user.username, data.password)
         
@@ -232,7 +233,9 @@ class Settings(HTTPMethod):
         query = dict(active=True)
         query[b'username'] = data.id
 
-        user = User.objects(**query).first()
+        query_user = User.objects(**query).first()
+        if query_user.id != user.id:
+            raise HTTPForbidden
 
         if data.form == "changepassword":
             passwd_ok, error_msg = _check_password(data.passwd, data.passwd1)
@@ -400,6 +403,30 @@ class Settings(HTTPMethod):
         return 'json:', dict(success=True, location="/account/settings")
 
 
+class AccountInterface(HTTPMethod):
+    """Handles the individual user pages."""
+    
+    def __init__(self, userID):
+        super(AccountInterface, self).__init__()
+        
+        try:
+            self.user = User.objects.get(id=userID)
+        except User.DoesNotExist:
+            raise HTTPNotFound()
+        except ValidationError:
+            # Handles improper objectIDs
+            raise HTTPNotFound()
+
+        if self.user.id != user.id and not user.admin:
+            raise HTTPNotFound()
+            
+    def get(self):
+        return 'brave.core.account.template.accountdetails', dict(
+            area='admin',
+            account=self.user,
+        )
+
+
 class AccountController(Controller):
     authenticate = Authenticate()
     register = Register()
@@ -419,17 +446,17 @@ class AccountController(Controller):
         return 'json:', dict(available=not bool(count), query={str(k): v for k, v in query.items()})
         
     def entropy(self, **query):
-        #Remove the timestamp
+        # Remove the timestamp
         query.pop('ts', None)
         
-        #Make sure the user provides only a password
+        # Make sure the user provides only a password
         if set(query.keys()) - {'password'}:
             raise HTTPForbidden()
         
-        password = query.get("password");
-        strong = False;
+        password = query.get("password")
+        strong = False
         
-        #If the password has a score of greater than 2, allow it
+        # If the password has a score of greater than 2, allow it
         if(zxcvbn.password_strength(password).get("score") > 2):
             strong = True
         
@@ -438,4 +465,7 @@ class AccountController(Controller):
     def deauthenticate(self):
         deauthenticate()
         raise HTTPSeeOther(location='/')
-
+        
+    def __lookup__(self, user, *args, **kw):
+        request.path_info_pop()  # We consume a single path element.
+        return AccountInterface(user), args

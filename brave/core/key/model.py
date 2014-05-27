@@ -5,9 +5,9 @@ from __future__ import unicode_literals
 from datetime import datetime
 from mongoengine import Document, StringField, DateTimeField, BooleanField, ReferenceField, IntField
 from mongoengine.errors import NotUniqueError
-from marrow.util.bunch import Bunch
 from requests.exceptions import HTTPError
 
+from brave.core.account.model import User
 from brave.core.util import strip_tags
 from brave.core.util.signal import update_modified_timestamp, trigger_api_validation
 from brave.core.util.eve import api, EVECharacterKeyMask, EVECorporationKeyMask
@@ -50,10 +50,11 @@ class EVECredential(Document):
         return 'EVECredential({0}, {1}, {2}, {3!r})'.format(self.id, self.kind, self._mask, self.owner)
     
     def delete(self):
-        #Delete any character that this key provides access to, but that the owner no longer has a key for.
-        for c in self.characters:
-            if not c.credential_for(EVECharacterKeyMask.NULL):
-                c.delete()
+        # Detach any character that this key provides access to, but that the owner no longer has a key for.
+        for char in self.characters:
+            # Make sure not to include this key when checking if there are still keys for the character
+            if len([c for c in char.credentials if c.id != self.id]) == 0:
+                char.detach()
                 
         super(EVECredential, self).delete()
     
@@ -91,19 +92,34 @@ class EVECredential(Document):
         from brave.core.character.model import EVEAlliance, EVECorporation, EVECharacter
         try:
             char = EVECharacter(identifier=info.characterID).save()
+            new = True
         except NotUniqueError:
             char = EVECharacter.objects(identifier=info.characterID)[0]
+            new = False
             
-            if self.owner != char.owner:
-                log.warning("Security violation detected. Multiple accounts trying to register character %s, ID %d. Actual owner is %s. User adding this character is %s.",
-                    char.name, info.characterID, EVECharacter.objects(identifier = info.characterID).first().owner, self.owner)
+            if char.owner and self.owner != char.owner:
+                log.warning("Security violation detected. Multiple accounts trying to register character %s, ID %d. "
+                            "Actual owner is %s. User adding this character is %s.",
+                            char.name, info.characterID,
+                            EVECharacter.objects(identifier=info.characterID).first().owner, self.owner)
                 self.violation = "Character"
+                
+                # Mark both accounts as duplicates of each other.
+                User.add_duplicate(self.owner, char.owner)
+        
                 return
 
-        if self.mask.has_access(EVECharacterKeyMask.CHARACTER_SHEET):
-            info = api.char.CharacterSheet(self, characterID=info.characterID)
-        elif self.mask.has_access(EVECharacterKeyMask.CHARACTER_INFO_PUBLIC):
-            info = api.eve.CharacterInfo(self, characterID=info.characterID)
+        try:
+            if self.mask.has_access(api.char.CharacterSheet.mask):
+                info = api.char.CharacterSheet(self, characterID=info.characterID)
+            elif self.mask.has_access(api.char.CharacterInfoPublic.mask):
+                info = api.char.CharacterInfoPublic(self, characterID=info.characterID)
+        except Exception:
+            log.warning("An error occured while querying data for key %s.", self.key)
+            if new:
+                char.delete()
+            
+            raise
 
         char.corporation, char.alliance = self.get_membership(info)
 
