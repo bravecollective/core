@@ -124,6 +124,17 @@ class User(Document):
         self.grants.delete()
         self.attempts.delete()
         self.recovery_keys.delete()
+        
+        dups = set(self.other_accs_char_key)
+        
+        for other in dups:
+            self.remove_duplicate(self, other)
+            
+        dups = set(self.other_accs_IP)
+        
+        for other in dups:
+            self.remove_duplicate(self, other, IP=True)
+        
         super(User, self).delete()
         
     @staticmethod
@@ -145,6 +156,28 @@ class User(Document):
                 acc.other_accs_IP.append(other)
             if acc not in other.other_accs_IP:
                 other.other_accs_IP.append(acc)
+                
+        acc.save()
+        other.save()
+        
+    @staticmethod
+    def remove_duplicate(acc, other, **kw):
+        """Removes a duplicate account connection for both accounts."""
+        
+        # If the 2 accounts supplied are the same, do nothing
+        if acc.id == other.id:
+            return
+        
+        if not kw.get('IP'):
+            if other in acc.other_accs_char_key:
+                acc.other_accs_char_key.remove(other)
+            if acc in other.other_accs_char_key:
+                other.other_accs_char_key.remove(acc)
+        else:
+            if other in acc.other_accs_IP:
+                acc.other_accs_IP.remove(other)
+            if acc in other.other_accs_IP:
+                other.other_accs_IP.remove(acc)
                 
         acc.save()
         other.save()
