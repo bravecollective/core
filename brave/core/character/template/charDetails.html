@@ -32,12 +32,14 @@
         <div class="header">
             <img src="//image.eveonline.com/Character/${char.identifier}_128.jpg" class="avatar">
             
-            <h3 class="name">${char.name | h}
+            <h3 class="name">
+                ${char.name | h}
                 % if char.owner:
-                    (<a href="/account/${char.owner.id}">${char.owner}</a>)</h3>
+                    (<a href="/account/${char.owner.id}">${char.owner}</a>)
                 % else:
                     (no associated account)
                 % endif
+            </h3>
             <span class="area">
             ${", ".join(char.titles) | h}
             </span>
