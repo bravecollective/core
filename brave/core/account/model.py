@@ -87,10 +87,11 @@ class User(Document):
         from brave.core.api.model import Ban
         
         for c in self.characters:
-            if Ban.objects(characters__character=c.id):
+            if Ban.objects(characters__character=c):
                 return True
         
-        if Ban.objects(IPs__host=self.host):
+        # Check if this account's IP is banned.
+        if self.host and Ban.objects(IPs__host=self.host):
             return True
             
         return False
