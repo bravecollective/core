@@ -59,6 +59,9 @@ class CharacterBan(EmbeddedDocument):
         if self._enabled:
             log.info("User %s disabled ban against %s (%s).".format((user.username, self.host, self.id)))
             self._enabled = False
+            
+    def __repr__(self):
+        return "CharacterBan({0}) {1} Enabled: {2}".format(str(self.id), self.character, self._enabled)
     
     
 class IPBan(EmbeddedDocument):
@@ -85,7 +88,7 @@ class IPBan(EmbeddedDocument):
         ('account')
     )))
         
-    _enabled = BooleanField(db_field='enabled', default=True)
+    _enabled = BooleanField(db_field='e', default=True)
     
     def enable(self, user):
         """Enables this ban."""
@@ -102,6 +105,9 @@ class IPBan(EmbeddedDocument):
         if self._enabled:
             log.info("User %s disabled ban against %s (%s).".format((user.username, self.host, self.id)))
             self._enabled = False
+            
+    def __repr__(self):
+        return "IPBan({0}) {1} Enabled: {2}".format(str(self.id), self.host, self._enabled)
     
     
 class Ban(Document):
@@ -167,7 +173,7 @@ class Ban(Document):
     def ban_character(self, character, reason):
         # Check if the character has already been banned in this ban
         if self in Ban.objects(characters__character=character):
-             return
+            return
              
         if not character:
             return
@@ -194,11 +200,11 @@ class Ban(Document):
         self.IPs.append(i)
         self.save()
             
-    def __init__(self, user=None, character=None, ip=None, reason=None, creator=None, **kw):
+    def initializeBan(self, user=None, character=None, ip=None, reason=None, creator=None):
         """Creates a new ban that bans the specified arguments, along with any other characters and IP addresses
-            affiliated with the account. user must be of the type User, and character must be an EVECharacter."""
-            
-        super(Ban, self).__init__()
+            affiliated with the account. user must be of the type User, and character must be an EVECharacter.
+            Alternative to using __init__, which is also called when MongoEngine returns items from the DB and thus
+            leads to interesting complications."""
         
         # A reason and a creator must be supplied.
         if not reason or not creator:
@@ -223,7 +229,7 @@ class Ban(Document):
             # Ban the character supplied.
             self.ban_character(character, 'direct')
             
-            for c in c.owner.characters:
+            for c in character.owner.characters:
                 # Check if this character is on the same key (and thus EVE account) as the directly banned character.
                 for cred in c.credentials:
                     if cred in character.credentials:
@@ -248,7 +254,7 @@ class Ban(Document):
             
             # If there are any accounts associated with this IP, ban all of their characters.
             if len(User.objects(host=ip)):
-                users = User.objects(host=ip) 
+                users = User.objects(host=ip)
                 for u in users:
                     for c in u.characters:
                         self.ban_character(c, 'account')
@@ -263,6 +269,10 @@ class Ban(Document):
             
             # Only ban this user's IP if it's not already banned in this ban.
             self.ban_ip(user.host, 'account')
+            
+    def __repr__(self):
+        return ("Ban({0}); Characters({1}); IPs({2}); Enabled: {3}".format(str(self.id), ",".join(self.characters),
+                ",".join(self.IPs), self._enabled))
     
     
 class AuthenticationBlacklist(Document):

@@ -142,8 +142,8 @@ class CoreAPI(SignedController):
         # Step 2: Check if the character has been banned.
         if character.banned:
             return dict(
-                success = False,
-                reason = 'char.banned'
+                success=False,
+                reason='char.banned'
             )
         
         # Step 3: Update info about the character from the EVE API

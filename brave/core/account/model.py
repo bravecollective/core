@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 
 from itertools import chain
 from datetime import datetime, timedelta
-from mongoengine import Document, StringField, EmailField, DateTimeField, BooleanField, ReferenceField, ListField
+from mongoengine import Document, StringField, EmailField, DateTimeField, BooleanField, ReferenceField, ListField, Q
 from mongoengine.fields import LongField
 
 from brave.core.util.signal import update_modified_timestamp
@@ -87,11 +87,12 @@ class User(Document):
         from brave.core.api.model import Ban
         
         for c in self.characters:
-            if Ban.objects(characters__character=c):
+            # Returns all bans where the character is c, and the ban is enabled.
+            if Ban.objects(Q(characters__character=c) & Q(characters___enabled=True)):
                 return True
         
         # Check if this account's IP is banned.
-        if self.host and Ban.objects(IPs__host=self.host):
+        if self.host and Ban.objects(Q(IPs__host=self.host) & Q(IPs___enabled=True)):
             return True
             
         return False

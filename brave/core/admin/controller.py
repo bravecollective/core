@@ -29,7 +29,7 @@ class SearchCharInterface(HTTPMethod):
     
     def post(self, character=None, charMethod=None, alliance=None, corporation=None, group=None, banned=None):
         
-        # Have to be an admin to access admin pages.            
+        # Have to be an admin to access admin pages.
         if not is_administrator:
             raise HTTPNotFound()
         
@@ -137,7 +137,7 @@ class SearchUserInterface(HTTPMethod):
     
     def post(self, username=None, userMethod=None, ip=None, duplicate=None, banned=None):
         
-        # Have to be an admin to access admin pages.            
+        # Have to be an admin to access admin pages.
         if not is_administrator:
             raise HTTPNotFound()
             
@@ -172,7 +172,7 @@ class SearchUserInterface(HTTPMethod):
                 if u.banned:
                     banList.append(u.id)
             
-            if banned.lower() == 'true':            
+            if banned.lower() == 'true':
                 users = users.filter(id__in=banList)
             else:
                 users = users.filter(id__nin=banList)

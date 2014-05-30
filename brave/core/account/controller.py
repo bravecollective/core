@@ -435,8 +435,9 @@ class AccountInterface(HTTPMethod):
         if not reason:
             return 'You must include a reason for this ban.'
         
-        if ban: 
-            b = Ban(user=self.user, reason=reason, creator=User.objects(username=user.username).first())
+        if ban:
+            b = Ban()
+            b.initializeBan(user=self.user, reason=reason, creator=User.objects(username=user.username).first())
             b.save()
             
         return 'json:', dict(success=True, id=str(self.user.id))
