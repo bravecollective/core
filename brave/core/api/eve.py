@@ -44,6 +44,11 @@ class ProxyAPI(SignedController):
         except AttributeError:
             return dict(success=False, reason='endpoint.invalid', message="Unknown API endpoint: {0}.{1}".format(group, endpoint))
         
+        # Check if the character has been banned.
+        if token.character.banned:
+            return dict(success=False, reason='char.banned', message="The character you are making a call "
+                                                                     "for has been banned from Brave IT infastructure.")
+        
         key = None
         if anonymous is False or token or call.mask:
             # Check that this grant allows calls to this API endpoint.

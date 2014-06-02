@@ -48,6 +48,11 @@
                 % if char.alliance:
                 <span>›</span> <a target="_blank" href="https://gate.eveonline.com/Alliance/${char.alliance.name | u}">${char.alliance.name | h}</a>
                 % endif
+                % if char.banned:
+                <div class="area">
+                    <font color="red">Banned</font>
+                </div>
+                % endif
             </div>
         </div>
     

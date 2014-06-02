@@ -18,7 +18,8 @@
                         charMethod: charMethod,
                         alliance: alliance,
                         corporation: corporation,
-                        group: group
+                        group: group,
+                        banned: banned
                     }, function(data) {
                         if (data.success) {
                             alert(data.results)
@@ -36,6 +37,9 @@
     <div id="pad-wrapper">
         <div class="row-fluid header">
             <h3>Administrative Search</h3>
+            <h4>Banned takes values of 'True', which returns all characters that are banned, 'Account' which returns
+                all characters on banned accounts, and 'False' for all characters that don't meet either of the former.
+            </h4>
         </div>
         <div class="span12">
             <form method="POST" action="/admin/search/char" id="search" class="form-inline">
@@ -58,9 +62,12 @@
                 <div class="span2">
                     <input name="group" type="text" placeholder="Group Name" class="span2"/>
                 </div>
+                <div class="span2">
+                    <input name="banned" type="text" placeholder="Banned" class="span2"/>
+                </div>
                 <br>
                 <br>
-                <div class="span5"></div>
+                <div class="span6"></div>
                 <input type="submit" class="btn btn-default" value="Search" />
             </form>
         </div>

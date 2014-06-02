@@ -1,0 +1,27 @@
+## encoding: utf-8
+
+<%inherit file="brave.core.template.light"/>
+
+<%block name="title">${_("Sign In Error")}</%block>
+
+<%block name="header">
+    ${parent.header()}
+
+    <style>
+        input[type=submit] { float: right; border: 0 none; height: 0; width: 0; padding: 0; margin: 0; overflow: hidden; }
+        .content-wrap.authentication { position: relative; }
+        .overlay { position: absolute; top: 15px; left: 0; right: 0; text-align: center; display: none; }
+        .overlay.result { text-shadow: 0 1px 4px rgba(0,0,0,0.75); }
+        .overlay.fail { color: #b00; }
+        .overlay.success { color: #0b0; }
+    </style>
+</%block>
+
+<div class="span4 box">
+    <div class="content-wrap authentication">
+        <h6>${_("You have been banned.")}</h6>
+        <h4><font color="white">Good work. You went and got yourself banned. Want to find out why? Go to 
+            <a href="https://blacklist.braveineve.com">blacklist.braveineve.com</a> and search for your character name.
+             Want to try to get unbanned? Contact Brave HR.</font></h4>
+    </div>
+</div>

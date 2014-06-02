@@ -11,8 +11,10 @@ from marrow.util.url import URL
 from marrow.util.object import load_object as load
 from marrow.util.convert import boolean
 
+from brave.core.application.model import Application
 from brave.core.api.model import AuthenticationBlacklist, AuthenticationRequest
 from brave.core.api.util import SignedController
+from brave.core.ban.model import Ban
 from brave.core.util.eve import EVECharacterKeyMask, api
 
 
@@ -138,7 +140,14 @@ class CoreAPI(SignedController):
         token = ApplicationGrant.objects.get(id=token, application=request.service)
         character = token.character
         
-        # Step 2: Update info about the character from the EVE API
+        # Step 2: Check if the character has been banned.
+        if character.banned:
+            return dict(
+                success=False,
+                reason='char.banned'
+            )
+        
+        # Step 3: Update info about the character from the EVE API
         mask, key = character.credential_multi_for((api.char.CharacterSheet.mask,
                                                     api.char.CharacterInfoPublic.mask, EVECharacterKeyMask.NULL))
         
@@ -150,7 +159,7 @@ class CoreAPI(SignedController):
         if not key.pull():
             return None
         
-        # Step 3: Match ACLs.
+        # Step 4: Match ACLs.
         tags = []
         for group in Group.objects(id__in=request.service.groups):
             if group.evaluate(token.user, character):
@@ -164,3 +173,36 @@ class CoreAPI(SignedController):
                 expires = None,
                 mask = token.mask
             )
+            
+    def blacklist(self, kind=None, lookup=None):
+        """Check if lookup of type kind (char or IP) is banned.
+        
+        Returns all bans that match lookup using a contains filter, unless lookup < 9 characters,
+        in which case it will do an exact match (to prevent people from just getting the entire ban list.
+        If the queried ban is an IP address, it will return only exact matches. Wildcards are not supported
+        for security and privacy reasons."""
+        
+        # Check that argument kind is supplied.
+        if not kind:
+            return 'json:', dict(success=False, reason='kind.missing', message='Argument kind is required.')
+        
+        # Check that the argument kind is a valid choice (char for character lookups and IP for IP lookups).
+        if kind != 'char' and kind != 'IP':
+            return 'json:', dict(success=False, reason='kind.invalid', message='Argument kind must be "char" or "IP".')
+        
+        # Verify that the argument lookup was supplied.
+        if not lookup:
+            return 'json:', dict(success=False, reason='lookup.missing', message='Argument lookup is required.')
+        
+        # Search for bans that meet the specified characteristics.
+        if kind == 'char' and len(lookup) > 8:
+            bans = Ban.objects(characters__character__contains=lookup)
+        elif kind == 'char':
+            bans = Ban.objects(characters__character__iexact=lookup)
+        else:
+            bans = Ban.objects(IPs__host=lookup)
+            
+        if not len(bans):
+            return 'json:', dict(success=True, bans=None)
+        else:
+            return 'json:', dict(success=True, bans=bans)

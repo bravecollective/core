@@ -16,7 +16,8 @@
                 $.post('/admin/search/user', {
                         userMethod: userMethod,
                         ip: ip,
-                        duplicate: duplicate
+                        duplicate: duplicate,
+                        banned: banned
                     }, function(data) {
                         if (data.success) {
                             alert(data.results)
@@ -35,6 +36,9 @@
         <div class="row-fluid header">
             <h3>Administrative Search</h3>
             <h4>Duplicate accepts values of 'char' and 'ip'.</h4>
+            <h4>Banned takes values of 'True', which returns all users that are banned and 'False' for all users
+             that aren't.
+            </h4>
         </div>
         <div class="span12">
             <form method="POST" action="/admin/search/user" id="search" class="form-inline">
@@ -54,9 +58,12 @@
                 <div class="span2">
                     <input name="duplicate" type="text" placeholder="Duplicate" class="span2"/>
                 </div>
+                <div class="span2">
+                    <input name="banned" type="text" placeholder="Banned" class="span2"/>
+                </div>
                 <br>
                 <br>
-                <div class="span4"></div>
+                <div class="span5"></div>
                 <input type="submit" class="btn btn-default" value="Search" />
             </form>
         </div>
