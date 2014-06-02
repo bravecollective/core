@@ -12,8 +12,9 @@ from marrow.util.object import load_object as load
 from marrow.util.convert import boolean
 
 from brave.core.application.model import Application
-from brave.core.api.model import AuthenticationBlacklist, AuthenticationRequest, Ban
+from brave.core.api.model import AuthenticationBlacklist, AuthenticationRequest
 from brave.core.api.util import SignedController
+from brave.core.ban.model import Ban
 from brave.core.util.eve import EVECharacterKeyMask, api
 
 

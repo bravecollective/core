@@ -187,7 +187,7 @@ class EVECharacter(EVEEntity):
     def banned(self):
         """Returns true if this character is banned."""
         
-        from brave.core.api.model import Ban
+        from brave.core.ban.model import Ban
         
         # If there are any bans with a character subban that matches this character and that is enabled.
         if Ban.objects(Q(characters__character=self) & Q(characters___enabled=True)):

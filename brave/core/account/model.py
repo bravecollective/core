@@ -84,7 +84,7 @@ class User(Document):
     def banned(self):
         """Returns true if this user account is banned."""
         
-        from brave.core.api.model import Ban
+        from brave.core.ban.model import Ban
         
         for c in self.characters:
             # Returns all bans where the character is c, and the ban is enabled.
