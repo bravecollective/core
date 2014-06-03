@@ -12,13 +12,14 @@ from web.core.http import HTTPFound, HTTPNotFound
 from brave.core.character.model import EVECharacter, EVECorporation, EVEAlliance
 from brave.core.group.model import Group
 from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
+from brave.core.util import post_only
 from brave.core.util.predicate import authorize, is_administrator
 
 import json
 
 log = __import__('logging').getLogger(__name__)
 
-class OneGroupController(HTTPMethod):
+class OneGroupController(Controller):
     def __init__(self, id):
         super(OneGroupController, self).__init__()
 
@@ -35,6 +36,7 @@ class OneGroupController(HTTPMethod):
         )
 
     @authorize(is_administrator)
+    @post_only
     def set_rules(self, rules, really=False):
         rules = json.loads(rules)
         rule_objects = []
@@ -82,6 +84,7 @@ class OneGroupController(HTTPMethod):
                              message=_("unimplemented"))
 
     @authorize(is_administrator)
+    @post_only
     def delete(self):
         self.group.delete()
         return 'json:', dict(success=True)
@@ -97,20 +100,8 @@ class GroupList(HTTPMethod):
             groups=groups,
         )
 
-class GroupController(Controller):
-    index = GroupList()
-
-    def __lookup__(self, id, *args, **kw):
-        request.path_info_pop()  # We consume a single path element.
-        return OneGroupController(id), args
-
     @authorize(is_administrator)
-    def check_rule_reference_exists(self, kind, name):
-        cls = ACLList.target_class(kind)
-        return "json:", dict(exists=bool(cls.objects(name=name)))
-
-    @authorize(is_administrator)
-    def create(self, id=None, title=None):
+    def post(self, id=None, title=None):
         if not id:
             return 'json:', dict(success=False,
                                  message=_("id required"))
@@ -123,3 +114,15 @@ class GroupController(Controller):
                                  message=_("group with that id already existed"))
 
         return 'json:', dict(success=True, id=g.id)
+
+class GroupController(Controller):
+    index = GroupList()
+
+    def __lookup__(self, id, *args, **kw):
+        request.path_info_pop()  # We consume a single path element.
+        return OneGroupController(id), args
+
+    @authorize(is_administrator)
+    def check_rule_reference_exists(self, kind, name):
+        cls = ACLList.target_class(kind)
+        return "json:", dict(exists=bool(cls.objects(name=name)))
