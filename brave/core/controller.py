@@ -139,7 +139,7 @@ class RootController(StartupMixIn, Controller):
 
     def check_csrf(self):
         # portions of the application explicitly opted out of CSRF protection.
-        if request.path_info_peek() in 'api':
+        if request.path_info_peek() == 'api':
             return
 
         if request.headers.get('X-CSRF'):
