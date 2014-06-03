@@ -164,6 +164,7 @@ class EVECharacter(EVEEntity):
     
     titles = ListField(StringField(), db_field='ti', default=list)
     roles = ListField(StringField(), db_field='ro', default=list)
+    personal_permissions = ListField(ReferenceField('Permission', db_field='p'))
     
     credentials = ListField(ReferenceField(EVECredential, reverse_delete_rule=PULL), db_field='e', default=list)
     
@@ -182,6 +183,62 @@ class EVECharacter(EVEEntity):
             return mapping[i].title
         
         return OrderedDict((i, mapping[i]) for i in sorted(mapping.keys(), key=titlesort))
+        
+    @property
+    def permissions(self, app=None):
+        """Return all permissions that the character has that start with core or app.
+        
+        An app of None returns all of the character's permissions."""
+        
+        from brave.core.group.model import Permission
+        from brave.core.application.model import Application
+        
+        # Use a set so we don''t need to worry about characters having a permission from multiple groups.
+        permissions = set()
+        
+        # Allow app to be either the short name or the application object itself.
+        if isinstance(app, Application):
+            app = app.short_name
+        
+        # Return permissions from groups that this character has.
+        for group in self.tags:
+            for perm in group.permissions:
+                # Append all of the group's permissions when no app is specified.
+                if not app:
+                    permissions.append(perm)
+                    continue
+                
+                # Permissions are case-sensitive.
+                if perm.startswith('core') or perm.startswith(app):
+                    permissions.append(perm)
+        
+        # Return permissions that have been assigned directly to this user.
+        for perm in self.personal_permissions:
+            # Append all of the user's individual permissions when no app is specified.
+            if not app:
+                permissions.append(perm)
+                continue
+            
+            # If an app is specified, return only Core permissions and permissions for that app.
+            if perm.startswith('core') or perm.startswith(app):
+                permissions.append(perm)
+        
+        return permissions
+        
+    def has_permission(self, permission):
+        """Accepts both Permission objects and Strings."""
+        
+        from brave.core.group.model import Permission
+        
+        if isinstance(permission, str) or isinstance(permission, unicode):
+            perm = permission
+            permission = Permission.objects(name=permission)
+            
+            if not permission:
+                log.warning("Permission %s not found.", perm)
+                return False
+        
+        return(permission in self.permissions)
     
     def credential_for(self, mask):
         """Return the least-permissive API key that can satisfy the given mask."""

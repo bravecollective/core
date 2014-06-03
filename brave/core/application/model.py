@@ -51,6 +51,9 @@ class Application(Document):
     site = URLField(db_field='s')
     contact = EmailField(db_field='c')
     
+    # This is the short name of the application, which is used for permissions. Must be lowercase.
+    short = StringField(db_field='p', unique=True, regex='[a-z]+')
+    
     key = EmbeddedDocumentField(ApplicationKeys, db_field='k', default=lambda: ApplicationKeys())
     
     mask = EmbeddedDocumentField(ApplicationMasks, db_field='m', default=lambda: ApplicationMasks())

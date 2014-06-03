@@ -12,6 +12,32 @@ from brave.core.group.acl import ACLRule
 log = __import__('logging').getLogger(__name__)
 
 
+class Permission(Document):
+    meta = dict(
+        collection='Permissions',
+        allow_inheritance = False,
+        indexes = [
+            dict(fields=['name'], unique=True, required=True)
+        ],
+    )
+    
+    name = StringField(db_field='n')
+    description = StringField(db_field='d')
+    
+    @property
+    def application(self):
+        from brave.core.application.model import Application
+        
+        app_short = name[:(name.index('.')-1)]
+        
+        app = Application.objects(short=app_short)
+        
+        if not len(app):
+            return None
+        else:
+            return app.first()
+
+
 @update_modified_timestamp.signal
 class Group(Document):
     meta = dict(
@@ -26,6 +52,7 @@ class Group(Document):
     
     creator = ReferenceField('User', db_field='c')
     modified = DateTimeField(db_field='m', default=datetime.utcnow)
+    permissions = ListField(ReferenceField(Permission), db_field='p')
 
     def __repr__(self):
         return 'Group({0})'.format(self.id).encode('ascii', 'backslashreplace')
