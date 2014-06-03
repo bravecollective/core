@@ -12,6 +12,7 @@
         .user-profile .header .avatar { width: 96px; height: 96px; float: left; margin-right: 25px; border: 2px solid #e9ecee; position: relative; top: 3px; border-radius: 12px; }
         .user-profile .header .name { font-weight: 600; margin: 0 0 10px; line-height: 26px; float: none; padding-top: 12px; }
         .user-profile .header .area span { margin: 0 5px; }
+        .user-profile .header span.actions { float: right; margin-right: 25px; }
         #pad-wrapper.user-profile h4 { margin: 0 0 10px; font-weight: 600; font-size: 14px; font-style: normal; text-indent: 0; color: black; }
         .user-profile .profile .bio p { 
     </style>
@@ -23,6 +24,22 @@
     <script type="text/javascript" charset="utf-8">
         $(function(){
             $('time').timeago();
+        });
+        
+        $(function() {
+            $('#ban-user').click(function() {
+                var id = '${account.id}';
+                $.post('/account/${account.id}', {
+                        ban: true
+                    }, function(data) {
+                        if (data.success) {
+                            window.location = "/account/" + data.id;
+                        } else {
+                            alert(data.message);
+                        }
+                    }
+                );
+            });
         });
     </script>
 </%block>
@@ -36,6 +53,9 @@
             <h3 class="name">${account | h}</h3>
             <div class="area">
                 Primary character: <a href="/character/${account.primary.id}">${account.primary.name | h}</a>
+                <span class="actions">
+                    <a class="btn btn-danger pull-right add" id="ban-user"><i class="fa fa-times"></i> Ban User</a>
+                </span>
             </div>
             <span class="area">
                 ${", ".join(account.primary.titles) | h}
@@ -46,12 +66,25 @@
                     <span>›</span> <a target="_blank" href="https://gate.eveonline.com/Alliance/${account.primary.alliance.name | u}">${account.primary.alliance.name | h}</a>
                 % endif
             </div>
+            % if account.banned:
+                <div class="area">
+                    <font color="red">Banned</font>
+                </div>
+            % endif
         </div>
     % else:
         <div class="header">
             <h3 class="name">${account | h}</h3>
             <div class="area">
+                <span class="actions">
+                    <a class="btn btn-danger pull-right add" id="ban-user"><i class="fa fa-times"></i> Ban User</a>
+                </span>
             </div>
+            % if account.banned:
+                <div class="area">
+                    <font color="red">Banned</font>
+                </div>
+            % endif
         </div>
     % endif
     

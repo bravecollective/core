@@ -51,6 +51,7 @@
                         } else {
                             $('.overlay.fail').fadeIn(250, function(){
                                 $('.overlay.fail').fadeOut(250);
+                                if(data.location){ window.location = data.location; };
                                 $('#authenticate-form, .authentication .span6').animate({opacity: 1}, 250);
                                 $('#submit').removeClass('disabled').attr('disabled', false);
                             });

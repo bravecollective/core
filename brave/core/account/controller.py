@@ -13,6 +13,7 @@ from brave.core.account.form import authenticate as authenticate_form, register 
     recover as recover_form, reset_password as reset_password_form
 from brave.core.account.authentication import lookup_email, send_recover_email
 from brave.core.util.predicate import is_administrator
+from brave.core.ban.model import Ban
 
 from yubico import yubico
 from marrow.util.convert import boolean
@@ -66,6 +67,10 @@ class Authenticate(HTTPMethod):
                 return 'json:', dict(success=False, message=_("Invalid user name or password."))
 
             return self.get(redirect)
+
+        # Check if the user is banned, if so redirect them to the banned user info page.
+        if user.banned:
+            return 'json:', dict(success=False, location='/account/banned')
 
         if request.is_xhr:
             return 'json:', dict(success=True, location=redirect or '/')
@@ -421,6 +426,21 @@ class AccountInterface(HTTPMethod):
             area='admin',
             account=self.user,
         )
+        
+    def post(self, ban=None, reason=None):
+        """ban = True bans the user, ban=False unbans the user, and ban=None leaves the user's ban status alone."""
+        
+        reason = 'test'
+        
+        if not reason:
+            return 'You must include a reason for this ban.'
+        
+        if ban:
+            b = Ban()
+            b.initializeBan(user=self.user, reason=reason, creator=User.objects(username=user.username).first())
+            b.save()
+            
+        return 'json:', dict(success=True, id=str(self.user.id))
 
 
 class AccountController(Controller):
@@ -428,6 +448,9 @@ class AccountController(Controller):
     register = Register()
     settings = Settings()
     recover = Recover()
+    
+    def banned(self):
+        return 'brave.core.account.template.banned', dict()
     
     def exists(self, **query):
         query.pop('ts', None)

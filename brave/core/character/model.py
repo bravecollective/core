@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 
 from collections import OrderedDict
 from datetime import datetime
-from mongoengine import Document, StringField, DateTimeField, ReferenceField, IntField, BooleanField, FloatField, ListField, NULLIFY, PULL
+from mongoengine import Document, StringField, DateTimeField, ReferenceField, IntField, BooleanField, FloatField, ListField, NULLIFY, PULL, Q
 from brave.core.util.signal import update_modified_timestamp
 from brave.core.key.model import EVECredential
 from brave.core.util.eve import api
@@ -185,6 +185,18 @@ class EVECharacter(EVEEntity):
             return mapping[i].title
         
         return OrderedDict((i, mapping[i]) for i in sorted(mapping.keys(), key=titlesort))
+        
+    @property
+    def banned(self):
+        """Returns true if this character is banned."""
+        
+        from brave.core.ban.model import Ban
+        
+        # If there are any bans with a character subban that matches this character and that is enabled.
+        if Ban.objects(Q(characters__character=self) & Q(characters___enabled=True)):
+            return True
+            
+        return False
     
     def credential_for(self, mask):
         """Return the least-permissive API key that can satisfy the given mask."""

@@ -8,12 +8,16 @@ from mongoengine import Document, EmbeddedDocument, EmbeddedDocumentField, Strin
 from brave.core.util.signal import update_modified_timestamp
 from brave.core.application.signal import trigger_private_key_generation
 from brave.core.util.field import PasswordField, IPAddressField
+from brave.core.account.model import User
+from brave.core.character.model import EVECharacter
 
 
 log = __import__('logging').getLogger(__name__)
-
-
+    
+    
 class AuthenticationBlacklist(Document):
+    """Blacklist for applications and servers."""
+    
     meta = dict(
             allow_inheritance = False,
             indexes = [
@@ -30,7 +34,7 @@ class AuthenticationBlacklist(Document):
     port = StringField('o')
     
     creator = ReferenceField('User')  # TODO: Nullify inverse deletion rule.
-
+        
 
 class AuthenticationRequest(Document):
     meta = dict(

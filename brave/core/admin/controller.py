@@ -27,9 +27,9 @@ class SearchCharInterface(HTTPMethod):
         
         return 'brave.core.admin.template.searchChar', dict(area='admin')
     
-    def post(self, character=None, charMethod=None, alliance=None, corporation=None, group=None):
+    def post(self, character=None, charMethod=None, alliance=None, corporation=None, group=None, banned=None):
         
-        # Have to be an admin to access admin pages.            
+        # Have to be an admin to access admin pages.
         if not is_administrator:
             raise HTTPNotFound()
         
@@ -67,6 +67,24 @@ class SearchCharInterface(HTTPMethod):
                     groupList.append(c.id)
                     
             chars = chars.filter(id__in=groupList)
+            
+        # Limit to characters with the specified banned status.
+        if banned:
+            charList = []
+            if banned.lower() == 'true':
+                for c in chars:
+                    if c.banned:
+                        charList.append(c.id)
+            elif banned.lower() == 'account':
+                for c in chars:
+                    if c.owner.banned:
+                        charList.append(c.id)
+            else:
+                for c in chars:
+                    if not c.banned and not c.owner.banned:
+                        charList.append(c.id)
+                        
+            chars = chars.filter(id__in=charList)
             
         return 'brave.core.admin.template.searchChar', dict(area='admin', result=chars, success=True)
 
@@ -117,9 +135,9 @@ class SearchUserInterface(HTTPMethod):
         
         return 'brave.core.admin.template.searchUser', dict(area='admin')
     
-    def post(self, username=None, userMethod=None, ip=None, duplicate=None):
+    def post(self, username=None, userMethod=None, ip=None, duplicate=None, banned=None):
         
-        # Have to be an admin to access admin pages.            
+        # Have to be an admin to access admin pages.
         if not is_administrator:
             raise HTTPNotFound()
             
@@ -146,6 +164,18 @@ class SearchUserInterface(HTTPMethod):
             users = users.filter(other_accs_IP__exists=True)
         elif duplicate.lower() == "char":
             users = users.filter(other_accs_char_key__exists=True)
+            
+        # Limit to users with the specified banned status.
+        if banned:
+            banList = []
+            for u in users:
+                if u.banned:
+                    banList.append(u.id)
+            
+            if banned.lower() == 'true':
+                users = users.filter(id__in=banList)
+            else:
+                users = users.filter(id__nin=banList)
             
         return 'brave.core.admin.template.searchUser', dict(area='admin', result=users, success=True)
         
