@@ -4,32 +4,6 @@
 
 <%block name="title">Search Users</%block>
 
-<%block name="post">
-    ${parent.post()}
-
-    <script type="text/javascript" charset="utf-8">
-        $(function() {
-            $('#new-search').click(function() {
-                var form = $(this).parents(".modal-content").find("form");
-                var id = form.find('input[name=id]').val();
-                var title = form.find('input[name=title]').val();
-                $.post('/admin/search/user', {
-                        userMethod: userMethod,
-                        ip: ip,
-                        duplicate: duplicate
-                    }, function(data) {
-                        if (data.success) {
-                            alert(data.results)
-                        } else {
-                            alert(data.message);
-                        }
-                    }
-                );
-            });
-        });
-    </script>
-</%block>
-
 <div class="container-fluid">
     <div id="pad-wrapper">
         <div class="row-fluid header">
