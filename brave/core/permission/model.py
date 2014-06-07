@@ -27,9 +27,11 @@ class Permission(Document):
     
     @property
     def application(self):
+        """Returns the application that this permission is for."""
+        
         from brave.core.application.model import Application
         
-        app_short = name[:(name.index('.')-1)]
+        app_short = self.name[:(self.name.index('.'))]
         
         app = Application.objects(short=app_short)
         

@@ -7,6 +7,7 @@ from mongoengine import Document, EmbeddedDocument, EmbeddedDocumentField, Strin
 
 from brave.core.util.signal import update_modified_timestamp
 from brave.core.application.signal import trigger_private_key_generation
+from brave.core.permission.model import Permission
 
 
 log = __import__('logging').getLogger(__name__)
@@ -75,6 +76,18 @@ class Application(Document):
     
     def __unicode__(self):
         return self.name
+        
+    def delete(self):
+        """Deletes the application and any permissions added by the application."""
+        perms = Permission.objects()
+    
+        for p in perms:
+            if p.application != self:
+                continue
+                
+            p.delete()
+        
+        super(Application, self).delete()
 
 
 class ApplicationGrant(Document):
