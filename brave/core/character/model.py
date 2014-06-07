@@ -189,8 +189,9 @@ class EVECharacter(EVEEntity):
         
         An app of None returns all of the character's permissions."""
         
-        from brave.core.group.model import Permission
+        from brave.core.permission.model import Permission
         from brave.core.application.model import Application
+        from brave.core.group.model import Group
         
         # Use a set so we don''t need to worry about characters having a permission from multiple groups.
         permissions = set()
@@ -201,26 +202,27 @@ class EVECharacter(EVEEntity):
         
         # Return permissions from groups that this character has.
         for group in self.tags:
+            group = Group.objects(id=group).first()
             for perm in group.permissions:
                 # Append all of the group's permissions when no app is specified.
                 if not app:
-                    permissions.append(perm)
+                    permissions.add(perm)
                     continue
                 
                 # Permissions are case-sensitive.
                 if perm.startswith('core') or perm.startswith(app):
-                    permissions.append(perm)
+                    permissions.add(perm)
         
         # Return permissions that have been assigned directly to this user.
         for perm in self.personal_permissions:
             # Append all of the user's individual permissions when no app is specified.
             if not app:
-                permissions.append(perm)
+                permissions.add(perm)
                 continue
             
             # If an app is specified, return only Core permissions and permissions for that app.
             if perm.startswith('core') or perm.startswith(app):
-                permissions.append(perm)
+                permissions.add(perm)
         
         return permissions
         
