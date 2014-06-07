@@ -183,8 +183,7 @@ class EVECharacter(EVEEntity):
             return mapping[i].title
         
         return OrderedDict((i, mapping[i]) for i in sorted(mapping.keys(), key=titlesort))
-        
-    @property
+    
     def permissions(self, app=None):
         """Return all permissions that the character has that start with core or app.
         
@@ -238,7 +237,7 @@ class EVECharacter(EVEEntity):
                 log.warning("Permission %s not found.", perm)
                 return False
         
-        return(permission in self.permissions)
+        return(permission in self.permissions())
     
     def credential_for(self, mask):
         """Return the least-permissive API key that can satisfy the given mask."""
