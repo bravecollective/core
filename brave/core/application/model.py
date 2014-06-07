@@ -52,7 +52,7 @@ class Application(Document):
     contact = EmailField(db_field='c')
     
     # This is the short name of the application, which is used for permissions. Must be lowercase.
-    short = StringField(db_field='p', unique=True, regex='[a-z]+')
+    short = StringField(db_field='p', unique=True, regex='[a-z]+', required=True)
     
     key = EmbeddedDocumentField(ApplicationKeys, db_field='k', default=lambda: ApplicationKeys())
     

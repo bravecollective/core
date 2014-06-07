@@ -17,3 +17,8 @@ ad709e0: It is highly recommended that admins remove all characters whose owners
     Commands: 
         from brave.core.util.eve import populate_calls
         populate_calls(True)                    
+
+***v0.7***
+20b85a5: A new field was added to Applications, which will need to be set before attempting to run Core after the update.
+    The field name is short, and it must be unique. This is used as the basis for that application's permissions, so
+    pick a reasonable name such as 'jabber'. Must be lowercase.
