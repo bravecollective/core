@@ -13,7 +13,7 @@
                 var form = $(this).parents(".modal-content").find("form");
                 var id = form.find('input[name=id]').val();
                 var title = form.find('input[name=title]').val();
-                $.post('/group/create', {
+                $.post('/group/', {
                         id: id,
                         title: title,
                     }, function(data) {
