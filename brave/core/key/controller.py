@@ -137,7 +137,6 @@ class KeyList(HTTPMethod):
                             message=_("Validation error: one or more fields are incorrect or missing."),
                     )
         except NotUniqueError:
-            
             if EVECredential.objects(key=data.key):
                 # Mark both of these accounts as duplicates to each other.
                 acc = User.objects(username=user.username).first()
@@ -147,7 +146,7 @@ class KeyList(HTTPMethod):
             
             return 'json:', dict(
                 success=False,
-                message=_("This key has already been added by another account."),
+                message=_("This key has already been added to this or another account."),
             )
 
         raise HTTPFound(location='/key/')

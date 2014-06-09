@@ -30,7 +30,7 @@ class EVECredential(Document):
                 ],
         )
     
-    key = IntField(db_field='k')
+    key = IntField(db_field='k', unique=True)
     code = StringField(db_field='c')
     kind = StringField(db_field='t')
     _mask = IntField(db_field='a', default=0)
