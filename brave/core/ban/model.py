@@ -16,7 +16,6 @@ class CharacterBan(EmbeddedDocument):
     """Stores information about character bans."""
     
     meta = dict(
-        collection = 'Bans',
         allow_inheritance=False,
         indexes=[
             'n',
@@ -116,6 +115,7 @@ class Ban(Document):
     
     meta = dict(
         allow_inheritance=False,
+        collection = 'Bans',
         indexes=[
             'creator',
             '_enabled',
