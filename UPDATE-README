@@ -17,3 +17,8 @@ ad709e0: It is highly recommended that admins remove all characters whose owners
     Commands: 
         from brave.core.util.eve import populate_calls
         populate_calls(True)                    
+
+***TEMP***
+# To be renamed in release branch.
+feature/minKeyID: The config value 'core.minimum_key_id' should be added to the production config file. Recommended
+    value of 3283828
