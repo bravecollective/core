@@ -16,7 +16,7 @@ GRANT_WILDCARD = '*'
 class Permission(Document):
     meta = dict(
         collection='Permissions',
-        allow_inheritance = False,
+        allow_inheritance = True,
         indexes = [
             dict(fields=['name'], unique=True, required=True)
         ],
@@ -31,7 +31,11 @@ class Permission(Document):
         
         from brave.core.application.model import Application
         
-        app_short = self.name[:(self.name.index('.'))]
+        # Handle '*' properly
+        if self.name.find('.') == -1:
+            return None
+        
+        app_short = self.name.split('.')[0]
         
         app = Application.objects(short=app_short)
         
@@ -43,45 +47,44 @@ class Permission(Document):
     def __repr__(self):
         return "Permission('{0}')".format(self.name)
             
-    @staticmethod
-    def wildcardPerms(wild):
-        """Returns all permissions which wild provides access to. wild should be a string."""
+    def getPermissions(self):
+        """Returns all permissions granted by this Permission."""
+        
+        return set({self})
+        
+class WildcardPermission(Permission):
+    
+    def __repr__(self):
+        return "WildcardPermission('{0}')".format(self.name)
+            
+    def getPermissions(self):
+        """Returns all Permissions granted by this Permission"""
         
         from brave.core.application.model import Application
         
-        # If the provided string doesn't contain any wildcards, returnan empty set.
-        if GRANT_WILDCARD not in wild:
-            return set()
-        
         # Mongoengine has no way to find objects based on a regex (as far as I can tell at least...)
         perms = set()
-        
-        num_wildcards = wild.count(GRANT_WILDCARD)
 
-        # Loops through all of the permissions, then loops through the segments of wild between the periods.
+        # Loops through all of the permissions, then loops through the segments of this wildcardPerm between the periods.
         for perm in Permission.objects():
-            # Splits both the wildcard permission provided and the permission being checked.
-            wild_segments = wild.split(r'.')
-            perm_segments = perm.name.split(r'.')
+            # Splits both this permission's name and the permission being checked.
+            self_segments = self.name.split('.')
+            perm_segments = perm.name.split('.')
             
-            # Loops through each segment of the wildcard. 'core.example.*.test.*' would have segments of 'core', 
-            # 'example', '*', 'test', and '*' in that order.
-            for w_seg in wild_segments:
+            # Loops through each segment of the wildcardPerm and permission name. 'core.example.*.test.*' would have 
+            # segments of 'core', 'example', '*', 'test', and '*' in that order.
+            for (s_seg, perm_seg) in zip(self_segments, perm_segments):
                 # We loop through looking for something wrong, if there's nothing wrong then we add it to the set.
                 
                 # This index is a wildcard, so we skip checks
-                if w_seg == GRANT_WILDCARD:
+                if s_seg == GRANT_WILDCARD:
                     continue
                 
-                # This can occur when the wildcard provided is longer (in terms of segments) than the permission we're
-                # checking.
-                if wild_segments.index(w_seg) >= len(perm_segments):
+                # If this self segment doesn't match the corresponding segment in the permission, this permission
+                # doesn't match, and we break to the next permission.
+                if s_seg != perm_seg:
                     break
                 
-                # If this wildcard segment doesn't match the corresponding segment in the permission, this permission
-                # doesn't match, and we break to the next permission.
-                if not w_seg == perm_segments[wild_segments.index(w_seg)]:
-                    break
             else:
                 perms.add(perm)        
         

@@ -8,6 +8,8 @@ from mongoengine import Document, StringField, DateTimeField, ReferenceField, In
 from brave.core.util.signal import update_modified_timestamp
 from brave.core.key.model import EVECredential
 from brave.core.util.eve import api
+from brave.core.permission.model import Permission, WildcardPermission, GRANT_WILDCARD
+from brave.core.application.model import Application
 
 
 log = __import__('logging').getLogger(__name__)
@@ -164,12 +166,13 @@ class EVECharacter(EVEEntity):
     
     titles = ListField(StringField(), db_field='ti', default=list)
     roles = ListField(StringField(), db_field='ro', default=list)
-    personal_permissions = ListField(ReferenceField('Permission', db_field='p'))
+    personal_permissions = ListField(ReferenceField(Permission), db_field='p', default=list)
     
     credentials = ListField(ReferenceField(EVECredential, reverse_delete_rule=PULL), db_field='e', default=list)
     
     owner = ReferenceField('User', db_field='o', reverse_delete_rule=NULLIFY)
     
+    # DEPRECATED
     @property
     def tags(self):
         from brave.core.group.model import Group
@@ -183,26 +186,43 @@ class EVECharacter(EVEEntity):
             return mapping[i].title
         
         return OrderedDict((i, mapping[i]) for i in sorted(mapping.keys(), key=titlesort))
-    
-    def permissions(self, app=None):
-        """Return all permissions that the character has that start with core or app.
         
-        An app of None returns all of the character's permissions."""
+    @property
+    def groups(self):
+        """Returns the groups a character is in."""
         
-        from brave.core.permission.model import Permission
-        from brave.core.application.model import Application
         from brave.core.group.model import Group
         
-        # Use a set so we don''t need to worry about characters having a permission from multiple groups.
+        char_groups = set()
+        
+        for group in Group.objects:
+            if group.evaluate(self.owner, self):
+                char_groups.add(group)
+                
+        return char_groups
+    
+    @property
+    def permissions(self, app=None):
+        """Return all permissions that the character has that start with core or app.
+           An app of None returns all of the character's permissions."""
+        
+        # Import Group here to avoid circular dependecies.
+        from brave.core.group.model import Group
+        
+        # Use a set so we don't need to worry about characters having a permission from multiple groups.
         permissions = set()
         
         # Allow app to be either the short name or the application object itself.
         if isinstance(app, Application):
-            app = app.short_name
+            app = app.short_name + '.'
+        
+        # Ensure the provided string ends with a . to prevent pulling permissions from another application with the
+        # same starting letters (forums should not return forums2's permissions.)
+        if app and app[-1] != '.':
+            app = app + '.'
         
         # Return permissions from groups that this character has.
-        for group in self.tags:
-            group = Group.objects(id=group).first()
+        for group in self.groups:
             for perm in group.permissions:
                 # Append all of the group's permissions when no app is specified.
                 if not app:
@@ -210,7 +230,7 @@ class EVECharacter(EVEEntity):
                     continue
                 
                 # Permissions are case-sensitive.
-                if perm.startswith('core') or perm.startswith(app):
+                if perm.name.startswith('core') or perm.name.startswith(app):
                     permissions.add(perm)
         
         # Return permissions that have been assigned directly to this user.
@@ -221,8 +241,15 @@ class EVECharacter(EVEEntity):
                 continue
             
             # If an app is specified, return only Core permissions and permissions for that app.
-            if perm.startswith('core') or perm.startswith(app):
+            if perm.name.startswith('core') or perm.name.startswith(app):
                 permissions.add(perm)
+                
+        # Evaluate all of the User's wildcard permissions.
+        for perm in permissions.copy():
+            if GRANT_WILDCARD not in perm.name:
+                continue
+            
+            permissions |= perm.getPermissions()
         
         return permissions
         
@@ -232,11 +259,11 @@ class EVECharacter(EVEEntity):
         from brave.core.group.model import Permission
         
         if isinstance(permission, str) or isinstance(permission, unicode):
-            perm = permission
-            permission = Permission.objects(name=permission)
+            perm_string = permission
+            permission = Permission.objects(name=perm_string)
             
             if not permission:
-                log.warning("Permission %s not found.", perm)
+                log.warning("Permission %s not found.", perm_string)
                 return False
         
         return(permission in self.permissions())

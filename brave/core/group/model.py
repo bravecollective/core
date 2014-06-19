@@ -7,7 +7,7 @@ from mongoengine import Document, EmbeddedDocument, EmbeddedDocumentField, Strin
 
 from brave.core.util.signal import update_modified_timestamp
 from brave.core.group.acl import ACLRule
-from brave.core.permission.model import Permission
+from brave.core.permission.model import Permission, WildcardPermission, GRANT_WILDCARD
 
 
 log = __import__('logging').getLogger(__name__)
@@ -27,7 +27,25 @@ class Group(Document):
     
     creator = ReferenceField('User', db_field='c')
     modified = DateTimeField(db_field='m', default=datetime.utcnow)
-    permissions = ListField(ReferenceField(Permission), db_field='p')
+    _permissions = ListField(ReferenceField(Permission), db_field='p')
+    
+    @property
+    def permissions(self):
+        """Returns the permissions that this group grants as Permission objects. Evaluates the wildcard permissions
+            as well."""
+        
+        perms = set()
+        
+        for perm in self._permissions:
+            # if perm is not a wildcard permission, add it to the set.
+            if not isinstance(perm, WildcardPermission):
+                perms.add(perm)
+                continue
+                
+            for p in perm.getPermissions():
+                perms.add(p)
+                
+        return perms
 
     def __repr__(self):
         return 'Group({0})'.format(self.id).encode('ascii', 'backslashreplace')
