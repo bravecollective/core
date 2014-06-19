@@ -71,6 +71,11 @@ class WildcardPermission(Permission):
             self_segments = self.name.split('.')
             perm_segments = perm.name.split('.')
             
+            # If this permission has more segments than the permission we're matching against, it can't provide access
+            # to that permission, so we skip it.
+            if len(self_segments) > len(perm_segments):
+                continue
+            
             # Loops through each segment of the wildcardPerm and permission name. 'core.example.*.test.*' would have 
             # segments of 'core', 'example', '*', 'test', and '*' in that order.
             for (s_seg, perm_seg) in zip(self_segments, perm_segments):

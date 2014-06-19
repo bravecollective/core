@@ -246,7 +246,7 @@ class EVECharacter(EVEEntity):
                 
         # Evaluate all of the User's wildcard permissions.
         for perm in permissions.copy():
-            if GRANT_WILDCARD not in perm.name:
+            if isinstance(perm, WildcardPermission):
                 continue
             
             permissions |= perm.getPermissions()
@@ -259,11 +259,11 @@ class EVECharacter(EVEEntity):
         from brave.core.group.model import Permission
         
         if isinstance(permission, str) or isinstance(permission, unicode):
-            perm_string = permission
-            permission = Permission.objects(name=perm_string)
+            perm_name = permission
+            permission = Permission.objects(name=perm_name)
             
             if not permission:
-                log.warning("Permission %s not found.", perm_string)
+                log.warning("Permission %s not found.", perm_name)
                 return False
         
         return(permission in self.permissions())
