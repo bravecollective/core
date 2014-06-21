@@ -52,6 +52,20 @@ class Permission(Document):
         
         return set({self})
         
+    def grantsPermission(self, perm_string):
+        """This is used to see if a Permission grants access to a permission which is not in the database.
+            For instance, when evaluating whether a WildcardPermission grants access to a run-time permission."""
+        
+        return(self.name == perm_string)
+        
+    def __eq__(self, other):
+        if isinstance(other, Permission):
+            return self.name == other.name
+        return False
+        
+    def __ne__(self, other):
+        return not self.__eq__(other)
+        
 class WildcardPermission(Permission):
     
     def __repr__(self):
@@ -65,32 +79,38 @@ class WildcardPermission(Permission):
         # Mongoengine has no way to find objects based on a regex (as far as I can tell at least...)
         perms = set()
 
-        # Loops through all of the permissions, then loops through the segments of this wildcardPerm between the periods.
+        # Loops through all of the permissions, checking if this permission grants access to that permission.
         for perm in Permission.objects():
-            # Splits both this permission's name and the permission being checked.
-            self_segments = self.name.split('.')
-            perm_segments = perm.name.split('.')
-            
-            # If this permission has more segments than the permission we're matching against, it can't provide access
-            # to that permission, so we skip it.
-            if len(self_segments) > len(perm_segments):
-                continue
-            
-            # Loops through each segment of the wildcardPerm and permission name. 'core.example.*.test.*' would have 
-            # segments of 'core', 'example', '*', 'test', and '*' in that order.
-            for (s_seg, perm_seg) in zip(self_segments, perm_segments):
-                # We loop through looking for something wrong, if there's nothing wrong then we add it to the set.
-                
-                # This index is a wildcard, so we skip checks
-                if s_seg == GRANT_WILDCARD:
-                    continue
-                
-                # If this self segment doesn't match the corresponding segment in the permission, this permission
-                # doesn't match, and we break to the next permission.
-                if s_seg != perm_seg:
-                    break
-                
-            else:
-                perms.add(perm)        
+            if self.grantsPermission(perm.name):
+                perms.add(perm)
         
         return perms
+        
+    def grantsPermission(self, perm_string):
+        """This is used to see if a Permission grants access to a permission which is not in the database.
+            For instance, when evaluating whether a WildcardPermission grants access to a run-time permission."""
+        # Splits both this permission's name and the permission being checked.
+        self_segments = self.name.split('.')
+        perm_segments = perm_string.split('.')
+        
+        # If this permission has more segments than the permission we're matching against, it can't provide access
+        # to that permission.
+        if len(self_segments) > len(perm_segments):
+            return False
+        
+        # Loops through each segment of the wildcardPerm and permission name. 'core.example.*.test.*' would have 
+        # segments of 'core', 'example', '*', 'test', and '*' in that order.
+        for (s_seg, perm_seg) in zip(self_segments, perm_segments):
+            # We loop through looking for something wrong, if there's nothing wrong then we return True.
+            
+            # This index is a wildcard, so we skip checks
+            if s_seg == GRANT_WILDCARD:
+                continue
+            
+            # If this self segment doesn't match the corresponding segment in the permission, this permission
+            # doesn't match, and we return False
+            if s_seg != perm_seg:
+                return False
+        
+        return True
+

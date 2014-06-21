@@ -201,7 +201,6 @@ class EVECharacter(EVEEntity):
                 
         return char_groups
     
-    @property
     def permissions(self, app=None):
         """Return all permissions that the character has that start with core or app.
            An app of None returns all of the character's permissions."""
@@ -246,7 +245,7 @@ class EVECharacter(EVEEntity):
                 
         # Evaluate all of the User's wildcard permissions.
         for perm in permissions.copy():
-            if isinstance(perm, WildcardPermission):
+            if not isinstance(perm, WildcardPermission):
                 continue
             
             permissions |= perm.getPermissions()
@@ -263,8 +262,18 @@ class EVECharacter(EVEEntity):
             permission = Permission.objects(name=perm_name)
             
             if not permission:
-                log.warning("Permission %s not found.", perm_name)
+                log.info("Permission %s not found.", perm_name)
+                
+                # The permission specified was not found in the database, so we loop through the character's
+                # permissions and see if they would grant this permission. Might be worth optimizing in the future
+                # by adding a new EVECharacter function that returns only that character's wildcard permissions.
+                for p in self.permissions():
+                    if p.grantsPermission(perm_name):
+                        return True
+                
                 return False
+            
+            permission = permission.first()
         
         return(permission in self.permissions())
     
