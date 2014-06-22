@@ -98,6 +98,12 @@ class WildcardPermission(Permission):
         if len(self_segments) > len(perm_segments):
             return False
         
+        # If the permission we're checking against is longer than the wildcard permission (this permission), then this
+        # permission must end in a wildcard for it to grant the checked permission.
+        if len(self_segments) < len(perm_segments):
+            if GRANT_WILDCARD != self_segments[-1]:
+                return False
+        
         # Loops through each segment of the wildcardPerm and permission name. 'core.example.*.test.*' would have 
         # segments of 'core', 'example', '*', 'test', and '*' in that order.
         for (s_seg, perm_seg) in zip(self_segments, perm_segments):
