@@ -14,7 +14,7 @@ from mongoengine.errors import NotUniqueError
 
 from brave.core.account.model import User
 from brave.core.key.model import EVECredential
-from brave.core.util.predicate import authorize, authenticated, is_administrator
+from brave.core.util.predicate import authorize, authenticate, is_administrator
 from brave.core.util.eve import EVECharacterKeyMask, EVECorporationKeyMask
 
 
@@ -74,7 +74,7 @@ class KeyInterface(Controller):
 
 
 class KeyList(HTTPMethod):
-    @authorize(authenticated)
+    @authenticate
     def get(self, admin=False):
         admin = boolean(admin)
         
@@ -92,7 +92,7 @@ class KeyList(HTTPMethod):
                 records=credentials
             )
 
-    @authorize(authenticated)
+    @authenticate
     def post(self, **kw):
         data = Bunch(kw)
         

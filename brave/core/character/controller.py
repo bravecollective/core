@@ -7,7 +7,7 @@ from web.core.http import HTTPFound, HTTPNotFound
 from marrow.util.bunch import Bunch
 
 from brave.core.character.model import EVECharacter
-from brave.core.util.predicate import authorize, authenticated, is_administrator
+from brave.core.util.predicate import authorize, authenticate, is_administrator
 
 
 class CharacterInterface(HTTPMethod):
@@ -22,7 +22,7 @@ class CharacterInterface(HTTPMethod):
         if (not self.char.owner or self.char.owner.id != user.id) and not user.admin:
             raise HTTPNotFound()
 
-    @authorize(authenticated)
+    @authenticate
     def put(self):
         if not self.char.owner or self.char.owner.id != user.id:
             raise HTTPNotFound()
@@ -36,7 +36,7 @@ class CharacterInterface(HTTPMethod):
 
         raise HTTPFound(location='/character/')
         
-    @authorize(authenticated)
+    @authenticate
     def get(self):
         if (not self.char.owner or self.char.owner.id != user.id) and not user.admin:
             raise HTTPNotFound()
@@ -47,7 +47,7 @@ class CharacterInterface(HTTPMethod):
         )
 
 class CharacterList(HTTPMethod):
-    @authorize(authenticated)
+    @authenticate
     def get(self, admin=False):
         if admin and not is_administrator:
             raise HTTPNotFound()
