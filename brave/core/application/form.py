@@ -3,9 +3,10 @@
 from __future__ import unicode_literals
 
 from web.core.locale import L_
-from marrow.widgets import Form, TextField, TextArea, SelectField, URLField, EmailField, CheckboxField
+from marrow.widgets import Form, TextField, TextArea, SelectField, URLField, EmailField, CheckboxField, NumberField
 from marrow.widgets.transforms import TagsTransform
 from brave.core.util.form import Tab, EmbeddedDocumentTab, Paragraph
+from web.auth import user
 
 
 log = __import__('logging').getLogger(__name__)
@@ -13,7 +14,7 @@ log = __import__('logging').getLogger(__name__)
 
 # TODO: Secondary form with additional 'owner' selector.
 def manage_form(action='/application/manage/'):
-    return Form('application', action=action, method='post', class_='modal-body tab-content form-horizontal', children=[
+    form = Form('application', action=action, method='post', class_='modal-body tab-content form-horizontal', children=[
             Tab('general', L_("General"), class_='active', children=[
                     TextField('name', L_("Name"), required=True, class_="input-block-level validate"),
                     TextArea('description', L_("Description"), rows="6", class_='input-block-level'),
@@ -32,3 +33,10 @@ def manage_form(action='/application/manage/'):
                     TextArea('groups', L_("Group Identifiers"), transform=TagsTransform(), placeholder="E.g.: fc diplo myapp myapp.special", rows=3, class_="input-block-level")
                 ])
         ])
+        
+    if user.admin:
+        form.children.append(Tab('admin', L_("Admin"), children=[
+                    NumberField('expire', L_("Grant Duration (Days)"), placeholder=30, class_="input-small")
+                ])
+            )
+    return form

@@ -51,7 +51,8 @@ class ApplicationInterface(HTTPMethod):
                                 ),
                             required = app.mask.required,
                             optional = app.mask.optional,
-                            groups = app.groups
+                            groups = app.groups,
+                            expire = app.expireGrantDays
                         )
                 )
         
@@ -79,6 +80,9 @@ class ApplicationInterface(HTTPMethod):
         app.key.public = valid['key']['public']
         app.mask.required = valid['required'] or 0
         app.mask.optional = valid['optional'] or 0
+        
+        if user.admin:
+            app.expireGrantDays = valid['expire'] or 30
         
         app.save()
         

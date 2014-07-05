@@ -56,6 +56,8 @@ class Application(Document):
     mask = EmbeddedDocumentField(ApplicationMasks, db_field='m', default=lambda: ApplicationMasks())
     groups = ListField(StringField(), db_field='g', default=list)
     development = BooleanField(db_field='dev')
+    # Number of days that grants for this application should last.
+    expireGrantDays = IntField(db_field='e', default=30)
     
     owner = ReferenceField('User', db_field='o')
     
