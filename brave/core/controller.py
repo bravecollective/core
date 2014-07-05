@@ -16,7 +16,7 @@ from marrow.util.url import URL
 
 from brave.core import util
 from brave.core.util.signal import StartupMixIn
-from brave.core.util.predicate import authorize, authenticated
+from brave.core.util.predicate import authorize, authenticate
 from brave.core.api.model import AuthenticationRequest
 
 
@@ -161,7 +161,7 @@ class RootController(StartupMixIn, Controller):
         if boolean(config.get('debug', False)):
             self.dev = DeveloperTools()
     
-    @authorize(authenticated)
+    @authenticate
     def index(self):
         return 'brave.core.template.dashboard', dict()
     

@@ -21,3 +21,7 @@ ad709e0: It is highly recommended that admins remove all characters whose owners
 ***0.6.3***
 8ac784f: The config value 'core.minimum_key_id' should be added to the production config file. Recommended
     value of 3283828
+    
+***DEVELOP***
+feature/authenticated: The config value 'web.auth.intercept' should be added to the production config file with a value 
+    of 401.
