@@ -57,7 +57,7 @@ class Application(Document):
     groups = ListField(StringField(), db_field='g', default=list)
     development = BooleanField(db_field='dev')
     # Number of days that grants for this application should last.
-    expireGrantTime = IntField(db_field='e', default=30)
+    expireGrantDays = IntField(db_field='e', default=30)
     
     owner = ReferenceField('User', db_field='o')
     

@@ -65,7 +65,7 @@ class AuthorizeHandler(HTTPMethod):
                      ar=ar))
             return 'brave.core.template.authorize', dict(success=True, ar=ar, characters=characters, default=default)
         
-        ngrant = ApplicationGrant(user=u, application=ar.application, mask=grant.mask, expires=datetime.utcnow() + timedelta(days=ar.application.expireGrantTime), character=grant.character)
+        ngrant = ApplicationGrant(user=u, application=ar.application, mask=grant.mask, expires=datetime.utcnow() + timedelta(days=ar.application.expireGrantDays), character=grant.character)
         ngrant.save()
         
         ar.user = u
@@ -107,7 +107,7 @@ class AuthorizeHandler(HTTPMethod):
             return 'json:', dict(success=False, message="Error loading character.")
         
         # TODO: Non-zero grants.
-        grant = ApplicationGrant(user=u, application=ar.application, mask=0, expires=datetime.utcnow() + timedelta(days=ar.application.expireGrantTime), character=character)
+        grant = ApplicationGrant(user=u, application=ar.application, mask=0, expires=datetime.utcnow() + timedelta(days=ar.application.expireGrantDays), character=character)
         grant.save()
         
         ar.user = u
