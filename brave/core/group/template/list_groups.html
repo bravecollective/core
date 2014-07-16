@@ -46,7 +46,7 @@
                     },
                     function()
                     {
-                        $.ajax('/group/' + row.attr('data-id') + '/delete').
+                        $.post('/group/' + row.attr('data-id') + '/delete').
                         done(function()
                         {
                             row.remove();
