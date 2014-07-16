@@ -149,6 +149,49 @@ class User(Document):
                 
         return perms
         
+    def has_permission(self, permission):
+        """Accepts both Permission objects and Strings. Returns the first character found with that permission,
+           preferring the user's primary character."""
+        
+        from brave.core.group.model import Permission
+        
+        if isinstance(permission, str) or isinstance(permission, unicode):
+            perm_name = permission
+            permission = Permission.objects(name=perm_name)
+            
+            if not permission:
+                log.info("Permission %s not found.", perm_name)
+                
+                # The permission specified was not found in the database, so we loop through the character's
+                # permissions and see if they would grant this permission. Might be worth optimizing in the future
+                # by adding a new EVECharacter function that returns only that character's wildcard permissions.
+                
+                # Check the primary character first, and if they have the permission return them.
+                for p in self.primary.permissions():
+                    if p.grantsPermission(perm_name):
+                        return self.primary
+                
+                # Primary didn't have permission, check if the other characters do.
+                for c in self.characters:
+                    for p in c.permissions():
+                        if p.grantsPermission(perm_name):
+                            return c
+                
+                return None
+            
+            permission = permission.first()
+        
+        # Check the primary character first, and if they have the permission return them.
+        if permission in self.primary.permissions:
+            return self.primary
+        
+        # Primary didn't have permission, check if the other characters do.
+        for c in self.characters:
+            if permission in c.permissions:
+                return c
+        
+        return None
+        
     @staticmethod
     def add_duplicate(acc, other, IP=False):
         """Marks other as a duplicate account to this account.
