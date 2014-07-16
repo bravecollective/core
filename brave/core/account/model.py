@@ -136,6 +136,18 @@ class User(Document):
             self.remove_duplicate(self, other, IP=True)
         
         super(User, self).delete()
+    
+    @property
+    def permissions(self):
+        """Returns all permissions that any character this user owns has."""
+        
+        perms = set()
+        
+        for c in self.characters:
+            for p in c.permissions:
+                perms.add(p)
+                
+        return perms
         
     @staticmethod
     def add_duplicate(acc, other, IP=False):
