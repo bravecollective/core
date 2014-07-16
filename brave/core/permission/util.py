@@ -41,11 +41,9 @@ def user_has_permission(perm=None):
             user = user._current_obj()
         
             # No user with that username was found.
-            if not len(user):
-                log.debug('User not found in database.')
+            if not user:
+                log.debug('User not found.')
                 raise HTTPForbidden()
-        
-            user = user.first()
             
             # User has no characters, so they have no permissions.
             if not len(user.characters):
