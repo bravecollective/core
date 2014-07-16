@@ -9,6 +9,7 @@ from brave.core.util.signal import update_modified_timestamp
 from brave.core.permission.model import Permission, WildcardPermission, GRANT_WILDCARD
 from brave.core.account.model import User
 from web.core.http import HTTPForbidden, HTTPUnauthorized
+from brave.core.util.predicate import authenticate
 import web.auth
 
 
@@ -19,14 +20,10 @@ def user_has_permission(perm=None):
     
     def decorator(function):
         
+        @authenticate
         def check_permission(self, *args, **kwargs):
             user = web.auth.user
             
-            # If there is no user, they don't have permission
-            if not user or not user._current_obj():
-                log.debug('user not a valid object')
-                raise HTTPUnauthorized()
-        
             # If there is no permission provided, then any auth'd user has permission
             if not perm:
                 log.debug('No permission provided.')
