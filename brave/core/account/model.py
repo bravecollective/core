@@ -11,6 +11,9 @@ from brave.core.util.signal import update_modified_timestamp
 from brave.core.util.field import PasswordField, IPAddressField
 
 
+log = __import__('logging').getLogger(__name__)
+
+
 @update_modified_timestamp.signal
 class User(Document):
     meta = dict(
