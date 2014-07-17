@@ -16,7 +16,7 @@ import web.auth
 log = __import__('logging').getLogger(__name__)
 
 
-def user_has_permission(perm=None):
+def user_has_permission(perm=None, **runkw):
     
     def decorator(function):
         
@@ -46,6 +46,18 @@ def user_has_permission(perm=None):
             if not len(user.characters):
                 log.debug('User has no characters.')
                 raise HTTPForbidden()
+                
+            # Handle run-time permissions.
+            for key, value in runkw.iteritems():
+                valSplit = value.split('.')
+                for attr in valSplit:
+                    if attr == 'self':
+                        value = self
+                        continue
+                    value = getattr(value, attr)
+                    
+                permission = perm.replace('{'+key+'}', value)
+                
             
             # Cycle through the user's permissions, and if they have it leave the method.
             for c in user.characters:
