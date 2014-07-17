@@ -216,7 +216,7 @@ class EVECharacter(EVEEntity):
         
         # Allow app to be either the short name or the application object itself.
         if isinstance(app, Application):
-            app = app.short_name + '.'
+            app = app.short + '.'
         
         # Ensure the provided string ends with a . to prevent pulling permissions from another application with the
         # same starting letters (forums should not return forums2's permissions.)
@@ -253,6 +253,17 @@ class EVECharacter(EVEEntity):
             
             permissions |= perm.getPermissions()
         
+        return permissions
+        
+    def permissions_tags(self, application=None):
+        """Returns just the string for the permissions owned by this character."""
+        
+        perms = self.permissions(application)
+        permissions =  list()
+        
+        for p in perms:
+            permissions.append(p.name)
+            
         return permissions
         
     def has_permission(self, permission):

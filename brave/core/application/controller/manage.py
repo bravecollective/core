@@ -15,6 +15,7 @@ from web.core.http import HTTPFound, HTTPNotFound
 from brave.core.application.model import Application
 from brave.core.application.form import manage_form
 from brave.core.util.predicate import authorize, authenticate, is_administrator
+from brave.core.permission.util import user_has_permission
 
 
 log = __import__('logging').getLogger(__name__)
@@ -29,7 +30,7 @@ class ApplicationInterface(HTTPMethod):
         except Application.DoesNotExist:
             raise HTTPNotFound()
 
-        if self.app.owner.id != user.id and not user.admin:
+        if self.app.owner.id != user.id and not user.has_permission('core.application.edit.'+str(app)):
             raise HTTPNotFound()
     
     def get(self):
@@ -80,6 +81,7 @@ class ApplicationInterface(HTTPMethod):
         app.key.public = valid['key']['public']
         app.mask.required = valid['required'] or 0
         app.mask.optional = valid['optional'] or 0
+        app.short = valid['short'] or app.name.replace(" ", "").lower()
         
         if user.admin:
             app.expireGrantDays = valid['expire'] or 30
@@ -107,10 +109,11 @@ class ApplicationInterface(HTTPMethod):
 class ApplicationList(HTTPMethod):
     @authenticate
     def get(self):
-        if user.admin:
-            adminRecords = {record for record in Application.objects() if record.owner != user._current_obj()}
-        else:
-            adminRecords = {}
+        adminRecords = set()
+            
+        for app in Application.objects():
+            if app.owner.id != user.id and user.has_permission('core.application.edit.'+str(app.id)):
+                adminRecords.add(app)
         
         records = Application.objects(owner=user._current_obj())
         
@@ -127,7 +130,7 @@ class ApplicationList(HTTPMethod):
                 adminRecords = adminRecords
             )
     
-    @authenticate
+    @user_has_permission('core.application.create')
     def post(self, **kw):
         if not request.is_xhr:
             raise HTTPNotFound()
@@ -145,6 +148,8 @@ class ApplicationList(HTTPMethod):
             app.development = True
         else:
             app.development = False
+            
+        app.short = valid['short'] or app.name.replace(" ", "").lower()
         
         app.save()
         
