@@ -91,10 +91,12 @@
 
 <div class="container-fluid">
     <div id="pad-wrapper">
-        <div class="row-fluid header">
-            <a class="btn btn-success pull-right add" data-toggle="modal" data-target="#new-group"><i class="fa fa-plus"></i> Create Group</a>
-            <h3>Groups</h3>
-        </div>
+         % if web.user.has_permission('core.group.create'):
+            <div class="row-fluid header">
+                <a class="btn btn-success pull-right add" data-toggle="modal" data-target="#new-group"><i class="fa fa-plus"></i> Create Group</a>
+                <h3>Groups</h3>
+            </div>
+        % endif
         <div class="row-fluid table">
             % if not len(groups):
                 <p class="subtext" style="text-transform: uppercase;"><strong>There seem to be no groups.</strong></p>
@@ -112,7 +114,9 @@
                             <tr data-id="${group.id | h}">
                                 <td><a href="/group/${group.id | u}">${group.id | h}</a></td>
                                 <td>${group.title | h}</td>
-                                <td><button class="btn btn-danger btn-small delete"><i class="fa fa-times"></i></button></td>
+                                % if web.user.has_permission('core.group.delete.'+group.id):
+                                    <td><button class="btn btn-danger btn-small delete"><i class="fa fa-times"></i></button></td>
+                                % endif
                             </tr>
                         % endfor
                     </tbody>

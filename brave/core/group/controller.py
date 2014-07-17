@@ -7,13 +7,15 @@ from datetime import datetime
 from web.auth import user
 from web.core import Controller, HTTPMethod, request
 from web.core.locale import _
-from web.core.http import HTTPFound, HTTPNotFound
+from web.core.http import HTTPFound, HTTPNotFound, HTTPForbidden
 
 from brave.core.character.model import EVECharacter, EVECorporation, EVEAlliance
 from brave.core.group.model import Group
 from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
 from brave.core.util import post_only
 from brave.core.util.predicate import authorize, is_administrator
+from brave.core.permission.util import user_has_permission
+from brave.core.permission.model import Permission
 
 import json
 
@@ -28,15 +30,15 @@ class OneGroupController(Controller):
         except Group.DoesNotExist:
             raise HTTPNotFound()
 
-    @authorize(is_administrator)
+    @user_has_permission('core.group.view.{gid}', gid='self.group.id')
     def index(self):
         return 'brave.core.group.template.group', dict(
             area='group',
             group=self.group,
         )
 
-    @authorize(is_administrator)
     @post_only
+    @user_has_permission('core.group.edit.{gid}', gid='self.group.id')
     def set_rules(self, rules, really=False):
         rules = json.loads(rules)
         rule_objects = []
@@ -83,24 +85,28 @@ class OneGroupController(Controller):
         return 'json:', dict(success=True,
                              message=_("unimplemented"))
 
-    @authorize(is_administrator)
     @post_only
+    @user_has_permission('core.group.delete.{gid}', gid='self.group.id')
     def delete(self):
         self.group.delete()
         return 'json:', dict(success=True)
 
 class GroupList(HTTPMethod):
+    @user_has_permission('core.group.list')
     def get(self):
-        if not is_administrator:
-            raise HTTPNotFound
-
         groups = sorted(Group.objects(), key=lambda g: g.id)
+        
+        visibleGroups = list()
+        for g in groups:
+            if user.has_permission('core.group.view.'+g.id):
+                visibleGroups.append(g)
+        
         return 'brave.core.group.template.list_groups', dict(
             area='group',
-            groups=groups,
+            groups=visibleGroups,
         )
 
-    @authorize(is_administrator)
+    @user_has_permission('core.group.create')
     def post(self, id=None, title=None):
         if not id:
             return 'json:', dict(success=False,
@@ -112,7 +118,16 @@ class GroupList(HTTPMethod):
         if not g:
             return 'json:', dict(success=False,
                                  message=_("group with that id already existed"))
-
+        # Give the creator of the group the ability to edit it and delete it.
+        editPerm = Permission(name='core.group.edit.'+g.id)
+        deletePerm = Permission(name='core.group.delete.'+g.id)
+        # Might be called when we save the user... Should probably check that.
+        editPerm.save()
+        deletePerm.save()
+        user.personal_permissions.append(editPerm)
+        user.personal_permissions.append(deletePerm)
+        user.save()
+        
         return 'json:', dict(success=True, id=g.id)
 
 class GroupController(Controller):
@@ -122,7 +137,7 @@ class GroupController(Controller):
         request.path_info_pop()  # We consume a single path element.
         return OneGroupController(id), args
 
-    @authorize(is_administrator)
+    @user_has_permission('core.group.edit')
     def check_rule_reference_exists(self, kind, name):
         cls = ACLList.target_class(kind)
         return "json:", dict(exists=bool(cls.objects(name=name)))

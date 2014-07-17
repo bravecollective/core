@@ -19,7 +19,8 @@ class CharacterInterface(HTTPMethod):
         except EVECharacter.DoesNotExist:
             raise HTTPNotFound()
 
-        if (not self.char.owner or self.char.owner.id != user.id) and not user.admin:
+        if (not self.char.owner or self.char.owner.id != user.id) and not user.has_permission('core.character.view.'+
+                str(self.char.id)):
             raise HTTPNotFound()
 
     @authenticate
@@ -38,7 +39,8 @@ class CharacterInterface(HTTPMethod):
         
     @authenticate
     def get(self):
-        if (not self.char.owner or self.char.owner.id != user.id) and not user.admin:
+        if (not self.char.owner or self.char.owner.id != user.id) and not user.has_permission('core.character.view.'+
+                str(self.char.id)):
             raise HTTPNotFound()
         
         return 'brave.core.character.template.charDetails', dict(
@@ -49,7 +51,7 @@ class CharacterInterface(HTTPMethod):
 class CharacterList(HTTPMethod):
     @authenticate
     def get(self, admin=False):
-        if admin and not is_administrator:
+        if admin and not user.has_permission('core.character.list.all'):
             raise HTTPNotFound()
             
         characters = user.characters
