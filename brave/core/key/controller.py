@@ -39,7 +39,7 @@ class KeyIndex(HTTPMethod):
         
     def get(self):
         return 'brave.core.key.template.keyDetails', dict(
-            area='admin',
+            area='admin' if user.admin else 'keys',
             admin=True,
             record=self.key
         )
