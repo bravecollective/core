@@ -8,7 +8,7 @@ from web.core.locale import _
 from web.core.http import HTTPFound, HTTPNotFound
 
 from brave.core.application.model import Application
-from brave.core.util.predicate import authorize, authenticated
+from brave.core.util.predicate import authorize, authenticate
 
 
 log = __import__('logging').getLogger(__name__)
@@ -46,7 +46,7 @@ class ApplicationInterface(Controller):
 
 
 class BrowseController(Controller):
-    @authorize(authenticated)
+    @authenticate
     def index(self):
         records = Application.objects(development__in=[False, None])  # TODO: This needs to be ACL-filtered!
         devRecords = Application.objects(development=True)

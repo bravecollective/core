@@ -177,6 +177,9 @@ class EVECharacter(EVEEntity):
     def tags(self):
         from brave.core.group.model import Group
         mapping = dict()
+
+        if not self.owner:
+            return dict()
         
         for group in Group.objects:
             if group.evaluate(self.owner, self):
@@ -303,12 +306,15 @@ class EVECharacter(EVEEntity):
     def delete(self):
         """Deletes the character. This is not recommended for typical use."""
         
-        self.detach()
+        if self.owner:
+            self.detach()
                 
         super(EVECharacter, self).delete()
         
     def detach(self):
         """Removes all references to this character that imply ownership of the character."""
+        if not self.owner:
+            return
         
         # If this character is the primary character for the account, wipe that field for the user.
         if self == self.owner.primary:

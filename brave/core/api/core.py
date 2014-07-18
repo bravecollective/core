@@ -145,8 +145,10 @@ class CoreAPI(SignedController):
         # User has no keys registered.
         if not key:
             return None
-            
-        key.pull()
+        
+        # Update key info, and if something goes wrong, abort the call.
+        if not key.pull():
+            return None
         
         # Step 3: Match ACLs.
         tags = []

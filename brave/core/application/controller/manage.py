@@ -14,7 +14,7 @@ from web.core.http import HTTPFound, HTTPNotFound
 
 from brave.core.application.model import Application
 from brave.core.application.form import manage_form
-from brave.core.util.predicate import authorize, authenticated, is_administrator
+from brave.core.util.predicate import authorize, authenticate, is_administrator
 
 
 log = __import__('logging').getLogger(__name__)
@@ -44,13 +44,15 @@ class ApplicationInterface(HTTPMethod):
                             description = app.description,
                             site = app.site,
                             contact = app.contact,
+                            development = app.development,
                             key = dict(
                                     public = app.key.public,
                                     private = app.key.private,
                                 ),
                             required = app.mask.required,
                             optional = app.mask.optional,
-                            groups = app.groups
+                            groups = app.groups,
+                            expire = app.expireGrantDays
                         )
                 )
         
@@ -68,7 +70,7 @@ class ApplicationInterface(HTTPMethod):
         app = self.app
         valid, invalid = manage_form().native(kw)
         
-        for k in ('name', 'description', 'groups', 'site', 'contact'):
+        for k in ('name', 'description', 'groups', 'site', 'contact', 'development'):
             setattr(app, k, valid[k])
         
         if valid['key']['public'].startswith('-'):
@@ -79,10 +81,8 @@ class ApplicationInterface(HTTPMethod):
         app.mask.required = valid['required'] or 0
         app.mask.optional = valid['optional'] or 0
         
-        if valid['development'] == "true" or valid['development'] == "True":
-            app.development = True
-        else:
-            app.development = False
+        if user.admin:
+            app.expireGrantDays = valid['expire'] or 30
         
         app.save()
         
@@ -105,7 +105,7 @@ class ApplicationInterface(HTTPMethod):
 
 
 class ApplicationList(HTTPMethod):
-    @authorize(authenticated)
+    @authenticate
     def get(self):
         if user.admin:
             adminRecords = {record for record in Application.objects() if record.owner != user._current_obj()}
@@ -127,7 +127,7 @@ class ApplicationList(HTTPMethod):
                 adminRecords = adminRecords
             )
     
-    @authorize(authenticated)
+    @authenticate
     def post(self, **kw):
         if not request.is_xhr:
             raise HTTPNotFound()

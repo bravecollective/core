@@ -229,7 +229,9 @@ class Settings(HTTPMethod):
         query = dict(active=True)
         query[b'username'] = data.id
 
-        user = User.objects(**query).first()
+        query_user = User.objects(**query).first()
+        if query_user.id != user.id:
+            raise HTTPForbidden
 
         if data.form == "changepassword":
             passwd_ok, error_msg = _check_password(data.passwd, data.passwd1)

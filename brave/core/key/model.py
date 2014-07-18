@@ -30,7 +30,7 @@ class EVECredential(Document):
                 ],
         )
     
-    key = IntField(db_field='k')
+    key = IntField(db_field='k', unique=True)
     code = StringField(db_field='c')
     kind = StringField(db_field='t')
     _mask = IntField(db_field='a', default=0)
@@ -92,8 +92,10 @@ class EVECredential(Document):
         from brave.core.character.model import EVEAlliance, EVECorporation, EVECharacter
         try:
             char = EVECharacter(identifier=info.characterID).save()
+            new = True
         except NotUniqueError:
             char = EVECharacter.objects(identifier=info.characterID)[0]
+            new = False
             
             if char.owner and self.owner != char.owner:
                 log.warning("Security violation detected. Multiple accounts trying to register character %s, ID %d. "
@@ -107,10 +109,17 @@ class EVECredential(Document):
         
                 return
 
-        if self.mask.has_access(api.char.CharacterSheet.mask):
-            info = api.char.CharacterSheet(self, characterID=info.characterID)
-        elif self.mask.has_access(api.char.CharacterInfoPublic.mask):
-            info = api.char.CharacterInfoPublic(self, characterID=info.characterID)
+        try:
+            if self.mask.has_access(api.char.CharacterSheet.mask):
+                info = api.char.CharacterSheet(self, characterID=info.characterID)
+            elif self.mask.has_access(api.char.CharacterInfoPublic.mask):
+                info = api.char.CharacterInfoPublic(self, characterID=info.characterID)
+        except Exception:
+            log.warning("An error occured while querying data for key %s.", self.key)
+            if new:
+                char.delete()
+            
+            raise
 
         char.corporation, char.alliance = self.get_membership(info)
 

@@ -124,19 +124,29 @@ class User(Document):
         self.grants.delete()
         self.attempts.delete()
         self.recovery_keys.delete()
+        
+        dups = set(self.other_accs_char_key)
+        
+        for other in dups:
+            self.remove_duplicate(self, other)
+            
+        dups = set(self.other_accs_IP)
+        
+        for other in dups:
+            self.remove_duplicate(self, other, IP=True)
+        
         super(User, self).delete()
         
     @staticmethod
-    def add_duplicate(acc, other, **kw):
+    def add_duplicate(acc, other, IP=False):
         """Marks other as a duplicate account to this account.
-        And marks this account as duplicate to other.
+        And marks this account as duplicate to other."""
         
-        kw should include an argument IP, which defaults to False"""
         # If the 2 accounts supplied are the same, do nothing
         if acc.id == other.id:
             return
         
-        if not kw.get('IP'):
+        if not IP:
             if other not in acc.other_accs_char_key:
                 acc.other_accs_char_key.append(other)
             if acc not in other.other_accs_char_key:
@@ -146,6 +156,28 @@ class User(Document):
                 acc.other_accs_IP.append(other)
             if acc not in other.other_accs_IP:
                 other.other_accs_IP.append(acc)
+                
+        acc.save()
+        other.save()
+        
+    @staticmethod
+    def remove_duplicate(acc, other, IP=False):
+        """Removes a duplicate account connection for both accounts."""
+        
+        # If the 2 accounts supplied are the same, do nothing
+        if acc.id == other.id:
+            return
+        
+        if not IP:
+            if other in acc.other_accs_char_key:
+                acc.other_accs_char_key.remove(other)
+            if acc in other.other_accs_char_key:
+                other.other_accs_char_key.remove(acc)
+        else:
+            if other in acc.other_accs_IP:
+                acc.other_accs_IP.remove(other)
+            if acc in other.other_accs_IP:
+                other.other_accs_IP.remove(acc)
                 
         acc.save()
         other.save()
@@ -170,7 +202,7 @@ class LoginHistory(Document):
         return 'LoginHistory({0}, {1}, {2}, {3})'.format(
                 self.id.generation_time.isoformat(),
                 'PASS' if self.success else 'FAIL',
-                self.user_id,
+                self.user.username,
                 self.location
             )
 
@@ -196,6 +228,6 @@ class PasswordRecovery(Document):
     def __repr__(self):
         return 'PasswordRecovery({0}, {1}, {2})'.format(
             self.id.generation_time.isoformat(),
-            self.user_id,
+            self.user.username,
             self.recovery_key
         )
