@@ -18,11 +18,11 @@ class Permission(Document):
         collection='Permissions',
         allow_inheritance = True,
         indexes = [
-            dict(fields=['name'], unique=True, required=True)
+            dict(fields=['id'])
         ],
     )
     
-    name = StringField(db_field='n')
+    id = StringField(primary_key=True)
     description = StringField(db_field='d')
     
     @property
@@ -32,10 +32,10 @@ class Permission(Document):
         from brave.core.application.model import Application
         
         # Handle '*' properly
-        if self.name.find('.') == -1:
+        if self.id.find('.') == -1:
             return None
         
-        app_short = self.name.split('.')[0]
+        app_short = self.id.split('.')[0]
         
         app = Application.objects(short=app_short)
         
@@ -45,7 +45,7 @@ class Permission(Document):
             return app.first()
             
     def __repr__(self):
-        return "Permission('{0}')".format(self.name)
+        return "Permission('{0}')".format(self.id)
             
     def getPermissions(self):
         """Returns all permissions granted by this Permission."""
@@ -56,11 +56,11 @@ class Permission(Document):
         """This is used to see if a Permission grants access to a permission which is not in the database.
             For instance, when evaluating whether a WildcardPermission grants access to a run-time permission."""
         
-        return(self.name == perm_string)
+        return(self.id == perm_string)
         
     def __eq__(self, other):
         if isinstance(other, Permission):
-            return self.name == other.name
+            return self.id == other.id
         return False
         
     def __ne__(self, other):
@@ -69,7 +69,7 @@ class Permission(Document):
 class WildcardPermission(Permission):
     
     def __repr__(self):
-        return "WildcardPermission('{0}')".format(self.name)
+        return "WildcardPermission('{0}')".format(self.id)
             
     def getPermissions(self):
         """Returns all Permissions granted by this Permission"""
@@ -81,7 +81,7 @@ class WildcardPermission(Permission):
 
         # Loops through all of the permissions, checking if this permission grants access to that permission.
         for perm in Permission.objects():
-            if self.grantsPermission(perm.name):
+            if self.grantsPermission(perm.id):
                 perms.add(perm)
         
         return perms
@@ -89,8 +89,8 @@ class WildcardPermission(Permission):
     def grantsPermission(self, perm_string):
         """This is used to see if a Permission grants access to a permission which is not in the database.
             For instance, when evaluating whether a WildcardPermission grants access to a run-time permission."""
-        # Splits both this permission's name and the permission being checked.
-        self_segments = self.name.split('.')
+        # Splits both this permission's id and the permission being checked.
+        self_segments = self.id.split('.')
         perm_segments = perm_string.split('.')
         
         # If this permission has more segments than the permission we're matching against, it can't provide access
@@ -104,7 +104,7 @@ class WildcardPermission(Permission):
             if GRANT_WILDCARD != self_segments[-1]:
                 return False
         
-        # Loops through each segment of the wildcardPerm and permission name. 'core.example.*.test.*' would have 
+        # Loops through each segment of the wildcardPerm and permission id. 'core.example.*.test.*' would have 
         # segments of 'core', 'example', '*', 'test', and '*' in that order.
         for (s_seg, perm_seg) in zip(self_segments, perm_segments):
             # We loop through looking for something wrong, if there's nothing wrong then we return True.

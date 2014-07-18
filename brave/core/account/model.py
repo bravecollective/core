@@ -159,11 +159,11 @@ class User(Document):
         from brave.core.group.model import Permission
         
         if isinstance(permission, str) or isinstance(permission, unicode):
-            perm_name = permission
-            permission = Permission.objects(name=perm_name)
+            perm_id = permission
+            permission = Permission.objects(id=perm_id)
             
             if not permission:
-                log.info("Permission %s not found.", perm_name)
+                log.info("Permission %s not found.", perm_id)
                 
                 # The permission specified was not found in the database, so we loop through the character's
                 # permissions and see if they would grant this permission. Might be worth optimizing in the future
@@ -171,13 +171,13 @@ class User(Document):
                 
                 # Check the primary character first, and if they have the permission return them.
                 for p in self.primary.permissions():
-                    if p.grantsPermission(perm_name):
+                    if p.grantsPermission(perm_id):
                         return self.primary
                 
                 # Primary didn't have permission, check if the other characters do.
                 for c in self.characters:
                     for p in c.permissions():
-                        if p.grantsPermission(perm_name):
+                        if p.grantsPermission(perm_id):
                             return c
                 
                 return None
@@ -185,12 +185,12 @@ class User(Document):
             permission = permission.first()
         
         # Check the primary character first, and if they have the permission return them.
-        if permission in self.primary.permissions:
+        if permission in self.primary.permissions():
             return self.primary
         
         # Primary didn't have permission, check if the other characters do.
         for c in self.characters:
-            if permission in c.permissions:
+            if permission in c.permissions():
                 return c
         
         return None

@@ -38,7 +38,7 @@ class OneGroupController(Controller):
         )
 
     @post_only
-    @user_has_permission('core.group.edit.{gid}', gid='self.group.id')
+    @user_has_permission('core.group.edit.acl.{gid}', gid='self.group.id')
     def set_rules(self, rules, really=False):
         rules = json.loads(rules)
         rule_objects = []
@@ -119,8 +119,8 @@ class GroupList(HTTPMethod):
             return 'json:', dict(success=False,
                                  message=_("group with that id already existed"))
         # Give the creator of the group the ability to edit it and delete it.
-        editPerm = Permission(name='core.group.edit.'+g.id)
-        deletePerm = Permission(name='core.group.delete.'+g.id)
+        editPerm = Permission('core.group.edit.acl.'+g.id, "Ability to edit ACLs for Group {0}".format(g.id))
+        deletePerm = Permission('core.group.delete.'+g.id, "Ability to delete Group {0}".format(g.id))
         # Might be called when we save the user... Should probably check that.
         editPerm.save()
         deletePerm.save()

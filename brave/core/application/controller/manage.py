@@ -151,6 +151,11 @@ class ApplicationList(HTTPMethod):
             
         app.short = valid['short'] or app.name.replace(" ", "").lower()
         
+        p = Permission(app.short+'.authorize', "Ability to authorize application {0}".format(app.name))
+        p.save()
+        u.personal_permissions.append(p)
+        u.save()
+        
         app.save()
         
         return 'json:', dict(

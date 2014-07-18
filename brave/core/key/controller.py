@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 from web.auth import user
 from web.core import Controller, HTTPMethod, request, config
 from web.core.locale import _
-from web.core.http import HTTPFound, HTTPNotFound, HTTPUnauthorized
+from web.core.http import HTTPFound, HTTPNotFound, HTTPUnauthorized, HTTPForbidden
 from web.core.templating import render
 from marrow.util.convert import boolean
 from marrow.util.bunch import Bunch

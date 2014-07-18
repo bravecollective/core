@@ -179,7 +179,7 @@
 
 
 <div class="container-fluid">
-    % if web.user.admin:
+    % if web.user.has_permission('core.key.list.all'):
     <div id="tabs-wrapper">
         <div class="row-fluid">
             <a class="span3 tab${' active' if not admin else ''}" href="/key/">
