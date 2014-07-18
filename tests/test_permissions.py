@@ -16,26 +16,26 @@ class PermissionTest(unittest.TestCase):
             g.delete()
             
     def createWild(self, name):
-        p = WildcardPermission(name=name)
+        p = WildcardPermission(name)
         p.save()
         return p
         
     def createPerm(self, name):
-        p = Permission(name=name)
+        p = Permission(name)
         p.save()
         return p
         
     def createPermsTest(self):
-        Permission(name='core.hello').save()
-        Permission(name='core.test').save()
-        Permission(name='core.test.no').save()
-        Permission(name='core.permission.grant').save()
-        Permission(name='mumble.join').save()
-        Permission(name='mumble.server.join').save()
-        Permission(name='mumble.test').save()
-        WildcardPermission(name='*').save()
-        WildcardPermission(name='*.test').save()
-        WildcardPermission(name='core.*').save()
+        Permission('core.hello').save()
+        Permission('core.test').save()
+        Permission('core.test.no').save()
+        Permission('core.permission.grant').save()
+        Permission('mumble.join').save()
+        Permission('mumble.server.join').save()
+        Permission('mumble.test').save()
+        WildcardPermission('*').save()
+        WildcardPermission('*.test').save()
+        WildcardPermission('core.*').save()
             
     def test_runtime_perm(self):
         check_perm = 'core.test.wildcard.permission'
@@ -52,9 +52,9 @@ class PermissionTest(unittest.TestCase):
         self.assertFalse(self.createWild('core.*.wildcard.*.hello').grantsPermission(check_perm))
         
     def test_wildcard_evaluation(self):
-        check_perm = Permission(name='core.test.wildcard.permission')
+        check_perm = Permission('core.test.wildcard.permission')
         check_perm.save()
-        check_perm = check_perm.name
+        check_perm = check_perm.id
         self.assertTrue(self.createWild('*').grantsPermission(check_perm))
         self.assertTrue(self.createWild('core.*').grantsPermission(check_perm))
         self.assertTrue(self.createWild('core.test.*').grantsPermission(check_perm))
@@ -70,9 +70,9 @@ class PermissionTest(unittest.TestCase):
     def test_group_permissions(self):
         self.createPermsTest()
         g = Group(id='testGroup')
-        g._permissions.append(Permission.objects(name='*.test').first())
-        g._permissions.append(Permission.objects(name='core.permission.grant').first())
+        g._permissions.append(Permission.objects(id='*.test').first())
+        g._permissions.append(Permission.objects(id='core.permission.grant').first())
         g.save()
-        self.assertEqual(g.permissions, set({Permission.objects(name='core.test').first(),
-            Permission.objects(name='mumble.test').first(), Permission.objects(name='core.permission.grant').first(),
-            Permission.objects(name='*.test').first()}))
+        self.assertEqual(g.permissions, set({Permission.objects(id='core.test').first(),
+            Permission.objects(id='mumble.test').first(), Permission.objects(id='core.permission.grant').first(),
+            Permission.objects(id='*.test').first()}))
