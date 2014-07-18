@@ -71,4 +71,3 @@ def user_has_permission(perm=None, **runkw):
         return check_permission
     
     return decorator
-
