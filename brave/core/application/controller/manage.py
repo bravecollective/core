@@ -17,6 +17,7 @@ from brave.core.application.form import manage_form
 from brave.core.util.predicate import authorize, authenticate, is_administrator
 from brave.core.permission.util import user_has_permission
 from brave.core.permission.model import Permission
+from brave.core.permission.controller import createPerms
 
 
 log = __import__('logging').getLogger(__name__)
@@ -37,6 +38,11 @@ class ApplicationInterface(HTTPMethod):
     def get(self):
         app = self.app
         
+        perms = ""
+        
+        for p in Permission.objects(id__startswith=app.short):
+            perms += p.id + ":" + p.description +"\n"
+        
         if request.is_xhr:
             return 'brave.core.template.form', dict(
                     kind = _("Application"),
@@ -54,6 +60,8 @@ class ApplicationInterface(HTTPMethod):
                             required = app.mask.required,
                             optional = app.mask.optional,
                             groups = app.groups,
+                            short = app.short,
+                            perms=perms,
                             expire = app.expireGrantDays
                         )
                 )
@@ -83,6 +91,8 @@ class ApplicationInterface(HTTPMethod):
         app.mask.required = valid['required'] or 0
         app.mask.optional = valid['optional'] or 0
         app.short = valid['short'] or app.name.replace(" ", "").lower()
+        
+        createPerms(valid['perms'])
         
         if user.admin:
             app.expireGrantDays = valid['expire'] or 30
@@ -151,6 +161,8 @@ class ApplicationList(HTTPMethod):
             app.development = False
             
         app.short = valid['short'] or app.name.replace(" ", "").lower()
+        
+        createPerms(valid['perms'])
         
         p = Permission(app.short+'.authorize', "Ability to authorize application {0}".format(app.name))
         p.save()
