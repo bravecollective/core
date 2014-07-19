@@ -18,3 +18,4 @@ core.key.view.*:Ability to view the details on any key
 core.key.list.all:Ability to see the list of all API keys
 core.permission.grant.*:Ability to grant any permission
 core.permission.revoke.*:Ability to revoke any permission
+core.*:Ability to do anything within Core

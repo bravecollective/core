@@ -24,7 +24,7 @@ def createPerms(permString):
             
         permission.save()
 
-def initPerms():
+def init_perms():
     f = open('permissions.txt', 'r')
     permString = ""
     for line in f:
