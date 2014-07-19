@@ -15,7 +15,7 @@ from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
 from brave.core.util import post_only
 from brave.core.util.predicate import authorize, is_administrator
 from brave.core.permission.util import user_has_permission
-from brave.core.permission.model import Permission
+from brave.core.permission.model import Permission, WildcardPermission, GRANT_WILDCARD
 
 import json
 
@@ -84,6 +84,30 @@ class OneGroupController(Controller):
             return 'json:', dict(success=True)
         return 'json:', dict(success=True,
                              message=_("unimplemented"))
+                             
+    @post_only
+    @user_has_permission('core.group.edit.perms.{gid}', gid='self.group.id')
+    @user_has_permission('core.permission.grant.{permID}', permID='permission')
+    def addPerm(self, permission=None):
+        p = Permission.objects(id=permission)
+        if len(p):
+            p = p.first()
+        else:
+            if GRANT_WILDCARD in permission:
+                p = WildcardPermission(permission)
+            else:
+                p = Permission(permission)
+            p.save()
+        self.group._permissions.append(p)
+        self.group.save()
+        
+    @post_only
+    @user_has_permission('core.group.edit.perms.{gid}', gid='self.group.id')
+    @user_has_permission('core.permission.revoke.{permID}', permID='permission')
+    def deletePerm(self, permission=None):
+        p = Permission.objects(id=permission).first()
+        self.group._permissions.remove(p)
+        self.group.save()
 
     @post_only
     @user_has_permission('core.group.delete.{gid}', gid='self.group.id')

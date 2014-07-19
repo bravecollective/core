@@ -166,8 +166,9 @@ class ApplicationList(HTTPMethod):
         
         p = Permission(app.short+'.authorize', "Ability to authorize application {0}".format(app.name))
         p.save()
-        u.personal_permissions.append(p)
-        u.save()
+        if u.primary:
+            u.primary.personal_permissions.append(p)
+        u.primary.save()
         
         app.save()
         

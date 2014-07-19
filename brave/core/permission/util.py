@@ -54,6 +54,9 @@ def user_has_permission(perm=None, **runkw):
                     if attr == 'self':
                         value = self
                         continue
+                    elif attr in kwargs:
+                        value = kwargs.get(attr)
+                        continue
                     value = getattr(value, attr)
                     
                 permission = perm.replace('{'+key+'}', value)
