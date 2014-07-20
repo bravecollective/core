@@ -14,7 +14,7 @@ from web.core.http import HTTPFound, HTTPNotFound
 
 from brave.core.application.model import Application
 from brave.core.application.form import manage_form
-from brave.core.util.predicate import authorize, authenticated, is_administrator
+from brave.core.util.predicate import authorize, authenticate, is_administrator
 
 
 log = __import__('logging').getLogger(__name__)
@@ -51,7 +51,8 @@ class ApplicationInterface(HTTPMethod):
                                 ),
                             required = app.mask.required,
                             optional = app.mask.optional,
-                            groups = app.groups
+                            groups = app.groups,
+                            expire = app.expireGrantDays
                         )
                 )
         
@@ -80,6 +81,9 @@ class ApplicationInterface(HTTPMethod):
         app.mask.required = valid['required'] or 0
         app.mask.optional = valid['optional'] or 0
         
+        if user.admin:
+            app.expireGrantDays = valid['expire'] or 30
+        
         app.save()
         
         return 'json:', dict(
@@ -101,7 +105,7 @@ class ApplicationInterface(HTTPMethod):
 
 
 class ApplicationList(HTTPMethod):
-    @authorize(authenticated)
+    @authenticate
     def get(self):
         if user.admin:
             adminRecords = {record for record in Application.objects() if record.owner != user._current_obj()}
@@ -123,7 +127,7 @@ class ApplicationList(HTTPMethod):
                 adminRecords = adminRecords
             )
     
-    @authorize(authenticated)
+    @authenticate
     def post(self, **kw):
         if not request.is_xhr:
             raise HTTPNotFound()

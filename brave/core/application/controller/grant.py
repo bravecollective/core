@@ -10,7 +10,7 @@ from web.core.http import HTTPFound, HTTPNotFound
 from brave.core.application.controller.browse import BrowseController
 from brave.core.application.controller.manage import ManagementController
 from brave.core.application.model import ApplicationGrant
-from brave.core.util.predicate import authorize, authenticated
+from brave.core.util.predicate import authorize, authenticate
 
 
 log = __import__('logging').getLogger(__name__)
@@ -50,7 +50,7 @@ class GrantInterface(HTTPMethod):
 
 
 class GrantList(HTTPMethod):
-    @authorize(authenticated)
+    @authenticate
     def get(self):
         records = ApplicationGrant.objects(
                 user = user._current_obj()
