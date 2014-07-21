@@ -325,7 +325,7 @@ def selected(bool):
         <div class="row-fluid header">
             <h3>${group.id | h} - ${group.title | h}</h3>
         </div>
-        % if web.user.has_permission('core.group.edit.acl.${group.id}'):
+        % if web.user.has_permission('core.group.edit.acl.'+group.id):
         <div class="row-fluid table">
             Rules:
             <table id="acl-rules" data-action="/group/${group.id}/set_rules">
@@ -353,7 +353,7 @@ def selected(bool):
         <br>
         <br>
         <br>
-        % if web.user.has_permission('core.group.edit.perms.${group.id}'):
+        % if web.user.has_permission('core.group.edit.perms.'+group.id):
         <div class="row-fluid table">
             Permissions:
             <list>

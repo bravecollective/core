@@ -147,7 +147,7 @@ class User(Document):
         perms = set()
         
         for c in self.characters:
-            for p in c.permissions:
+            for p in c.permissions():
                 perms.add(p)
                 
         return perms
@@ -158,41 +158,22 @@ class User(Document):
         
         from brave.core.group.model import Permission
         
-        if isinstance(permission, str) or isinstance(permission, unicode):
-            perm_id = permission
-            permission = Permission.objects(id=perm_id)
-            
-            if not permission:
-                log.info("Permission %s not found.", perm_id)
-                
-                # The permission specified was not found in the database, so we loop through the character's
-                # permissions and see if they would grant this permission. Might be worth optimizing in the future
-                # by adding a new EVECharacter function that returns only that character's wildcard permissions.
-                
-                # Check the primary character first, and if they have the permission return them.
-                for p in self.primary.permissions():
-                    if p.grantsPermission(perm_id):
-                        return self.primary
-                
-                # Primary didn't have permission, check if the other characters do.
-                for c in self.characters:
-                    for p in c.permissions():
-                        if p.grantsPermission(perm_id):
-                            return c
-                
-                return None
-            
-            permission = permission.first()
+        if isinstance(permission, Permission):
+            permission = permission.id
+        
+        log.debug('Checking if user has permission {0}'.format(permission))
         
         # Check the primary character first, and if they have the permission return them.
-        if permission in self.primary.permissions():
-            return self.primary
-        
+        for p in self.primary.permissions():
+            if p.grantsPermission(permission):
+                return self.primary
+                
         # Primary didn't have permission, check if the other characters do.
         for c in self.characters:
-            if permission in c.permissions():
-                return c
-        
+            for p in c.permissions():
+                if p.grantsPermission(permission):
+                    return c
+                
         return None
         
     @staticmethod
