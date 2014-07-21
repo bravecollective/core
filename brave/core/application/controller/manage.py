@@ -41,7 +41,10 @@ class ApplicationInterface(HTTPMethod):
         perms = ""
         
         for p in Permission.objects(id__startswith=app.short):
-            perms += p.id + ":" + p.description +"\n"
+            desc = p.description
+            if not desc:
+                desc = "None"
+            perms += p.id + ":" + desc + "\n"
         
         if request.is_xhr:
             return 'brave.core.template.form', dict(
@@ -80,6 +83,12 @@ class ApplicationInterface(HTTPMethod):
         app = self.app
         valid, invalid = manage_form().native(kw)
         
+        # No dots in application shorts
+        if '.' in valid['short']:
+            return 'json:', dict(
+                    success=False,
+                    message=_("Stop being bad and remove the periods in your app short."))
+        
         for k in ('name', 'description', 'groups', 'site', 'contact', 'development'):
             setattr(app, k, valid[k])
         
@@ -92,7 +101,10 @@ class ApplicationInterface(HTTPMethod):
         app.mask.optional = valid['optional'] or 0
         app.short = valid['short'] or app.name.replace(" ", "").lower()
         
-        createPerms(valid['perms'])
+        if not createPerms(valid['perms'], app.short):
+            return 'json:', dict(
+                    success=False,
+                    message=_("Stop being bad and only include permissions for your app."))
         
         if user.admin:
             app.expireGrantDays = valid['expire'] or 30
@@ -149,6 +161,17 @@ class ApplicationList(HTTPMethod):
         u = user._current_obj()
         valid, invalid = manage_form().native(kw)
         
+        # No dots in application shorts
+        if '.' in valid['short']:
+            return 'json:', dict(
+                    success=False,
+                    message=_("Stop being bad and remove the periods in your app short."))
+                    
+        if len(Application.objects(short=valid['short'])):
+            return 'json:', dict(
+                    success=False,
+                    message=_("An application with this permission name already exists."))
+        
         app = Application(owner=u, **{k: v for k, v in valid.iteritems() if k in ('name', 'description', 'groups', 'site', 'contact')})
         
         app.key.public = valid['key']['public']
@@ -159,10 +182,13 @@ class ApplicationList(HTTPMethod):
             app.development = True
         else:
             app.development = False
-            
+
         app.short = valid['short'] or app.name.replace(" ", "").lower()
         
-        createPerms(valid['perms'])
+        if not createPerms(valid['perms'], app.short):
+            return 'json:', dict(
+                    success=False,
+                    message=_("Stop being bad and only include permissions for your app."))
         
         p = Permission(app.short+'.authorize', "Ability to authorize application {0}".format(app.name))
         p.save()
