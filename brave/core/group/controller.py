@@ -31,15 +31,16 @@ class OneGroupController(Controller):
             raise HTTPNotFound()
 
     @user_has_permission('core.group.view.{gid}', gid='self.group.id')
-    def index(self):
+    def index(self, rule_set=None):
         return 'brave.core.group.template.group', dict(
             area='group',
             group=self.group,
+            rule_set=rule_set,
         )
 
     @post_only
     @user_has_permission('core.group.edit.acl.{gid}', gid='self.group.id')
-    def set_rules(self, rules, really=False):
+    def set_rules(self, rules, really=False, rule_set=None):
         rules = json.loads(rules)
         rule_objects = []
         log.debug(rules)
@@ -77,7 +78,12 @@ class OneGroupController(Controller):
             return "json:", "\n".join([r.human_readable_repr() for r in rule_objects])
 
         log.debug("really!")
-        self.group.rules = rule_objects
+        if rule_set == "request":
+            self.group.request_rules = rule_objects
+        elif rule_set == "join":
+            self.group.join_rules = rule_objects
+        else:
+            self.group.rules = rule_objects
         success = self.group.save()
         log.debug(success)
         if success:

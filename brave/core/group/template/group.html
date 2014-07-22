@@ -90,6 +90,7 @@ def selected(bool):
                         $.post($("#acl-rules").data("action"), {
                             rules: JSON.stringify(get_rule_data()),
                             really: "really",
+                            rule_set: "${rule_set}",
                         }).fail(function(data) {
                             alert("something went wrong!");
                         });
@@ -321,6 +322,20 @@ def selected(bool):
 
 <div class="container-fluid">
 
+    <div id="tabs-wrapper">
+        <div class="row-fluid">
+            <a class="span3 tab${' active' if not rule_set else ''}" href="/group/${group.id}/">
+                ${_("Main")}
+            </a>
+            <a class="span3 tab${' active' if rule_set=='join' else ''}" href="/group/${group.id}/?rule_set=join">
+                ${_("Joining")}
+            </a>
+            <a class="span3 tab${' active' if rule_set=='request' else ''}" href="/group/${group.id}/?rule_set=request">
+                ${_("Requests")}
+            </a>
+        </div>
+    </div>
+
     <div id="pad-wrapper">
         <div class="row-fluid header">
             <h3>${group.id | h} - ${group.title | h}</h3>
@@ -330,7 +345,15 @@ def selected(bool):
             Rules:
             <table id="acl-rules" data-action="/group/${group.id}/set_rules">
                 <tbody class="sortable">
-                % for rule in group.rules:
+                <%  
+                    if rule_set == 'join':
+                        rules = group.join_rules
+                    elif rule_set == 'request':
+                        rules = group.request_rules
+                    else:
+                        rules = group.rules
+                %>
+                % for rule in rules:
                     ${rule_row(rule)}
                 % endfor
                 </tbody>
@@ -353,7 +376,7 @@ def selected(bool):
         <br>
         <br>
         <br>
-        % if web.user.has_permission('core.group.edit.perms.'+group.id):
+        % if web.user.has_permission('core.group.edit.perms.'+group.id) and not rule_set:
         <div class="row-fluid table">
             Permissions:
             <list>
@@ -370,6 +393,12 @@ def selected(bool):
             <input class="permission" id="permission" type="text" placeholder="Permission Name" class="span2"/>
             <button class="submitPerm">submit</button>
         </div>
+        % endif
+        % if rule_set:
+            Members in group from ${rule_set}ing this group:
+            % for char in getattr(group, rule_set + "_members"):
+                ${char.name}
+            % endfor
         % endif
     </div>
 </div>
