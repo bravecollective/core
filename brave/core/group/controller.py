@@ -3,6 +3,7 @@
 from __future__ import unicode_literals
 
 from datetime import datetime
+from collections import OrderedDict
 
 from web.auth import user
 from web.core import Controller, HTTPMethod, request
@@ -122,7 +123,86 @@ class OneGroupController(Controller):
         return 'json:', dict(success=True)
 
 class GroupList(HTTPMethod):
-    @user_has_permission('core.group.view.*', accept_any_matching=True)
+    def get(self):
+        groups = sorted(Group.objects(), key=lambda g: g.category.id if g.category else g.id)
+        
+        visibleGroups = list()
+        joinableGroups = list()
+        requestableGroups = list()
+        categories = list()
+        
+        for g in groups:
+            if g.evaluate(user, user.primary) and not (user.primary in g.request_members or user.primary in g.join_members):
+                continue
+            elif g.evaluate(user, user.primary, rule_set='join'):
+                joinableGroups.append(g)
+                visibleGroups.append(g)
+                categories.append(g.category)
+            elif g.evaluate(user, user.primary, rule_set='request'):
+                requestableGroups.append(g)
+                visibleGroups.append(g)
+                categories.append(g.category)
+                
+        mapping = dict()
+        
+        for c in categories:
+            mapping[c] = list(Group.objects(category__id=c.id if c else None))
+            
+        print mapping
+        
+        def ranksort(i):
+            if i:
+                return i.rank
+            else:
+                return 10000
+        
+        mapping = OrderedDict((i, mapping[i]) for i in sorted(mapping.keys(), key=ranksort))
+        
+        return 'brave.core.group.template.list_groups', dict(
+            area='group',
+            groups=visibleGroups,
+            joinableGroups=joinableGroups,
+            requestableGroups=requestableGroups,
+            categories=mapping,
+        )
+        
+    def leave(self, group):
+        log.info("Removing {0} from group {1} via LEAVE.".format(user.primary, group.id))
+        if user.primary in group.join_members:
+            group.join_members.remove(user.primary)
+        if user.primary in group.request_members:
+            group.request_members.remove(user.primary)
+        return 'json:', dict(success=True)
+        
+    def join(self, group):
+        if not group.evaluate(user, user.primary, rule_set='join'):
+            return 'json:', dict(success=False, message=_("You do not have permission to join this group."))
+        
+        log.info("Adding {0} to group {1} via JOIN.".format(user.primary, group.id))
+        group.add_join_member(user.primary)
+        return 'json:', dict(success=True)
+        
+    def request(self, group):
+        if not group.evaluate(user, user.primary, rule_set='request'):
+            return 'json:', dict(success=False, message=_("You do not have permission to request access to this group."))
+        
+        log.info("Adding {0} to requests list of {1} via REQUEST.".format(user.primary, group.id))
+        group.add_request(user.primary)
+        return 'json:', dict(success=True)
+
+    def post(self, id=None, action=None):
+        if not action:
+            return 'json:', dict(success=False)
+        else:
+            group = Group.objects(id=id).first()
+            
+            if not group:
+                return 'json:', dict(success=False, message=_("Group not found"))
+            
+            return getattr(self, action)(group)
+
+class ManageGroupList(HTTPMethod):
+    @user_has_permission('core.group.view.*', wild=True)
     def get(self):
         groups = sorted(Group.objects(), key=lambda g: g.id)
         
@@ -131,9 +211,9 @@ class GroupList(HTTPMethod):
             if user.has_permission('core.group.view.'+g.id):
                 visibleGroups.append(g)
         
-        return 'brave.core.group.template.list_groups', dict(
+        return 'brave.core.group.template.manage_groups', dict(
             area='group',
-            groups=visibleGroups,
+            groups=visibleGroups
         )
 
     @user_has_permission('core.group.create')
@@ -141,6 +221,10 @@ class GroupList(HTTPMethod):
         if not id:
             return 'json:', dict(success=False,
                                  message=_("id required"))
+                                 
+        if id == 'manange':
+            return 'json:', dict(success=False,
+                                 message=_("You cannot name a group 'manage'"))
         if not title:
             return 'json:', dict(success=False,
                                  message=_("title required"))
@@ -162,6 +246,7 @@ class GroupList(HTTPMethod):
 
 class GroupController(Controller):
     index = GroupList()
+    manage = ManageGroupList()
 
     def __lookup__(self, id, *args, **kw):
         request.path_info_pop()  # We consume a single path element.

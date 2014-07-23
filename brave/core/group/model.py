@@ -14,6 +14,11 @@ from brave.core.character.model import EVECharacter
 log = __import__('logging').getLogger(__name__)
 
 
+class GroupCategory(EmbeddedDocument):
+    id = StringField(db_field='_id', primary_key=True)
+    rank = IntField(db_field='i')
+    
+
 @update_modified_timestamp.signal
 class Group(Document):
     meta = dict(
@@ -35,6 +40,7 @@ class Group(Document):
     creator = ReferenceField('User', db_field='c')
     modified = DateTimeField(db_field='m', default=datetime.utcnow)
     _permissions = ListField(ReferenceField(Permission), db_field='p')
+    category = EmbeddedDocumentField(GroupCategory, db_field='ca')
     
     @property
     def permissions(self):
@@ -53,6 +59,27 @@ class Group(Document):
                 perms.add(p)
                 
         return perms
+        
+    def add_join_member(self, character):
+        """Use this to prevent duplicates in the database"""
+        if character in self.join_members:
+            return
+        
+        self.join_members.append(character)
+    
+    def add_request_member(self, character):
+        """Use this to prevent duplicates in the database"""
+        if character in self.request_members:
+            return
+        
+        self.request_members.append(character)
+        
+    def add_request(self, character):
+        """Use this to prevent duplicates in the database"""
+        if character in self.requests:
+            return
+            
+        self.requests.append(character)
 
     def __repr__(self):
         return 'Group({0})'.format(self.id).encode('ascii', 'backslashreplace')
