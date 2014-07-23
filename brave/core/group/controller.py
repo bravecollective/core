@@ -30,7 +30,48 @@ class OneGroupController(Controller):
             self.group = Group.objects.get(id=id)
         except Group.DoesNotExist:
             raise HTTPNotFound()
-
+    
+    @user_has_permission('core.group.edit.requests.{gid}', gid='self.group.id')
+    def accept_request(self, name):
+        c = EVECharacter.objects(name=name).first()
+        if not c:
+            return 'json:', dict(success=False, message=_("Character with that name not found."))
+            
+        if not c in self.group.requests:
+            return 'json:', dict(success=False, message=_("Character with that name has no request to join this group."))
+        
+        log.info("Adding {0} to group {1} via REQUEST_ACCEPT approved by {2}".format(c.name, self.group.id, user.primary))
+        self.group.add_request_member(c)
+        self.group.requests.remove(c)
+        self.group.save()
+        
+    @user_has_permission('core.group.edit.requests.{gid}', gid='self.group.id')
+    def deny_request(self, name):
+        c = EVECharacter.objects(name=name).first()
+        if not c:
+            return 'json:', dict(success=False, message=_("Character with that name not found."))
+            
+        if not c in self.group.requests:
+            return 'json:', dict(success=False, message=_("Character with that name has no request to join this group."))
+        
+        log.info("Rejecting {0}'s application to group {1} via REQUEST_DENY by {2}".format(c.name, self.group.id, user.primary))
+        self.group.requests.remove(c)
+        self.group.save()
+        
+    @user_has_permission('core.group.edit.members.{gid}', gid='self.group.id')
+    def kick_member(self, name, method):
+        c = EVECharacter.objects(name=name).first()
+        if not c:
+            return 'json:', dict(success=False, message=_("Character with that name not found."))
+            
+        if not c in getattr(self.group, method+"_members"):
+            return 'json:', dict(success=False, message=_("Character with that name is not a member via that method."))
+            
+        glist = getattr(self.group, method+"_members")
+        log.info("Removing {0} from group {1} (admitted via {2}) via KICK_MEMBER by {3}".format(c.name, self.group.id, method, user.primary))
+        glist.remove(c)
+        self.group.save()
+        
     @user_has_permission('core.group.view.{gid}', gid='self.group.id')
     def index(self, rule_set=None):
         return 'brave.core.group.template.group', dict(
@@ -95,7 +136,7 @@ class OneGroupController(Controller):
     @post_only
     @user_has_permission('core.group.edit.perms.{gid}', gid='self.group.id')
     @user_has_permission('core.permission.grant.{permID}', permID='permission')
-    def addPerm(self, permission=None):
+    def add_perm(self, permission=None):
         p = Permission.objects(id=permission)
         if len(p):
             p = p.first()
@@ -111,7 +152,7 @@ class OneGroupController(Controller):
     @post_only
     @user_has_permission('core.group.edit.perms.{gid}', gid='self.group.id')
     @user_has_permission('core.permission.revoke.{permID}', permID='permission')
-    def deletePerm(self, permission=None):
+    def delete_perm(self, permission=None):
         p = Permission.objects(id=permission).first()
         self.group._permissions.remove(p)
         self.group.save()
@@ -132,7 +173,7 @@ class GroupList(HTTPMethod):
         categories = list()
         
         for g in groups:
-            if g.evaluate(user, user.primary) and not (user.primary in g.request_members or user.primary in g.join_members):
+            if g.evaluate(user, user.primary, rule_set="main"):
                 continue
             elif g.evaluate(user, user.primary, rule_set='join'):
                 joinableGroups.append(g)
@@ -147,8 +188,6 @@ class GroupList(HTTPMethod):
         
         for c in categories:
             mapping[c] = list(Group.objects(category__id=c.id if c else None))
-            
-        print mapping
         
         def ranksort(i):
             if i:
@@ -172,6 +211,8 @@ class GroupList(HTTPMethod):
             group.join_members.remove(user.primary)
         if user.primary in group.request_members:
             group.request_members.remove(user.primary)
+            
+        group.save()
         return 'json:', dict(success=True)
         
     def join(self, group):
@@ -180,6 +221,8 @@ class GroupList(HTTPMethod):
         
         log.info("Adding {0} to group {1} via JOIN.".format(user.primary, group.id))
         group.add_join_member(user.primary)
+        
+        group.save()
         return 'json:', dict(success=True)
         
     def request(self, group):
@@ -188,6 +231,8 @@ class GroupList(HTTPMethod):
         
         log.info("Adding {0} to requests list of {1} via REQUEST.".format(user.primary, group.id))
         group.add_request(user.primary)
+        
+        group.save()
         return 'json:', dict(success=True)
 
     def post(self, id=None, action=None):

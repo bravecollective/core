@@ -162,7 +162,7 @@ def selected(bool):
             
             $(document).on('click', '.submitPerm', function()
             {
-                $.post('/group/${group.id}/addPerm', { permission: $(".permission").val() }).
+                $.post('/group/${group.id}/add_perm', { permission: $(".permission").val() }).
                 done(function()
                 {
                     //Should probably add the permission here... WTB CSRF for normal POST requests
@@ -173,11 +173,44 @@ def selected(bool):
             $(document).on('click', '.deletePerm', function()
             {
                 var row = $(this).parents('li');
-                $.post('/group/${group.id}/deletePerm', { permission: row.attr("id") }).
+                $.post('/group/${group.id}/delete_perm', { permission: row.attr("id") }).
                 done(function()
                 {
                     //Should probably add the permission here... WTB CSRF for normal POST requests
                     window.location="/group/${group.id}"
+                });
+            });
+            
+            $(document).on('click', '.acceptRequest', function()
+            {
+                var row = $(this).parents('li');
+                $.post('/group/${group.id}/accept_request', { name: row.attr("name") }).
+                done(function()
+                {
+                    //Should probably add the permission here... WTB CSRF for normal POST requests
+                    window.location="/group/${group.id}/?rule_set=request"
+                });
+            });
+            
+            $(document).on('click', '.denyRequest', function()
+            {
+                var row = $(this).parents('li');
+                $.post('/group/${group.id}/deny_request', { name: row.attr("name") }).
+                done(function()
+                {
+                    //Should probably add the permission here... WTB CSRF for normal POST requests
+                    window.location="/group/${group.id}?rule_set=request"
+                });
+            });
+            
+            $(document).on('click', '.kickMember', function()
+            {
+                var row = $(this).parents('li');
+                $.post('/group/${group.id}/kick_member', { name: row.attr("name"), method: "${rule_set}" }).
+                done(function()
+                {
+                    //Should probably add the permission here... WTB CSRF for normal POST requests
+                    window.location="/group/${group.id}?rule_set=${rule_set}"
                 });
             });
             
@@ -396,9 +429,19 @@ def selected(bool):
         % endif
         % if rule_set:
             Members in group from ${rule_set}ing this group:
+            <ul>
             % for char in getattr(group, rule_set + "_members"):
-                ${char.name}
+                <li name="${char.name}">${char.name} <button class="btn btn-danger btn-small kickMember"><i class="fa fa-times"></i></button></li>
             % endfor
+            </ul>
+        % endif
+        % if rule_set == 'request':
+            Pending requests:
+            <ul>
+            % for char in group.requests:
+                <li name="${char.name}">${char.name} <button class="btn btn-success btn-small acceptRequest"><i class="fa fa-plus"></i></button> <button class="btn btn-danger btn-small denyRequest"><i class="fa fa-times"></i></button></li>
+            % endfor
+            </ul>
         % endif
     </div>
 </div>

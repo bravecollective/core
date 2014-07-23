@@ -89,7 +89,20 @@ class Group(Document):
             rules = self.request_rules
         elif rule_set == "join":
             rules = self.join_rules
+        elif rule_set == "main":
+            # Allow evaluating the main group of rules without considering people who joined a group.
+            rules = self.rules
         else:
+            # Checking if a user is a member of this group... so we need to see if they've joined/been accepted
+            # Cascade down to further checks in case they joined or applied to join, then lost the ability to do so
+            # but is now automatically granted access to the group.
+            # TODO: Perhaps automatically clean up the join lists when a character no longer applies?
+            if character in self.join_members:
+                if self.evaluate(user, character, rule_set='join'):
+                    return True
+            if character in self.request_members:
+                if self.evaluate(user, character, rule_set='request'):
+                    return True
             rules = self.rules
         
         for rule in rules:
