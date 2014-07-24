@@ -47,12 +47,12 @@ class Permission(Document):
     def __repr__(self):
         return "Permission('{0}')".format(self.id)
             
-    def getPermissions(self):
+    def get_permissions(self):
         """Returns all permissions granted by this Permission."""
         
         return set({self})
         
-    def grantsPermission(self, perm_string):
+    def grants_permission(self, perm_string):
         """This is used to see if a Permission grants access to a permission which is not in the database.
             For instance, when evaluating whether a WildcardPermission grants access to a run-time permission."""
         
@@ -71,7 +71,7 @@ class WildcardPermission(Permission):
     def __repr__(self):
         return "WildcardPermission('{0}')".format(self.id)
             
-    def getPermissions(self):
+    def get_permissions(self):
         """Returns all Permissions granted by this Permission"""
         
         from brave.core.application.model import Application
@@ -81,12 +81,12 @@ class WildcardPermission(Permission):
 
         # Loops through all of the permissions, checking if this permission grants access to that permission.
         for perm in Permission.objects():
-            if self.grantsPermission(perm.id):
+            if self.grants_permission(perm.id):
                 perms.add(perm)
         
         return perms
         
-    def grantsPermission(self, perm_string):
+    def grants_permission(self, perm_string):
         """This is used to see if a Permission grants access to a permission which is not in the database.
             For instance, when evaluating whether a WildcardPermission grants access to a run-time permission."""
         # Splits both this permission's id and the permission being checked.

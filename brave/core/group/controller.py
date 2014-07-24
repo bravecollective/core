@@ -116,7 +116,7 @@ class OneGroupController(Controller):
         return 'json:', dict(success=True)
 
 class GroupList(HTTPMethod):
-    @user_has_permission('core.group.view.*', wild=True)
+    @user_has_permission('core.group.view.*', accept_any_matching=True)
     def get(self):
         groups = sorted(Group.objects(), key=lambda g: g.id)
         
@@ -161,7 +161,7 @@ class GroupController(Controller):
         request.path_info_pop()  # We consume a single path element.
         return OneGroupController(id), args
 
-    @user_has_permission('core.group.edit.*', wild=True)
+    @user_has_permission('core.group.edit.*', accept_any_matching=True)
     def check_rule_reference_exists(self, kind, name):
         cls = ACLList.target_class(kind)
         return "json:", dict(exists=bool(cls.objects(name=name)))

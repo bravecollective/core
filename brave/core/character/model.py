@@ -251,7 +251,7 @@ class EVECharacter(EVEEntity):
             if not isinstance(perm, WildcardPermission):
                 continue
             
-            permissions |= perm.getPermissions()
+            permissions |= perm.get_permissions()
         
         return permissions
         
@@ -282,7 +282,7 @@ class EVECharacter(EVEEntity):
                 # permissions and see if they would grant this permission. Might be worth optimizing in the future
                 # by adding a new EVECharacter function that returns only that character's wildcard permissions.
                 for p in self.permissions():
-                    if p.grantsPermission(perm_id):
+                    if p.grants_permission(perm_id):
                         return True
                 
                 return False

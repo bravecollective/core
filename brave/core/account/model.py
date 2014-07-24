@@ -165,13 +165,13 @@ class User(Document):
         
         # Check the primary character first, and if they have the permission return them.
         for p in self.primary.permissions():
-            if p.grantsPermission(permission):
+            if p.grants_permission(permission):
                 return self.primary
                 
         # Primary didn't have permission, check if the other characters do.
         for c in self.characters:
             for p in c.permissions():
-                if p.grantsPermission(permission):
+                if p.grants_permission(permission):
                     return c
                 
         return None

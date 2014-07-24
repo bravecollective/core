@@ -42,7 +42,7 @@ class Group(Document):
                 perms.add(perm)
                 continue
                 
-            for p in perm.getPermissions():
+            for p in perm.get_permissions():
                 perms.add(p)
                 
         return perms

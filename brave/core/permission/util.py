@@ -16,11 +16,11 @@ import web.auth
 log = __import__('logging').getLogger(__name__)
 
 
-def user_has_permission(perm=None, wild=False, **runkw):
-    """wild=True means that any permission that perm would grant will return true.
-        @user_has_permission('core.group.edit.*', wild=True) would work for any user with the ability to edit anything
-        about any group (for instance, a user with core.group.edit.acl.bob would be granted access when wild=True, but
-        not when wild=False."""
+def user_has_permission(perm=None, accept_any_matching=False, **runkw):
+    """accept_any_matching=True means that any permission that perm would grant will return true.
+        @user_has_permission('core.group.edit.*', accept_any_matching=True) would work for any user with the ability to 
+        edit anything about any group (for instance, a user with core.group.edit.acl.bob would be granted access when 
+        accept_any_matching=True, but not when wild=False."""
         
     def decorator(function):
         
@@ -33,6 +33,7 @@ def user_has_permission(perm=None, wild=False, **runkw):
                 log.debug('No permission provided.')
                 return function(self, *args, **kwargs)
             else:
+                # Can't modify perm due to scoping, so we duplicate it's value into a 'local' variable and use that.
                 permission = perm
         
             user = user._current_obj()
@@ -59,23 +60,20 @@ def user_has_permission(perm=None, wild=False, **runkw):
                         continue
                     value = getattr(value, attr)
                     
-                permission = perm.replace('{'+key+'}', value)
+                permission = permission.replace('{'+key+'}', value)
             
             # Cycle through the user's permissions, and if they have it leave the method.
             for c in user.characters:
                 if c.has_permission(permission):
                     return function(self, *args, **kwargs)
             
-            # If wild=True, then we let any user with a permission granted by perm proceed.
-            if wild:
-                p = WildcardPermission.objects(id=permission)
-                if len(p):
-                    p = p.first()
-                else:
+            # If accept_any_matching=True, then we let any user with a permission granted by perm proceed.
+            if accept_any_matching:
+                p = WildcardPermission.objects(id=permission).first()
+                if not p:
                     p = WildcardPermission(id=permission)
                 for permID in user.permissions:
-                    log.warning(permID.id)
-                    if p.grantsPermission(permID.id):
+                    if p.grants_permission(permID.id):
                         return function(self, *args, **kwargs)
             
             # User doesn't have this permission, so we raise HTTPForbidden
