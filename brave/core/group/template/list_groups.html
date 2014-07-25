@@ -22,6 +22,20 @@
             });
         })
         
+        $(document).on('click', '.withdraw', function()
+        {
+            var row = $(this).parents('tr');
+            $.post('/group/',
+            {
+                id:row.attr('data-id'),
+                action: 'withdraw'
+            }).
+            done(function()
+            {
+                window.location = '/group/'
+            });
+        })
+        
         $(document).on('click', '.join', function()
         {
             var row = $(this).parents('tr');
@@ -101,6 +115,8 @@
                                     <button class="btn btn-danger btn-small leave"><i class="fa fa-times"></i> Leave Group</button>
                                 % elif group in joinableGroups:
                                     <button class="btn btn-success btn-small join"><i class="fa fa-plus"></i> Join Group</button>
+                                % elif web.user.primary in group.requests:
+                                    <button class="btn btn-danger btn-small withdraw"><i class="fa fa-times"></i> Withdraw Request</button>
                                 % elif group in requestableGroups:
                                     <button class="btn btn-success btn-small request"><i class="fa fa-plus"></i> Request Access</button>
                                 % else:

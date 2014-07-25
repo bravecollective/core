@@ -299,7 +299,7 @@ class EVECharacter(EVEEntity):
         else:
             p = WildcardPermission(id=permission)
         for permID in self.permissions():
-            if p.grantsPermission(permID.id):
+            if p.grants_permission(permID.id):
                 return True
                 
         return False

@@ -234,6 +234,13 @@ class GroupList(HTTPMethod):
         
         group.save()
         return 'json:', dict(success=True)
+        
+    def withdraw(self, group):
+        log.info("Removing {0} from requests list of {1} via WITHDRAW.".format(user.primary, group.id))
+        group.requests.remove(user.primary)
+        
+        group.save()
+        return 'json:', dict(success=True)
 
     def post(self, id=None, action=None):
         if not action:
