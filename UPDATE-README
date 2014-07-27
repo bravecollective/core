@@ -29,3 +29,6 @@ feature/authenticated: The config value 'web.auth.intercept' should be added to 
 20b85a5: A new field was added to Applications, which will need to be set before attempting to run Core after the update.
     The field name is short, and it must be unique. This is used as the basis for that application's permissions, so
     pick a reasonable name such as 'jabber'. Must be lowercase.
+
+feature/permissions: Admins need to grant themselves the core.* permission in order to retain all previous
+    abilities that they had. Admins are also encouraged to grant the necessary permissions to normal users as well.

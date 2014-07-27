@@ -216,7 +216,7 @@ class EVECharacter(EVEEntity):
         
         # Allow app to be either the short name or the application object itself.
         if isinstance(app, Application):
-            app = app.short_name + '.'
+            app = app.short + '.'
         
         # Ensure the provided string ends with a . to prevent pulling permissions from another application with the
         # same starting letters (forums should not return forums2's permissions.)
@@ -232,7 +232,7 @@ class EVECharacter(EVEEntity):
                     continue
                 
                 # Permissions are case-sensitive.
-                if perm.name.startswith('core') or perm.name.startswith(app):
+                if perm.id.startswith('core') or perm.id.startswith(app):
                     permissions.add(perm)
         
         # Return permissions that have been assigned directly to this user.
@@ -243,7 +243,7 @@ class EVECharacter(EVEEntity):
                 continue
             
             # If an app is specified, return only Core permissions and permissions for that app.
-            if perm.name.startswith('core') or perm.name.startswith(app):
+            if perm.id.startswith('core') or perm.id.startswith(app):
                 permissions.add(perm)
                 
         # Evaluate all of the User's wildcard permissions.
@@ -251,8 +251,19 @@ class EVECharacter(EVEEntity):
             if not isinstance(perm, WildcardPermission):
                 continue
             
-            permissions |= perm.getPermissions()
+            permissions |= perm.get_permissions()
         
+        return permissions
+        
+    def permissions_tags(self, application=None):
+        """Returns just the string for the permissions owned by this character."""
+        
+        perms = self.permissions(application)
+        permissions =  list()
+        
+        for p in perms:
+            permissions.append(p.id)
+            
         return permissions
         
     def has_permission(self, permission):
@@ -261,17 +272,17 @@ class EVECharacter(EVEEntity):
         from brave.core.group.model import Permission
         
         if isinstance(permission, str) or isinstance(permission, unicode):
-            perm_name = permission
-            permission = Permission.objects(name=perm_name)
+            perm_id = permission
+            permission = Permission.objects(id=perm_id)
             
             if not permission:
-                log.info("Permission %s not found.", perm_name)
+                log.info("Permission %s not found.", perm_id)
                 
                 # The permission specified was not found in the database, so we loop through the character's
                 # permissions and see if they would grant this permission. Might be worth optimizing in the future
                 # by adding a new EVECharacter function that returns only that character's wildcard permissions.
                 for p in self.permissions():
-                    if p.grantsPermission(perm_name):
+                    if p.grants_permission(perm_id):
                         return True
                 
                 return False

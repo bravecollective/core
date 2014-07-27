@@ -11,6 +11,9 @@ from brave.core.util.signal import update_modified_timestamp
 from brave.core.util.field import PasswordField, IPAddressField
 
 
+log = __import__('logging').getLogger(__name__)
+
+
 @update_modified_timestamp.signal
 class User(Document):
     meta = dict(
@@ -136,6 +139,42 @@ class User(Document):
             self.remove_duplicate(self, other, IP=True)
         
         super(User, self).delete()
+    
+    @property
+    def permissions(self):
+        """Returns all permissions that any character this user owns has."""
+        
+        perms = set()
+        
+        for c in self.characters:
+            for p in c.permissions():
+                perms.add(p)
+                
+        return perms
+        
+    def has_permission(self, permission):
+        """Accepts both Permission objects and Strings. Returns the first character found with that permission,
+           preferring the user's primary character."""
+        
+        from brave.core.group.model import Permission
+        
+        if isinstance(permission, Permission):
+            permission = permission.id
+        
+        log.debug('Checking if user has permission {0}'.format(permission))
+        
+        # Check the primary character first, and if they have the permission return them.
+        for p in self.primary.permissions():
+            if p.grants_permission(permission):
+                return self.primary
+                
+        # Primary didn't have permission, check if the other characters do.
+        for c in self.characters:
+            for p in c.permissions():
+                if p.grants_permission(permission):
+                    return c
+                
+        return None
         
     @staticmethod
     def add_duplicate(acc, other, IP=False):

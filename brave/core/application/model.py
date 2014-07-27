@@ -78,18 +78,6 @@ class Application(Document):
     
     def __unicode__(self):
         return self.name
-        
-    def delete(self):
-        """Deletes the application and any permissions added by the application."""
-        perms = Permission.objects()
-    
-        for p in perms:
-            if p.application != self:
-                continue
-                
-            p.delete()
-        
-        super(Application, self).delete()
 
 
 class ApplicationGrant(Document):

@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 from web.auth import user
 from web.core import Controller, HTTPMethod, request, config
 from web.core.locale import _
-from web.core.http import HTTPFound, HTTPNotFound, HTTPUnauthorized
+from web.core.http import HTTPFound, HTTPNotFound, HTTPUnauthorized, HTTPForbidden
 from web.core.templating import render
 from marrow.util.convert import boolean
 from marrow.util.bunch import Bunch
@@ -16,6 +16,7 @@ from brave.core.account.model import User
 from brave.core.key.model import EVECredential
 from brave.core.util.predicate import authorize, authenticate, is_administrator
 from brave.core.util.eve import EVECharacterKeyMask, EVECorporationKeyMask
+from brave.core.permission.util import user_has_permission
 
 
 log = __import__('logging').getLogger(__name__)
@@ -54,7 +55,7 @@ class KeyInterface(Controller):
         except EVECredential.DoesNotExist:
             raise HTTPNotFound()
 
-        if self.key.owner.id != user.id and not user.admin:
+        if self.key.owner.id != user.id and not user.has_permission('core.key.view.'+str(self.key.id)):
             raise HTTPNotFound()
         
         self.index = KeyIndex(self.key)
@@ -78,8 +79,8 @@ class KeyList(HTTPMethod):
     def get(self, admin=False):
         admin = boolean(admin)
         
-        if admin and not is_administrator:
-            raise HTTPNotFound()
+        if admin and not user.has_permission('core.key.list.all'):
+            raise HTTPForbidden()
             
         credentials = user.credentials
         if admin:
