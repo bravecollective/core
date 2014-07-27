@@ -40,7 +40,7 @@ class ApplicationInterface(HTTPMethod):
         
         perms = ""
         
-        for p in Permission.objects(id__startswith=app.short):
+        for p in Permission.objects(id__startswith=(app.short + ".")):
             desc = p.description
             if not desc:
                 desc = "None"

@@ -142,15 +142,14 @@ class GroupList(HTTPMethod):
         if not g:
             return 'json:', dict(success=False,
                                  message=_("group with that id already existed"))
+                                 
+        primary = user.primary if user.primary else user.characters[0]
         # Give the creator of the group the ability to edit it and delete it.
         editPerm = Permission('core.group.edit.acl.'+g.id, "Ability to edit ACLs for Group {0}".format(g.id))
         deletePerm = Permission('core.group.delete.'+g.id, "Ability to delete Group {0}".format(g.id))
-        # Might be called when we save the user... Should probably check that.
-        editPerm.save()
-        deletePerm.save()
-        user.personal_permissions.append(editPerm)
-        user.personal_permissions.append(deletePerm)
-        user.save()
+        primary.personal_permissions.append(editPerm)
+        primary.personal_permissions.append(deletePerm)
+        user.save(cascade=True)
         
         return 'json:', dict(success=True, id=g.id)
 
