@@ -99,15 +99,15 @@ class ApplicationInterface(HTTPMethod):
         app.key.public = valid['key']['public']
         app.mask.required = valid['required'] or 0
         app.mask.optional = valid['optional'] or 0
-        app.short = valid['short'] or app.name.replace(" ", "").lower()
+        # Ignore their provided app short because we can't change permission names #ThanksMongo
+        
+        if user.admin:
+            app.expireGrantDays = valid['expire'] or 30
         
         if not createPerms(valid['perms'], app.short):
             return 'json:', dict(
                     success=False,
                     message=_("Stop being bad and only include permissions for your app."))
-        
-        if user.admin:
-            app.expireGrantDays = valid['expire'] or 30
         
         app.save()
         
