@@ -5,6 +5,7 @@ core.admin.search.char:Ability to search for characters
 core.admin.search.key:Ability to search for keys
 core.application.edit.*:Ability to edit any application
 core.application.create:Ability to create new applications
+core.application.authorize.*:Ability to authorize any application
 core.character.view.*:Ability to view all character details
 core.character.list.all:Ability to see the list of all characters
 core.group.view.*:Ability to see all groups

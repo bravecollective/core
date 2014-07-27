@@ -190,7 +190,7 @@ class ApplicationList(HTTPMethod):
                     success=False,
                     message=_("Stop being bad and only include permissions for your app."))
         
-        p = Permission(app.short+'.authorize', "Ability to authorize application {0}".format(app.name))
+        p = Permission('core.application.authorize.{0}'.format(app.short), "Ability to authorize application {0}".format(app.name))
         p.save()
         if u.primary:
             u.primary.personal_permissions.append(p)

@@ -90,9 +90,7 @@ u = User.objects(username=USERNAME_HERE)[0]
 u.admin = True
 c = u.primary
 p1 = Permission.objects(id='core.*').first()
-p2 = WildcardPermission(id='*.authorize')
 c.personal_permissions.append(p1)
-c.personal_permissions.append(p2)
 c.save()
 u.save()
 </code></pre>
