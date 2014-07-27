@@ -80,7 +80,7 @@
 
     <div id="pad-wrapper">
         <div class="row-fluid table">
-            % if not len(groups):
+            % if not len(groups) or not web.user.primary:
                 <p class="subtext" style="text-transform: uppercase;"><strong>You do not seem to be able to join any groups.</strong></p>
             % else:
                 % for c, g in categories.iteritems():

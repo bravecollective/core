@@ -172,6 +172,12 @@ class GroupList(HTTPMethod):
         requestableGroups = list()
         categories = list()
         
+        if not user.primary:
+            return 'brave.core.group.template.list_groups', dict(
+            area='group',
+            groups=visibleGroups
+        )
+        
         for g in groups:
             if g.evaluate(user, user.primary, rule_set="main"):
                 continue
@@ -254,7 +260,7 @@ class GroupList(HTTPMethod):
             return getattr(self, action)(group)
 
 class ManageGroupList(HTTPMethod):
-    @user_has_permission('core.group.view.*', wild=True)
+    @user_has_permission('core.group.view.*', accept_any_matching=True)
     def get(self):
         groups = sorted(Group.objects(), key=lambda g: g.id)
         
@@ -287,12 +293,9 @@ class ManageGroupList(HTTPMethod):
         # Give the creator of the group the ability to edit it and delete it.
         editPerm = Permission('core.group.edit.acl.'+g.id, "Ability to edit ACLs for Group {0}".format(g.id))
         deletePerm = Permission('core.group.delete.'+g.id, "Ability to delete Group {0}".format(g.id))
-        # Might be called when we save the user... Should probably check that.
-        editPerm.save()
-        deletePerm.save()
-        user.personal_permissions.append(editPerm)
-        user.personal_permissions.append(deletePerm)
-        user.save()
+        user.primary.personal_permissions.append(editPerm)
+        user.primary.personal_permissions.append(deletePerm)
+        user.save(cascade=True)
         
         return 'json:', dict(success=True, id=g.id)
 
