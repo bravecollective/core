@@ -55,7 +55,7 @@ class KeyInterface(Controller):
         except EVECredential.DoesNotExist:
             raise HTTPNotFound()
 
-        if self.key.owner.id != user.id and not user.has_permission('core.key.view.'+str(self.key.id)):
+        if self.key.owner.id != user.id and not user.has_permission(self.key.get_view_perm):
             raise HTTPNotFound()
         
         self.index = KeyIndex(self.key)
@@ -79,7 +79,7 @@ class KeyList(HTTPMethod):
     def get(self, admin=False):
         admin = boolean(admin)
         
-        if admin and not user.has_permission('core.key.list.all'):
+        if admin and not user.has_permission(EVECredential.list_perm):
             raise HTTPForbidden()
             
         credentials = user.credentials

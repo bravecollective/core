@@ -53,12 +53,12 @@ class BrowseController(Controller):
         
         # Retrieve non-development applications that the user is able to authorize
         for r in Application.objects(development__in=[False, None]):
-            if user.has_permission('core.application.authorize.{0}'.format(r.short)):
+            if user.has_permission(r.get_authorize_perm):
                 records.append(r)
         
         # Retrieve development applications that the user is able to authorize
         for r in Application.objects(development=True):
-            if user.has_permission('core.application.authorize.{0}'.format(r.short)):
+            if user.has_permission(r.get_authorize_perm):
                 devRecords.append(r)
         
         return 'brave.core.application.template.list_apps', dict(

@@ -65,6 +65,11 @@ class Application(Document):
     
     owner = ReferenceField('User', db_field='o')
     
+    # Permissions
+    edit_perm = 'core.application.edit.{app_short}'
+    create_perm = 'core.application.create.{app_short}'
+    authorize_perm = 'core.application.authorize.{app_short}'
+    
     # Related Data
     
     @property
@@ -78,6 +83,17 @@ class Application(Document):
     
     def __unicode__(self):
         return self.name
+    
+    def get_perm(self, perm_type):
+        return getattr(self, perm_type+"_perm").replace("{app_short}", self.short)
+    
+    @property
+    def get_edit_perm(self):
+        return self.get_perm('edit')
+    
+    @property
+    def get_authorize_perm(self):
+        return self.get_perm('authorize')
 
 
 class ApplicationGrant(Document):

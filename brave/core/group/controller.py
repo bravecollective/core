@@ -30,7 +30,7 @@ class OneGroupController(Controller):
         except Group.DoesNotExist:
             raise HTTPNotFound()
 
-    @user_has_permission('core.group.view.{gid}', gid='self.group.id')
+    @user_has_permission(Group.view_perm, group_id='self.group.id')
     def index(self):
         return 'brave.core.group.template.group', dict(
             area='group',
@@ -38,7 +38,7 @@ class OneGroupController(Controller):
         )
 
     @post_only
-    @user_has_permission('core.group.edit.acl.{gid}', gid='self.group.id')
+    @user_has_permission(Group.edit_acl_perm, group_id='self.group.id')
     def set_rules(self, rules, really=False):
         rules = json.loads(rules)
         rule_objects = []
@@ -86,8 +86,8 @@ class OneGroupController(Controller):
                              message=_("unimplemented"))
                              
     @post_only
-    @user_has_permission('core.group.edit.perms.{gid}', gid='self.group.id')
-    @user_has_permission('core.permission.grant.{permID}', permID='permission')
+    @user_has_permission(Group.edit_perms_perm, group_id='self.group.id')
+    @user_has_permission(Permission.grant_perm, permission_id='permission')
     def addPerm(self, permission=None):
         p = Permission.objects(id=permission)
         if len(p):
@@ -102,15 +102,15 @@ class OneGroupController(Controller):
         self.group.save()
         
     @post_only
-    @user_has_permission('core.group.edit.perms.{gid}', gid='self.group.id')
-    @user_has_permission('core.permission.revoke.{permID}', permID='permission')
+    @user_has_permission(Group.edit_perms_perm, group_id='self.group.id')
+    @user_has_permission(Permission.revoke_perm, permission_id='permission')
     def deletePerm(self, permission=None):
         p = Permission.objects(id=permission).first()
         self.group._permissions.remove(p)
         self.group.save()
 
     @post_only
-    @user_has_permission('core.group.delete.{gid}', gid='self.group.id')
+    @user_has_permission(Group.delete_perm, group_id='self.group.id')
     def delete(self):
         self.group.delete()
         return 'json:', dict(success=True)
@@ -122,7 +122,7 @@ class GroupList(HTTPMethod):
         
         visibleGroups = list()
         for g in groups:
-            if user.has_permission('core.group.view.'+g.id):
+            if user.has_permission(g.get_view_perm):
                 visibleGroups.append(g)
         
         return 'brave.core.group.template.list_groups', dict(
@@ -130,7 +130,7 @@ class GroupList(HTTPMethod):
             groups=visibleGroups,
         )
 
-    @user_has_permission('core.group.create')
+    @user_has_permission(Group.create_perm)
     def post(self, id=None, title=None):
         if not id:
             return 'json:', dict(success=False,
@@ -145,8 +145,9 @@ class GroupList(HTTPMethod):
                                  
         primary = user.primary if user.primary else user.characters[0]
         # Give the creator of the group the ability to edit it and delete it.
-        editPerm = Permission('core.group.edit.acl.'+g.id, "Ability to edit ACLs for Group {0}".format(g.id))
-        deletePerm = Permission('core.group.delete.'+g.id, "Ability to delete Group {0}".format(g.id))
+        editPerm = Permission(g.get_edit_acl_perm, "Ability to edit ACLs for Group {0}".format(g.id))
+        editPermsPerm = Permission(g.get_edit_perms_perm, "Ability to edit permissions for Group {0}".format(g.id))
+        deletePerm = Permission(g.get_delete_perm, "Ability to delete Group {0}".format(g.id))
         primary.personal_permissions.append(editPerm)
         primary.personal_permissions.append(deletePerm)
         user.save(cascade=True)
