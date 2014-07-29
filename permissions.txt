@@ -1,5 +1,4 @@
 core.account.view.*:Ability to view all user's account details
-core.admin.search:Ability to view /admin/search (not required to conduct any searches)
 core.admin.search.user:Ability to search for users
 core.admin.search.char:Ability to search for characters
 core.admin.search.key:Ability to search for keys
