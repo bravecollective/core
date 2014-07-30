@@ -81,7 +81,7 @@ class Group(Document):
         return g
         
     def get_perm(self, perm_type):
-        return getattr(self, perm_type+"_PERM").replace("{group_id}", self.id)
+        return getattr(self, perm_type+"_PERM").format(group_id=self.id)
         
     @property
     def view_perm(self):

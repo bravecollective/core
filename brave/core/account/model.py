@@ -227,7 +227,7 @@ class User(Document):
     @property
     def view_perm(self):
         """Returns the permission required to view this user's account details."""
-        return self.VIEW_PERM.replace("{account_id}", str(self.id))
+        return self.VIEW_PERM.format(account_id=str(self.id))
 
 class LoginHistory(Document):
     meta = dict(

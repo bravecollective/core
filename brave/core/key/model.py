@@ -230,4 +230,4 @@ class EVECredential(Document):
     
     @property
     def view_perm(self):
-        return self.VIEW_PERM.replace('{credential_key}', str(self.key))
+        return self.VIEW_PERM.format(credential_key=str(self.key))

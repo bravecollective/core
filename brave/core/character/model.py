@@ -346,4 +346,4 @@ class EVECharacter(EVEEntity):
     
     @property
     def view_perm(self):
-        return self.VIEW_PERM.replace('{character_id}', str(self.id))
+        return self.VIEW_PERM.format(character_id=str(self.id))

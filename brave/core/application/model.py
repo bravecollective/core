@@ -85,7 +85,7 @@ class Application(Document):
         return self.name
     
     def get_perm(self, perm_type):
-        return getattr(self, perm_type+"_PERM").replace("{app_short}", self.short)
+        return getattr(self, perm_type+"_PERM").format(app_short=self.short)
     
     @property
     def edit_perm(self):

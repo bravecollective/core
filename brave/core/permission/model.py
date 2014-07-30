@@ -71,7 +71,7 @@ class Permission(Document):
         return not self.__eq__(other)
         
     def get_perm(self, perm_type):
-        return getattr(self, perm_type+"_PERM").replace("{permission_id}", self.id)
+        return getattr(self, perm_type+"_PERM").format(permission_id=self.id)
         
     @property
     def grant_perm(self):
