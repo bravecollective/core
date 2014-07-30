@@ -47,7 +47,7 @@ class User(Document):
     other_accs_IP = ListField(ReferenceField('User'), db_field='otherAccountsIP')
     
     # Permissions
-    view_perm = 'core.account.view.{account_id}'
+    VIEW_PERM = 'core.account.view.{account_id}'
     
     # Python Magic Methods
     
@@ -225,9 +225,9 @@ class User(Document):
         other.save()
     
     @property
-    def get_view_perm(self):
+    def view_perm(self):
         """Returns the permission required to view this user's account details."""
-        return self.view_perm.replace("{account_id}", str(self.id))
+        return self.VIEW_PERM.replace("{account_id}", str(self.id))
 
 class LoginHistory(Document):
     meta = dict(

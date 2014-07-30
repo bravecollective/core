@@ -22,7 +22,7 @@ class CharacterInterface(HTTPMethod):
         except EVECharacter.DoesNotExist:
             raise HTTPNotFound()
 
-        if (not self.char.owner or self.char.owner.id != user.id) and not user.has_permission(self.char.get_view_perm):
+        if (not self.char.owner or self.char.owner.id != user.id) and not user.has_permission(self.char.view_perm):
             raise HTTPNotFound()
 
     @authenticate
@@ -41,7 +41,7 @@ class CharacterInterface(HTTPMethod):
         
     @authenticate
     def get(self):
-        if (not self.char.owner or self.char.owner.id != user.id) and not user.has_permission(self.char.get_view_perm):
+        if (not self.char.owner or self.char.owner.id != user.id) and not user.has_permission(self.char.view_perm):
             raise HTTPNotFound()
         
         return 'brave.core.character.template.charDetails', dict(
@@ -50,7 +50,7 @@ class CharacterInterface(HTTPMethod):
         )
     
     @post_only
-    @user_has_permission(Permission.grant_perm, permission_id='permission')
+    @user_has_permission(Permission.GRANT_PERM, permission_id='permission')
     def addPerm(self, permission=None):
         p = Permission.objects(id=permission)
         if len(p):
@@ -65,11 +65,8 @@ class CharacterInterface(HTTPMethod):
         self.char.save()
     
     @post_only
-    @user_has_permission(Permission.revoke_perm, permission_id='permission')
+    @user_has_permission(Permission.REVOKE_PERM, permission_id='permission')
     def deletePerm(self, permission=None):
-        if not user.has_permission('core.character.view.'+str(self.char.id)):
-            raise HTTPNotFound()
-        
         p = Permission.objects(id=permission).first()
         self.char.personal_permissions.remove(p)
         self.char.save()
@@ -77,7 +74,7 @@ class CharacterInterface(HTTPMethod):
 class CharacterList(HTTPMethod):
     @authenticate
     def get(self, admin=False):
-        if admin and not user.has_permission(EVECharacter.list_perm):
+        if admin and not user.has_permission(EVECharacter.LIST_PERM):
             raise HTTPNotFound()
             
         characters = user.characters

@@ -413,7 +413,7 @@ class AccountInterface(HTTPMethod):
             # Handles improper objectIDs
             raise HTTPNotFound()
 
-        if self.user.id != user.id and not user.has_permission(self.user.get_view_perm):
+        if self.user.id != user.id and not user.has_permission(self.user.view_perm):
             raise HTTPNotFound()
             
     def get(self):

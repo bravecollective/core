@@ -32,7 +32,7 @@ class ApplicationInterface(HTTPMethod):
         except Application.DoesNotExist:
             raise HTTPNotFound()
 
-        if self.app.owner.id != user.id and not user.has_permission(app.get_edit_perm):
+        if self.app.owner.id != user.id and not user.has_permission(app.edit_perm):
             raise HTTPNotFound()
     
     def get(self):
@@ -135,7 +135,7 @@ class ApplicationList(HTTPMethod):
         adminRecords = set()
             
         for app in Application.objects():
-            if app.owner.id != user.id and user.has_permission(app.get_edit_perm):
+            if app.owner.id != user.id and user.has_permission(app.edit_perm):
                 adminRecords.add(app)
         
         records = Application.objects(owner=user._current_obj())
@@ -153,7 +153,7 @@ class ApplicationList(HTTPMethod):
                 adminRecords = adminRecords
             )
     
-    @user_has_permission(Application.create_perm)
+    @user_has_permission(Application.CREATE_PERM)
     def post(self, **kw):
         if not request.is_xhr:
             raise HTTPNotFound()

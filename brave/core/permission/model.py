@@ -26,8 +26,8 @@ class Permission(Document):
     description = StringField(db_field='d')
     
     # Permissions
-    grant_perm = 'core.permission.grant.{permission_id}'
-    revoke_perm = 'core.permission.revoke.{permission_id}'
+    GRANT_PERM = 'core.permission.grant.{permission_id}'
+    REVOKE_PERM = 'core.permission.revoke.{permission_id}'
     
     @property
     def application(self):
@@ -71,15 +71,15 @@ class Permission(Document):
         return not self.__eq__(other)
         
     def get_perm(self, perm_type):
-        return getattr(self, perm_type+"_perm").replace("{permission_id}", self.id)
+        return getattr(self, perm_type+"_PERM").replace("{permission_id}", self.id)
         
     @property
-    def get_grant_perm(self):
-        return self.get_perm('grant')
+    def grant_perm(self):
+        return self.get_perm('GRANT')
         
     @property
-    def get_revoke_perm(self):
-        return self.get_perm('revoke')
+    def revoke_perm(self):
+        return self.get_perm('REVOKE')
         
 class WildcardPermission(Permission):
     

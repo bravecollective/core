@@ -47,8 +47,8 @@ class EVECredential(Document):
     modified = DateTimeField(db_field='m', default=datetime.utcnow)
     
     # Permissions
-    view_perm = 'core.key.view.{credential_key}'
-    list_perm = 'core.key.list.all'
+    VIEW_PERM = 'core.key.view.{credential_key}'
+    LIST_PERM = 'core.key.list.all'
     
     def __repr__(self):
         return 'EVECredential({0}, {1}, {2}, {3!r})'.format(self.id, self.kind, self._mask, self.owner)
@@ -229,5 +229,5 @@ class EVECredential(Document):
         return self
     
     @property
-    def get_view_perm(self):
-        return self.view_perm.replace('{credential_key}', str(self.key))
+    def view_perm(self):
+        return self.VIEW_PERM.replace('{credential_key}', str(self.key))

@@ -30,11 +30,11 @@ class Group(Document):
     _permissions = ListField(ReferenceField(Permission), db_field='p')
     
     # Permissions
-    view_perm = 'core.group.view.{group_id}'
-    edit_acl_perm = 'core.group.edit.acl.{group_id}'
-    edit_perms_perm = 'core.group.edit.perms.{group_id}'
-    delete_perm = 'core.group.delete.{group_id}'
-    create_perm = 'core.group.create'
+    VIEW_PERM = 'core.group.view.{group_id}'
+    EDIT_ACL_PERM = 'core.group.edit.acl.{group_id}'
+    EDIT_PERMS_PERM = 'core.group.edit.perms.{group_id}'
+    DELETE_PERM = 'core.group.delete.{group_id}'
+    CREATE_PERM = 'core.group.create'
     
     @property
     def permissions(self):
@@ -81,20 +81,20 @@ class Group(Document):
         return g
         
     def get_perm(self, perm_type):
-        return getattr(self, perm_type+"_perm").replace("{group_id}", self.id)
+        return getattr(self, perm_type+"_PERM").replace("{group_id}", self.id)
         
     @property
-    def get_view_perm(self):
-        return self.get_perm('view')
+    def view_perm(self):
+        return self.get_perm('VIEW')
         
     @property
-    def get_edit_acl_perm(self):
-        return self.get_perm('edit_acl')
+    def edit_acl_perm(self):
+        return self.get_perm('EDIT_ACL')
         
     @property
-    def get_edit_perms_perm(self):
-        return self.get_perm('edit_perms')
+    def edit_perms_perm(self):
+        return self.get_perm('EDIT_PERMS')
         
     @property
-    def get_delete_perm(self):
-        return self.get_perm('delete')
+    def delete_perm(self):
+        return self.get_perm('DELETE')
