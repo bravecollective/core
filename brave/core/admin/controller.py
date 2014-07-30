@@ -153,6 +153,6 @@ class AdminController(Controller):
 
     search = SearchController()
     
-    @user_has_permission('core.admin.search')
+    @user_has_permission('core.admin.search.*', accept_any_matching=True)
     def index(self):
         return 'brave.core.admin.template.search', dict(area='admin')
