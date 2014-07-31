@@ -64,7 +64,6 @@ class AuthorizeHandler(HTTPMethod):
             chars = []
             for c in characters:
                 if c.credential_for(ar.application.mask.required):
-                    log.warn(c.credential_for(ar.application.mask.required).mask)
                     chars.append(c)
             if chars:
                 default = u.primary or characters[0]
@@ -115,8 +114,9 @@ class AuthorizeHandler(HTTPMethod):
             log.exception("Error loading character.")
             return 'json:', dict(success=False, message="Error loading character.")
         
-        # TODO: Non-zero grants.
-        grant = ApplicationGrant(user=u, application=ar.application, mask=0, expires=datetime.utcnow() + timedelta(days=ar.application.expireGrantDays), character=character)
+        # TODO: Add support for 'optional' masks
+        mask = ar.application.mask.required
+        grant = ApplicationGrant(user=u, application=ar.application, _mask=mask, expires=datetime.utcnow() + timedelta(days=ar.application.expireGrantDays), character=character)
         grant.save()
         
         ar.user = u
