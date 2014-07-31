@@ -3,6 +3,7 @@ from brave.core.key.model import EVECredential
 import random
 from threading import Thread
 from datetime import datetime, timedelta
+from requests.exceptions import HTTPError
 
 keys = dict()
 
