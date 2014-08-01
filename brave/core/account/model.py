@@ -164,9 +164,10 @@ class User(Document):
         log.debug('Checking if user has permission {0}'.format(permission))
         
         # Check the primary character first, and if they have the permission return them.
-        for p in self.primary.permissions():
-            if p.grants_permission(permission):
-                return self.primary
+        if self.primary:
+            for p in self.primary.permissions():
+                if p.grants_permission(permission):
+                    return self.primary
                 
         # Primary didn't have permission, check if the other characters do.
         for c in self.characters:
