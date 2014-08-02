@@ -5,7 +5,7 @@
         <thead>
             <tr>
                 <th class="span2 sortable key-id">${_("Key ID")}</th>
-                <th class="span2 sortable security-violation">${_("Security Violation")}</th>
+                <th class="span2 sortable security-violation"><span class="line"></span>${_("Security Violation")}</th>
                 % if not admin:
                 <th class="span3 sortable key-code"><span class="line"></span>${_("Verification Code")}</th>
                 % else:
