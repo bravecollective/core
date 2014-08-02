@@ -393,7 +393,7 @@ class EVEKeyMask:
         if mask > self.mask:
             return False
         
-        if self.mask & mask:
+        if self.mask & mask == self.mask:
             return True
             
         return False
