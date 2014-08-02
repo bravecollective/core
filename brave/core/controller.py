@@ -56,14 +56,22 @@ class AuthorizeHandler(HTTPMethod):
             # TODO: We need a 'just logged in' flag in the request.
             
             characters = list(u.characters.order_by('name').all())
-            if len(characters):
-                default = u.primary or characters[0]
-            else:
+            if not len(characters):
                 return ('brave.core.template.authorize',
                 dict(success=False, message=_("This application requires that you have a character connected to your"
                                               " account. Please <a href=\"/key/\">add an API key</a> to your account."),
                      ar=ar))
-            return 'brave.core.template.authorize', dict(success=True, ar=ar, characters=characters, default=default)
+            chars = []
+            for c in characters:
+                if c.credential_for(ar.application.mask.required):
+                    chars.append(c)
+            if chars:
+                default = u.primary if u.primary in chars else chars[0]
+            else:
+                return ('brave.core.template.authorize',
+                dict(success=False, message=_("This application requires an API key with a mask of <a href='/key/mask/{0}'>{0}</a> or better, please add an API key with that mask to your account.".format(ar.application.mask.required)),
+                     ar=ar))
+            return 'brave.core.template.authorize', dict(success=True, ar=ar, characters=chars, default=default)
         
         ngrant = ApplicationGrant(user=u, application=ar.application, mask=grant.mask, expires=datetime.utcnow() + timedelta(days=ar.application.expireGrantDays), character=grant.character)
         ngrant.save()
@@ -106,8 +114,9 @@ class AuthorizeHandler(HTTPMethod):
             log.exception("Error loading character.")
             return 'json:', dict(success=False, message="Error loading character.")
         
-        # TODO: Non-zero grants.
-        grant = ApplicationGrant(user=u, application=ar.application, mask=0, expires=datetime.utcnow() + timedelta(days=ar.application.expireGrantDays), character=character)
+        # TODO: Add support for 'optional' masks
+        mask = ar.application.mask.required
+        grant = ApplicationGrant(user=u, application=ar.application, _mask=mask, expires=datetime.utcnow() + timedelta(days=ar.application.expireGrantDays), character=character)
         grant.save()
         
         ar.user = u
