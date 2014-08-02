@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 
 from web.core import Controller, HTTPMethod, config, session, request, response
 from web.auth import user
-from web.core.http import HTTPBadRequest, HTTPFound, HTTPNotFound
+from web.core.http import HTTPBadRequest, HTTPFound, HTTPNotFound, HTTPBadRequest
 from web.core.locale import set_lang, LanguageError, _
 from marrow.util.convert import boolean
 from marrow.util.url import URL
@@ -45,8 +45,11 @@ class AuthorizeHandler(HTTPMethod):
         except AuthenticationRequest.DoesNotExist:
             raise HTTPNotFound()
     
-    def get(self, ar):
+    def get(self, ar=None):
         from brave.core.application.model import ApplicationGrant
+
+        if ar is None:
+            raise HTTPBadRequest()
         
         ar = self.ar(ar)
         u = user._current_obj()
