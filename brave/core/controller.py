@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 
 from web.core import Controller, HTTPMethod, config, session, request, response
 from web.auth import user
-from web.core.http import HTTPBadRequest, HTTPFound, HTTPNotFound, HTTPBadRequest
+from web.core.http import HTTPBadRequest, HTTPFound, HTTPNotFound
 from web.core.locale import set_lang, LanguageError, _
 from marrow.util.convert import boolean
 from marrow.util.url import URL
