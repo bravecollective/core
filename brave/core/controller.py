@@ -66,7 +66,7 @@ class AuthorizeHandler(HTTPMethod):
                 if c.credential_for(ar.application.mask.required):
                     chars.append(c)
             if chars:
-                default = u.primary or characters[0]
+                default = u.primary if u.primary in chars else chars[0]
             else:
                 return ('brave.core.template.authorize',
                 dict(success=False, message=_("This application requires an API key with a mask of <a href='/key/mask/{0}'>{0}</a> or better, please add an API key with that mask to your account.".format(ar.application.mask.required)),

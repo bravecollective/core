@@ -390,9 +390,6 @@ class EVEKeyMask:
         if isinstance(mask, EVEKeyMask):
             mask = mask.mask
         # If the mask we're checking for is greater than this object's mask it has to be False
-        if mask > self.mask:
-            return False
-        
         if self.mask & mask == self.mask:
             return True
             
