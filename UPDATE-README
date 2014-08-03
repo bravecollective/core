@@ -25,3 +25,6 @@ ad709e0: It is highly recommended that admins remove all characters whose owners
 ***DEVELOP***
 feature/authenticated: The config value 'web.auth.intercept' should be added to the production config file with a value 
     of 401.
+
+feature/recommendedKeyMask: The config value 'core.recommended_key_mask' should be added to the production config file with
+    a value equal to that which the admin wants to be recommended for users as the standard key.
