@@ -73,7 +73,7 @@ class OneGroupController(Controller):
         self.group.save()
 
     @user_has_permission(Group.VIEW_PERM, group_id='self.group.id')
-    def index(self):
+    def index(self, rule_set=None):
         return 'brave.core.group.template.group', dict(
             area='group',
             group=self.group,
