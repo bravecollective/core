@@ -30,7 +30,8 @@ class OneGroupController(Controller):
             self.group = Group.objects.get(id=id)
         except Group.DoesNotExist:
             raise HTTPNotFound()
-
+    
+    @post_only
     @user_has_permission(Group.EDIT_REQUESTS_PERM, group_id='self.group.id')
     def accept_request(self, name):
         c = EVECharacter.objects(name=name).first()
@@ -44,7 +45,8 @@ class OneGroupController(Controller):
         self.group.add_request_member(c)
         self.group.requests.remove(c)
         self.group.save()
-        
+    
+    @post_only
     @user_has_permission(Group.EDIT_REQUESTS_PERM, group_id='self.group.id')
     def deny_request(self, name):
         c = EVECharacter.objects(name=name).first()
@@ -57,7 +59,8 @@ class OneGroupController(Controller):
         log.info("Rejecting {0}'s application to group {1} via REQUEST_DENY by {2}".format(c.name, self.group.id, user.primary))
         self.group.requests.remove(c)
         self.group.save()
-        
+    
+    @post_only
     @user_has_permission(Group.EDIT_MEMBERS_PERM, group_id='self.group.id')
     def kick_member(self, name, method):
         c = EVECharacter.objects(name=name).first()

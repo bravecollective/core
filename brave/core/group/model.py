@@ -76,21 +76,24 @@ class Group(Document):
         return perms
         
     def add_join_member(self, character):
-        """Use this to prevent duplicates in the database"""
+        """Use this to prevent duplicates in the database when not checking if a user is already in the list, does not
+            prevent duplicates due to concurrent modification."""
         if character in self.join_members:
             return
         
         self.join_members.append(character)
     
     def add_request_member(self, character):
-        """Use this to prevent duplicates in the database"""
+        """Use this to prevent duplicates in the database when not checking if a user is already in the list, does not
+            prevent duplicates due to concurrent modification."""
         if character in self.request_members:
             return
         
         self.request_members.append(character)
         
     def add_request(self, character):
-        """Use this to prevent duplicates in the database"""
+        """Use this to prevent duplicates in the database when not checking if a user is already in the list, does not
+            prevent duplicates due to concurrent modification."""
         if character in self.requests:
             return
             
