@@ -89,7 +89,8 @@ class KeyList(HTTPMethod):
         return 'brave.core.key.template.list', dict(
                 area='keys',
                 admin=admin,
-                records=credentials
+                records=credentials,
+                rec_mask=config['core.recommended_key_mask']
             )
 
     @authenticate
