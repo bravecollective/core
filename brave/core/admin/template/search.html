@@ -10,9 +10,15 @@
             <h3>Administrative Search</h3>
         </div>
         <div class="span12">
+            % if web.user.has_permission('core.admin.search.char'):
             <a href="/admin/search/char"><button>Search Characters</button></a>
+            % endif
+            % if web.user.has_permission('core.admin.search.key'):
             <a href="/admin/search/key"><button>Search Keys</button></a>
+            % endif
+            % if web.user.has_permission('core.admin.search.user'):
             <a href="/admin/search/user"><button>Search Users</button></a>
+            % endif
         </div>
     </div>
 </div>

@@ -63,7 +63,7 @@ class AuthorizeHandler(HTTPMethod):
                 dict(success=False, message=_("This application requires that you have a character connected to your"
                                               " account. Please <a href=\"/key/\">add an API key</a> to your account."),
                      ar=ar))
-            if not u.has_permission(ar.application.short+'.authorize'):
+            if not u.has_permission('core.application.authorize.{0}'.format(ar.application.short)):
                 return ('brave.core.template.authorize',
                 dict(success=False, message=_("You do not have permission to use this application."), ar=ar))
             return 'brave.core.template.authorize', dict(success=True, ar=ar, characters=characters, default=default)

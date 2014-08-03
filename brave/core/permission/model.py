@@ -25,6 +25,10 @@ class Permission(Document):
     id = StringField(primary_key=True)
     description = StringField(db_field='d')
     
+    # Permissions
+    GRANT_PERM = 'core.permission.grant.{permission_id}'
+    REVOKE_PERM = 'core.permission.revoke.{permission_id}'
+    
     @property
     def application(self):
         """Returns the application that this permission is for."""
@@ -65,6 +69,17 @@ class Permission(Document):
         
     def __ne__(self, other):
         return not self.__eq__(other)
+        
+    def get_perm(self, perm_type):
+        return getattr(self, perm_type+"_PERM").format(permission_id=self.id)
+        
+    @property
+    def grant_perm(self):
+        return self.get_perm('GRANT')
+        
+    @property
+    def revoke_perm(self):
+        return self.get_perm('REVOKE')
         
 class WildcardPermission(Permission):
     

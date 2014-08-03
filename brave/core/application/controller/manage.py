@@ -32,7 +32,7 @@ class ApplicationInterface(HTTPMethod):
         except Application.DoesNotExist:
             raise HTTPNotFound()
 
-        if self.app.owner.id != user.id and not user.has_permission('core.application.edit.'+str(app)):
+        if self.app.owner.id != user.id and not user.has_permission(app.edit_perm):
             raise HTTPNotFound()
     
     def get(self):
@@ -99,15 +99,15 @@ class ApplicationInterface(HTTPMethod):
         app.key.public = valid['key']['public']
         app.mask.required = valid['required'] or 0
         app.mask.optional = valid['optional'] or 0
-        app.short = valid['short'] or app.name.replace(" ", "").lower()
+        # Ignore their provided app short because we can't change permission names #ThanksMongo
+        
+        if user.admin:
+            app.expireGrantDays = valid['expire'] or 30
         
         if not createPerms(valid['perms'], app.short):
             return 'json:', dict(
                     success=False,
                     message=_("Stop being bad and only include permissions for your app."))
-        
-        if user.admin:
-            app.expireGrantDays = valid['expire'] or 30
         
         app.save()
         
@@ -135,7 +135,7 @@ class ApplicationList(HTTPMethod):
         adminRecords = set()
             
         for app in Application.objects():
-            if app.owner.id != user.id and user.has_permission('core.application.edit.'+str(app.id)):
+            if app.owner.id != user.id and user.has_permission(app.edit_perm):
                 adminRecords.add(app)
         
         records = Application.objects(owner=user._current_obj())
@@ -153,7 +153,7 @@ class ApplicationList(HTTPMethod):
                 adminRecords = adminRecords
             )
     
-    @user_has_permission('core.application.create')
+    @user_has_permission(Application.CREATE_PERM)
     def post(self, **kw):
         if not request.is_xhr:
             raise HTTPNotFound()
@@ -190,7 +190,7 @@ class ApplicationList(HTTPMethod):
                     success=False,
                     message=_("Stop being bad and only include permissions for your app."))
         
-        p = Permission(app.short+'.authorize', "Ability to authorize application {0}".format(app.name))
+        p = Permission('core.application.authorize.{0}'.format(app.short), "Ability to authorize application {0}".format(app.name))
         p.save()
         if u.primary:
             u.primary.personal_permissions.append(p)

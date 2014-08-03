@@ -48,6 +48,15 @@ class Group(Document):
     modified = DateTimeField(db_field='m', default=datetime.utcnow)
     _permissions = ListField(ReferenceField(Permission), db_field='p')
     
+    # Permissions
+    VIEW_PERM = 'core.group.view.{group_id}'
+    EDIT_ACL_PERM = 'core.group.edit.acl.{group_id}'
+    EDIT_PERMS_PERM = 'core.group.edit.perms.{group_id}'
+    EDIT_MEMBERS_PERM = 'core.group.edit.members.{group_id}'
+    EDIT_REQUESTS_PERM = 'core.group.edit.requests.{group_id}'
+    DELETE_PERM = 'core.group.delete.{group_id}'
+    CREATE_PERM = 'core.group.create'
+    
     @property
     def permissions(self):
         """Returns the permissions that this group grants as Permission objects. Evaluates the wildcard permissions
@@ -137,3 +146,30 @@ class Group(Document):
         ).save()
 
         return g
+        
+    def get_perm(self, perm_type):
+        return getattr(self, perm_type+"_PERM").format(group_id=self.id)
+        
+    @property
+    def view_perm(self):
+        return self.get_perm('VIEW')
+        
+    @property
+    def edit_acl_perm(self):
+        return self.get_perm('EDIT_ACL')
+        
+    @property
+    def edit_perms_perm(self):
+        return self.get_perm('EDIT_PERMS')
+        
+    @property
+    def edit_members_perm(self):
+        return self.get_perm('EDIT_MEMBERS')
+        
+    @property
+    def edit_requests_perm(self):
+        return self.get_perm('EDIT_REQUESTS')
+        
+    @property
+    def delete_perm(self):
+        return self.get_perm('DELETE')

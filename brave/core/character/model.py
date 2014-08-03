@@ -172,6 +172,10 @@ class EVECharacter(EVEEntity):
     
     owner = ReferenceField('User', db_field='o', reverse_delete_rule=NULLIFY)
     
+    # Permissions
+    VIEW_PERM = 'core.character.view.{character_id}'
+    LIST_PERM = 'core.character.list.all'
+    
     # DEPRECATED
     @property
     def tags(self):
@@ -352,3 +356,7 @@ class EVECharacter(EVEEntity):
         
         self.owner = None
         self.save()
+    
+    @property
+    def view_perm(self):
+        return self.VIEW_PERM.format(character_id=str(self.id))
