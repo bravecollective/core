@@ -45,8 +45,11 @@ class AuthorizeHandler(HTTPMethod):
         except AuthenticationRequest.DoesNotExist:
             raise HTTPNotFound()
     
-    def get(self, ar):
+    def get(self, ar=None):
         from brave.core.application.model import ApplicationGrant
+
+        if ar is None:
+            raise HTTPBadRequest()
         
         ar = self.ar(ar)
         u = user._current_obj()
