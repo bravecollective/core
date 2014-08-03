@@ -14,9 +14,16 @@ from brave.core.character.model import EVECharacter
 log = __import__('logging').getLogger(__name__)
 
 
-class GroupCategory(EmbeddedDocument):
-    id = StringField(db_field='_id', primary_key=True)
+class GroupCategory(Document):
+    meta = dict(
+            collection = 'GroupCategories',
+            allow_inheritance = False,
+            indexes = [],
+        )
+    
+    name = StringField(db_field='name')
     rank = IntField(db_field='i')
+    members = ListField(ReferenceField('Group'), db_field='m', default=list)
     
 
 @update_modified_timestamp.signal
@@ -40,7 +47,6 @@ class Group(Document):
     creator = ReferenceField('User', db_field='c')
     modified = DateTimeField(db_field='m', default=datetime.utcnow)
     _permissions = ListField(ReferenceField(Permission), db_field='p')
-    category = EmbeddedDocumentField(GroupCategory, db_field='ca')
     
     @property
     def permissions(self):

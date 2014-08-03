@@ -83,8 +83,8 @@
             % if not len(groups) or not web.user.primary:
                 <p class="subtext" style="text-transform: uppercase;"><strong>You do not seem to be able to join any groups.</strong></p>
             % else:
-                % for c, g in categories.iteritems():
-                <h3>${c.id if c else 'No Category'}</h3><br>
+                % for c in categories:
+                <h3>${c.name}</h3><br>
                 <table class="table table-hover">
                     <thead>
                         <tr>
@@ -95,29 +95,29 @@
                         </tr>
                     </thead>
                     <tbody>
-                        % for group in g:
+                        % for g in c.members:
                         <%
-                            if group not in groups:
+                            if g not in groups:
                                 continue
                         %>
-                            <tr data-id="${group.id | h}">
-                                <td><a href="/group/${group.id | u}">${group.id | h}</a></td>
-                                <td>${group.title | h}</td>
+                            <tr data-id="${g.id | h}">
+                                <td><a href="/group/${g.id | u}">${g.id | h}</a></td>
+                                <td>${g.title | h}</td>
                                 <td>
-                                % if group in web.user.primary.groups:
+                                % if g in web.user.primary.groups:
                                     Member
-                                % elif web.user.primary in group.requests:
+                                % elif web.user.primary in g.requests:
                                     Request pending
                                 % endif
                                 </td>
                                 <td>
-                                % if group in web.user.primary.groups:
+                                % if g in web.user.primary.groups:
                                     <button class="btn btn-danger btn-small leave"><i class="fa fa-times"></i> Leave Group</button>
-                                % elif group in joinableGroups:
+                                % elif g in joinableGroups:
                                     <button class="btn btn-success btn-small join"><i class="fa fa-plus"></i> Join Group</button>
-                                % elif web.user.primary in group.requests:
+                                % elif web.user.primary in g.requests:
                                     <button class="btn btn-danger btn-small withdraw"><i class="fa fa-times"></i> Withdraw Request</button>
-                                % elif group in requestableGroups:
+                                % elif g in requestableGroups:
                                     <button class="btn btn-success btn-small request"><i class="fa fa-plus"></i> Request Access</button>
                                 % else:
                                     None?

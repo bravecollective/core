@@ -11,7 +11,7 @@ from web.core.locale import _
 from web.core.http import HTTPFound, HTTPNotFound, HTTPForbidden
 
 from brave.core.character.model import EVECharacter, EVECorporation, EVEAlliance
-from brave.core.group.model import Group
+from brave.core.group.model import Group, GroupCategory
 from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
 from brave.core.util import post_only
 from brave.core.util.predicate import authorize, is_administrator
@@ -165,12 +165,11 @@ class OneGroupController(Controller):
 
 class GroupList(HTTPMethod):
     def get(self):
-        groups = sorted(Group.objects(), key=lambda g: g.category.id if g.category else g.id)
+        groups = sorted(Group.objects(), key=lambda g: g.id)
         
         visibleGroups = list()
         joinableGroups = list()
         requestableGroups = list()
-        categories = list()
         
         if not user.primary:
             return 'brave.core.group.template.list_groups', dict(
@@ -184,31 +183,16 @@ class GroupList(HTTPMethod):
             elif g.evaluate(user, user.primary, rule_set='join'):
                 joinableGroups.append(g)
                 visibleGroups.append(g)
-                categories.append(g.category)
             elif g.evaluate(user, user.primary, rule_set='request'):
                 requestableGroups.append(g)
                 visibleGroups.append(g)
-                categories.append(g.category)
-                
-        mapping = dict()
-        
-        for c in categories:
-            mapping[c] = list(Group.objects(category__id=c.id if c else None))
-        
-        def ranksort(i):
-            if i:
-                return i.rank
-            else:
-                return 10000
-        
-        mapping = OrderedDict((i, mapping[i]) for i in sorted(mapping.keys(), key=ranksort))
         
         return 'brave.core.group.template.list_groups', dict(
             area='group',
             groups=visibleGroups,
             joinableGroups=joinableGroups,
             requestableGroups=requestableGroups,
-            categories=mapping,
+            categories=GroupCategory.objects(members__in=visibleGroups),
         )
         
     def leave(self, group):
