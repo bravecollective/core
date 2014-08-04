@@ -45,6 +45,8 @@ class OneGroupController(Controller):
         self.group.add_request_member(c)
         self.group.requests.remove(c)
         self.group.save()
+        
+        return 'json:', dict(success=True)
     
     @post_only
     @user_has_permission(Group.EDIT_REQUESTS_PERM, group_id='self.group.id')
@@ -59,6 +61,8 @@ class OneGroupController(Controller):
         log.info("Rejecting {0}'s application to group {1} via REQUEST_DENY by {2}".format(c.name, self.group.id, user.primary))
         self.group.requests.remove(c)
         self.group.save()
+        
+        return 'json:', dict(success=True)
     
     @post_only
     @user_has_permission(Group.EDIT_MEMBERS_PERM, group_id='self.group.id')
@@ -74,6 +78,8 @@ class OneGroupController(Controller):
         log.info("Removing {0} from group {1} (admitted via {2}) via KICK_MEMBER by {3}".format(c.name, self.group.id, method, user.primary))
         glist.remove(c)
         self.group.save()
+        
+        return 'json:', dict(success=True)
 
     @user_has_permission(Group.VIEW_PERM, group_id='self.group.id')
     def index(self, rule_set=None):
@@ -152,6 +158,8 @@ class OneGroupController(Controller):
         self.group._permissions.append(p)
         self.group.save()
         
+        return 'json:', dict(success=True)
+        
     @post_only
     @user_has_permission(Group.EDIT_PERMS_PERM, group_id='self.group.id')
     @user_has_permission(Permission.REVOKE_PERM, permission_id='permission')
@@ -159,6 +167,8 @@ class OneGroupController(Controller):
         p = Permission.objects(id=permission).first()
         self.group._permissions.remove(p)
         self.group.save()
+        
+        return 'json:', dict(success=True)
 
     @post_only
     @user_has_permission(Group.DELETE_PERM, group_id='self.group.id')
