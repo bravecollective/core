@@ -30,7 +30,7 @@
                 <td class="security-violation" title="The BIA is always watching..."><font color="green">All clear!</font></td>
                 % endif
                 % if not admin:
-                <td class="key-code"><span class="ellipsis">${record.code[:10])| h}...</span></td>
+                <td class="key-code"><span class="ellipsis">${record.code[:10]| h}...</span></td>
                 % else:
                 <td class="key-code"><span class="ellipsis">Redacted.</span></td>
                 % endif
