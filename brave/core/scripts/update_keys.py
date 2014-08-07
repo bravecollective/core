@@ -5,30 +5,33 @@ from threading import Thread
 from datetime import datetime, timedelta
 from requests.exceptions import HTTPError
 
-keys = dict()
-
 class CredentialUpdateThread(Thread):
-    def __init__(self, indices):
+    def __init__(self, indices, separation):
         super(CredentialUpdateThread, self).__init__()
         self.indices = indices
+        self.separation = separation
     
-    def next_index_time(self):
-        mins = datetime.now().hour * 60 + datetime.now().minute
+    @property
+    def next_index(self):
         for i in self.indices:
-            if i > mins:
+            if i > UpdateKeys.current_index:
                 return i
-        return self.indices[0] + 24*60
+        return self.indices[0]
     
     def run(self):
         while True:
             now = datetime.now()
-            next_index = now + timedelta(minutes=self.next_index_time()-(now.minute+60*now.hour))
+            index = self.next_index
+            next_index = now + timedelta(minutes=(self.next_index-UpdateKeys.current_index) if self.next_index > UpdateKeys.current_index else self.separation)
             next_index = next_index - timedelta(microseconds=(next_index.microsecond + next_index.second*1000000))
             sleep((next_index-datetime.now()).total_seconds())
-            now = datetime.now()
-            if (now.minute+60*now.hour) not in keys.keys():
+            # There must've been a delay somewhere, recalulate when it's this thread's turn to run
+            if not UpdateKeys.current_index + 1 == index and not UpdateKeys.current_index + 1 == index + self.separation:
                 continue
-            for k in keys[(now.minute+60*now.hour)]:
+            UpdateKeys.current_index = index
+            if UpdateKeys.current_index not in UpdateKeys.keys.keys():
+                continue
+            for k in UpdateKeys.keys[UpdateKeys.current_index]:
                 self.update_key(k)
         
                     
@@ -42,26 +45,38 @@ class CredentialUpdateThread(Thread):
             print("Error {}: {}".format(e.response.status_code, e.response.text))
         if not key_result:
             print("Removed disabled key {0} from account {1} with characters {2}".format(k, key.owner, key.characters))
-
-def main(time_between_pulls=1440, threads=1):
-    """ Max supported int for time_between_pulls is 1440, setting time_between_pulls less than threads will probably
-        cause problems, so don't do it. This script makes no guarentee of thread safety, so using more than 1 thread
-        is strongly discouraged if you value your database's integrity."""
-    # Seed the keys into a dictionary, sorted by randomly assigned integers
-    for k in EVECredential.objects():
-        index = random.randint(0, time_between_pulls)
-        print "Assigning key {0} to {1}".format(k, index)
-        if index in keys.keys():
-            keys[index].append(k.key)
-        else:
-            keys[index] = [k.key]
+            
+            
+class UpdateKeys():
+    
+    keys = dict()
+    # Start at -1 so that the script has time to delegate keys to the threads.
+    current_index = -1
+    
+    @staticmethod
+    def main(time_between_pulls=1440, threads=1):
+        """ Setting time_between_pulls less than threads will probably cause problems, so don't do it. This script makes
+            no guarantee of thread safety, so using more than 1 thread is strongly discouraged if you value your 
+            database's integrity."""
+        # Seed the keys into a dictionary
+        index = 0
+        for k in EVECredential.objects():
+            print "Assigning key {0} to {1}".format(k.key, index)
+            if index in UpdateKeys.keys.keys():
+                UpdateKeys.keys[index].append(k.key)
+            else:
+                UpdateKeys.keys[index] = [k.key]
+            index += 1
+            
+            if index >= time_between_pulls:
+                index = 0
     
     
-    for i in range(0, threads):
-        indices = []
-        for d in range(0, time_between_pulls):
-            if d % threads == i:
-                indices.append(d)
-        t = CredentialUpdateThread(indices)
-        t.start()
+        for i in range(0, threads):
+            indices = []
+            for d in range(0, time_between_pulls):
+                if d % threads == i:
+                    indices.append(d)
+            t = CredentialUpdateThread(indices, threads)
+            t.start()
         
