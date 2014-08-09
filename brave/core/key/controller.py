@@ -90,7 +90,8 @@ class KeyList(HTTPMethod):
                 area='keys',
                 admin=admin,
                 records=credentials,
-                rec_mask=config['core.recommended_key_mask']
+                rec_mask=config['core.recommended_key_mask'],
+                rec_kind=config['core.recommended_key_kind']
             )
 
     @authenticate

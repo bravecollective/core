@@ -33,7 +33,7 @@
                     '</p>' +
                     '<p>' +
                         'You may use one of the following links to go to CCP&apos;s New API Key page with the correct permissions pre-selected:<br />' +
-                        '<a target="_blank" href="https://community.eveonline.com/support/api-key/CreatePredefined?accessMask=${rec_mask}">Create a standard API key</a> with minimum permissions.<br/>' +
+                        '<a target="_blank" href="https://community.eveonline.com/support/api-key/CreatePredefined?accessMask=${rec_mask}">Create a standard API key</a> with minimum permissions. A${"n" if rec_kind == "Account" else ""} <b>${rec_kind}</b> key is recommended.<br/>' +
                         '<a target="_blank" href="https://community.eveonline.com/support/api-key/CreatePredefined?accessMask=268435455">Create a full API key</a> with all permissions.  BRAVE Leadership should choose this, as should anyone who wishes to avoid adding more API keys for future Core apps.<br/>' +
                     '</p>' +
                     '<p>' +
