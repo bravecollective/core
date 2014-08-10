@@ -205,7 +205,11 @@ class EVECredential(Document):
         
         try:
             rec_mask = int(config['core.recommended_key_mask'])
-            self.verified = self.mask.has_access(rec_mask)
+            kind_acceptable = self.kind == config['core.recommended_key_kind']
+            # Account keys are acceptable in place of Character keys
+            if not kind_acceptable and config['core.recommended_key_kind'] == 'Character' and self.kind == 'Account':
+                kind_acceptable = True
+            self.verified = self.mask.has_access(rec_mask) and kind_acceptable
         except ValueError:
             log.warn("core.recommended_key_mask MUST be an integer.")
             self.verified = False
