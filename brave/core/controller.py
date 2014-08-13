@@ -64,6 +64,11 @@ class AuthorizeHandler(HTTPMethod):
                 dict(success=False, message=_("This application requires that you have a character connected to your"
                                               " account. Please <a href=\"/key/\">add an API key</a> to your account."),
                      ar=ar))
+
+            if not u.has_permission(ar.application.authorize_perm):
+                return ('brave.core.template.authorize',
+                dict(success=False, message=_("You do not have permission to use this application."), ar=ar))
+
             chars = []
             for c in characters:
                 if c.credential_for(ar.application.mask.required):
@@ -75,7 +80,7 @@ class AuthorizeHandler(HTTPMethod):
                 dict(success=False, message=_("This application requires an API key with a mask of <a href='/key/mask/{0}'>{0}</a> or better, please add an API key with that mask to your account.".format(ar.application.mask.required)),
                      ar=ar))
             return 'brave.core.template.authorize', dict(success=True, ar=ar, characters=chars, default=default)
-        
+
         ngrant = ApplicationGrant(user=u, application=ar.application, mask=grant.mask, expires=datetime.utcnow() + timedelta(days=ar.application.expireGrantDays), character=grant.character)
         ngrant.save()
         

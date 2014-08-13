@@ -7,17 +7,18 @@ from datetime import datetime
 from web.auth import user
 from web.core import Controller, HTTPMethod, request
 from web.core.locale import _
-from web.core.http import HTTPFound, HTTPNotFound
+from web.core.http import HTTPNotFound
 
-from brave.core.character.model import EVECharacter, EVECorporation, EVEAlliance
 from brave.core.group.model import Group
 from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
 from brave.core.util import post_only
-from brave.core.util.predicate import authorize, is_administrator
+from brave.core.permission.util import user_has_permission
+from brave.core.permission.model import Permission, WildcardPermission, GRANT_WILDCARD
 
 import json
 
 log = __import__('logging').getLogger(__name__)
+
 
 class OneGroupController(Controller):
     def __init__(self, id):
@@ -28,15 +29,15 @@ class OneGroupController(Controller):
         except Group.DoesNotExist:
             raise HTTPNotFound()
 
-    @authorize(is_administrator)
+    @user_has_permission(Group.VIEW_PERM, group_id='self.group.id')
     def index(self):
         return 'brave.core.group.template.group', dict(
             area='group',
             group=self.group,
         )
 
-    @authorize(is_administrator)
     @post_only
+    @user_has_permission(Group.EDIT_ACL_PERM, group_id='self.group.id')
     def set_rules(self, rules, really=False):
         rules = json.loads(rules)
         rule_objects = []
@@ -82,25 +83,54 @@ class OneGroupController(Controller):
             return 'json:', dict(success=True)
         return 'json:', dict(success=True,
                              message=_("unimplemented"))
-
-    @authorize(is_administrator)
+                             
     @post_only
+    @user_has_permission(Group.EDIT_PERMS_PERM, group_id='self.group.id')
+    @user_has_permission(Permission.GRANT_PERM, permission_id='permission')
+    def addPerm(self, permission=None):
+        p = Permission.objects(id=permission)
+        if len(p):
+            p = p.first()
+        else:
+            if GRANT_WILDCARD in permission:
+                p = WildcardPermission(permission)
+            else:
+                p = Permission(permission)
+            p.save()
+        self.group._permissions.append(p)
+        self.group.save()
+        
+    @post_only
+    @user_has_permission(Group.EDIT_PERMS_PERM, group_id='self.group.id')
+    @user_has_permission(Permission.REVOKE_PERM, permission_id='permission')
+    def deletePerm(self, permission=None):
+        p = Permission.objects(id=permission).first()
+        self.group._permissions.remove(p)
+        self.group.save()
+
+    @post_only
+    @user_has_permission(Group.DELETE_PERM, group_id='self.group.id')
     def delete(self):
         self.group.delete()
         return 'json:', dict(success=True)
 
-class GroupList(HTTPMethod):
-    def get(self):
-        if not is_administrator:
-            raise HTTPNotFound
 
+class GroupList(HTTPMethod):
+    @user_has_permission('core.group.view.*', accept_any_matching=True)
+    def get(self):
         groups = sorted(Group.objects(), key=lambda g: g.id)
+        
+        visibleGroups = list()
+        for g in groups:
+            if user.has_permission(g.view_perm):
+                visibleGroups.append(g)
+        
         return 'brave.core.group.template.list_groups', dict(
             area='group',
-            groups=groups,
+            groups=visibleGroups,
         )
 
-    @authorize(is_administrator)
+    @user_has_permission(Group.CREATE_PERM)
     def post(self, id=None, title=None):
         if not id:
             return 'json:', dict(success=False,
@@ -112,8 +142,19 @@ class GroupList(HTTPMethod):
         if not g:
             return 'json:', dict(success=False,
                                  message=_("group with that id already existed"))
-
+                                 
+        primary = user.primary if user.primary else user.characters[0]
+        # Give the creator of the group the ability to edit it and delete it.
+        editPerm = Permission(g.edit_acl_perm, "Ability to edit ACLs for Group {0}".format(g.id))
+        editPermsPerm = Permission(g.edit_perms_perm, "Ability to edit permissions for Group {0}".format(g.id))
+        deletePerm = Permission(g.delete_perm, "Ability to delete Group {0}".format(g.id))
+        primary.personal_permissions.append(editPerm)
+        primary.personal_permissions.append(deletePerm)
+        primary.personal_permissions.append(editPermsPerm)
+        user.save(cascade=True)
+        
         return 'json:', dict(success=True, id=g.id)
+
 
 class GroupController(Controller):
     index = GroupList()
@@ -122,7 +163,7 @@ class GroupController(Controller):
         request.path_info_pop()  # We consume a single path element.
         return OneGroupController(id), args
 
-    @authorize(is_administrator)
+    @user_has_permission('core.group.edit.*', accept_any_matching=True)
     def check_rule_reference_exists(self, kind, name):
         cls = ACLList.target_class(kind)
         return "json:", dict(exists=bool(cls.objects(name=name)))

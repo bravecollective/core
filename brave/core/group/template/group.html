@@ -158,6 +158,28 @@ def selected(bool):
                     }
                 });
             });
+            
+            $(document).on('click', '.submitPerm', function()
+            {
+                $.post('/group/${group.id}/addPerm', { permission: $(".permission").val() }).
+                done(function()
+                {
+                    //Should probably add the permission here... WTB CSRF for normal POST requests
+                    window.location="/group/${group.id}"
+                });
+            });
+            
+            $(document).on('click', '.deletePerm', function()
+            {
+                var row = $(this).parents('li');
+                $.post('/group/${group.id}/deletePerm', { permission: row.attr("id") }).
+                done(function()
+                {
+                    //Should probably add the permission here... WTB CSRF for normal POST requests
+                    window.location="/group/${group.id}"
+                });
+            });
+            
         });
     </script>
 </%block>
@@ -303,6 +325,7 @@ def selected(bool):
         <div class="row-fluid header">
             <h3>${group.id | h} - ${group.title | h}</h3>
         </div>
+        % if web.user.has_permission('core.group.edit.acl.'+group.id):
         <div class="row-fluid table">
             Rules:
             <table id="acl-rules" data-action="/group/${group.id}/set_rules">
@@ -324,6 +347,29 @@ def selected(bool):
             <button class="addrule" data-rule="mask">by key mask</button>
         </div>
         <button id="submit">submit</button>
+        % endif
+        <br>
+        <br>
+        <br>
+        <br>
+        % if web.user.has_permission('core.group.edit.perms.'+group.id):
+        <div class="row-fluid table">
+            Permissions:
+            <list>
+            <table id="perms">
+                <tbody class="sortable">
+                    % for perm in group._permissions:
+                        <li id="${perm.id}">${perm.id} : ${perm.description} <button class="btn btn-danger btn-small deletePerm"><i class="fa fa-times"></i></button></li>
+                    % endfor
+                </tbody>
+            </table>
+        </div>
+        <div>
+            Add permission:
+            <input class="permission" id="permission" type="text" placeholder="Permission Name" class="span2"/>
+            <button class="submitPerm">submit</button>
+        </div>
+        % endif
     </div>
 </div>
 

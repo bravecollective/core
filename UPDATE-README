@@ -26,8 +26,16 @@ ad709e0: It is highly recommended that admins remove all characters whose owners
 feature/authenticated: The config value 'web.auth.intercept' should be added to the production config file with a value 
     of 401.
 
+20b85a5: A new field was added to Applications, which will need to be set before attempting to run Core after the update.
+    The field name is short, and it must be unique. This is used as the basis for that application's permissions, so
+    pick a reasonable name such as 'jabber'. Must be lowercase.
+
+feature/permissions: Admins need to grant themselves the core.* permission in order to retain all previous
+    abilities that they had. Admins are also encouraged to grant the necessary permissions to normal users as well.
+
 feature/recommendedKeyMask: The config value 'core.recommended_key_mask' should be added to the production config file with
     a value equal to that which the admin wants to be recommended for users as the standard key.
 
 feature/accountKeys: The config value 'core.recommended_key_kind' should be added to the production config file with
     a value of the kind of key the admin wants users to add ("Character", "Account", or "Corporation")
+

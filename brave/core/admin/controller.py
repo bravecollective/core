@@ -2,25 +2,24 @@
 
 from __future__ import unicode_literals
 
-from datetime import datetime
-
-from web.core import Controller, HTTPMethod, request
+from web.core import Controller, HTTPMethod
 from web.core.locale import _
-from web.core.http import HTTPFound, HTTPNotFound
+from web.core.http import HTTPNotFound
 
 from brave.core.character.model import EVECharacter, EVECorporation, EVEAlliance
-from brave.core.group.model import Group
-from brave.core.group.acl import ACLList
-from brave.core.util.predicate import authorize, is_administrator
+from brave.core.util.predicate import is_administrator
 from brave.core.key.model import EVECredential
 from brave.core.account.model import User
+from brave.core.permission.util import user_has_permission
 
 
 class SearchCharInterface(HTTPMethod):
     """Handles /admin/search/char"""
+    
+    @user_has_permission('core.admin.search.char')
     def get(self, character=None, charMethod=None, alliance=None, corporation=None, group=None, submit=None):
         
-        # Have to be an admin to access admin pages.            
+        # Have to be an admin to access admin pages.
         if not is_administrator:
             raise HTTPNotFound()
 
@@ -68,9 +67,11 @@ class SearchCharInterface(HTTPMethod):
 
 class SearchKeyInterface(HTTPMethod):
     """Handles /admin/search/key"""
+    
+    @user_has_permission('core.admin.search.key')
     def get(self, keyID=None, keyMask=None, violation=None, submit=None):
         
-        # Have to be an admin to access admin pages.            
+        # Have to be an admin to access admin pages.
         if not is_administrator:
             raise HTTPNotFound()
 
@@ -99,9 +100,11 @@ class SearchKeyInterface(HTTPMethod):
         
 class SearchUserInterface(HTTPMethod):
     """Handles /admin/search/user"""
+    
+    @user_has_permission('core.admin.search.user')
     def get(self, username=None, userMethod=None, ip=None, duplicate=None, submit=None):
         
-        # Have to be an admin to access admin pages.            
+        # Have to be an admin to access admin pages.
         if not is_administrator:
             raise HTTPNotFound()
 
@@ -145,6 +148,7 @@ class AdminController(Controller):
     """Entry point for the Search RESTful interface."""
 
     search = SearchController()
-
+    
+    @user_has_permission('core.admin.search.*', accept_any_matching=True)
     def index(self):
         return 'brave.core.admin.template.search', dict(area='admin')
