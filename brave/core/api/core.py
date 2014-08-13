@@ -163,5 +163,5 @@ class CoreAPI(SignedController):
                 tags = tags,
                 perms = character.permissions_tags(token.application),
                 expires = None,
-                mask = token.mask
+                mask = token.mask.mask if token.mask else 0
             )

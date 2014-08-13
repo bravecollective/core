@@ -12,6 +12,7 @@ from brave.core.util import strip_tags
 from brave.core.util.signal import update_modified_timestamp, trigger_api_validation
 from brave.core.util.eve import api, EVECharacterKeyMask, EVECorporationKeyMask
 
+from web.core import config
 
 log = __import__('logging').getLogger(__name__)
 
@@ -205,7 +206,17 @@ class EVECredential(Document):
         self.mask = int(result['accessMask'])
         self.kind = result['type']
         self.expires = datetime.strptime(result['expires'], '%Y-%m-%d %H:%M:%S') if result.get('expires', None) else None
-        self.verified = self._mask != 0
+        
+        try:
+            rec_mask = int(config['core.recommended_key_mask'])
+            kind_acceptable = self.kind == config['core.recommended_key_kind']
+            # Account keys are acceptable in place of Character keys
+            if not kind_acceptable and config['core.recommended_key_kind'] == 'Character' and self.kind == 'Account':
+                kind_acceptable = True
+            self.verified = self.mask.has_access(rec_mask) and kind_acceptable
+        except ValueError:
+            log.warn("core.recommended_key_mask MUST be an integer.")
+            self.verified = False
         
         if not result.characters.row:
             log.error("No characters returned for key %d?", self.key)

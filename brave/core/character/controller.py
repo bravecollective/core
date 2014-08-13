@@ -46,7 +46,7 @@ class CharacterInterface(HTTPMethod):
         
         return 'brave.core.character.template.charDetails', dict(
             char=self.char,
-            area='admin'
+            area='admin' if user.admin else 'chars'
         )
     
     @post_only

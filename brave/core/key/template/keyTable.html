@@ -5,7 +5,7 @@
         <thead>
             <tr>
                 <th class="span2 sortable key-id">${_("Key ID")}</th>
-                <th class="span2 sortable security-violation">${_("Security Violation")}</th>
+                <th class="span2 sortable security-violation"><span class="line"></span>${_("Security Violation")}</th>
                 % if not admin:
                 <th class="span3 sortable key-code"><span class="line"></span>${_("Verification Code")}</th>
                 % else:
@@ -25,12 +25,12 @@
             <tr data-id="${record.id}">
                 <td class="key-id"><i class="fa fa-fw fa-${'check' if record.verified else 'times'}"></i> <a href="/key/${record.id}">${record.key | h}</a></td>
                 % if record.violation == "Character":
-                <td class="security-violation" title="One or more characters associated with this key was found on another account. Join the 'Brave IT Team' channel in game for assistance."><font color="red">Character Security Violation.</font></td>
+                <td class="security-violation"><font color="red">Character Security Violation. <a href="https://wiki.braveineve.com/it/core#violations" target="_blank">help <i class="fa fa-external-link"></i></a></font></td>
                 % else:
-                <td class="security-violation" title="All clear!"><font color="green">The BIA is always watching...</font></td>
+                <td class="security-violation" title="The BIA is always watching..."><font color="green">All clear!</font></td>
                 % endif
                 % if not admin:
-                <td class="key-code" title="${record.code}"><span class="ellipsis">${"{0}...".format(record.code[:10])| h}</span></td>
+                <td class="key-code"><span class="ellipsis">${record.code[:10]| h}...</span></td>
                 % else:
                 <td class="key-code"><span class="ellipsis">Redacted.</span></td>
                 % endif

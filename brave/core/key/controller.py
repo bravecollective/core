@@ -40,7 +40,7 @@ class KeyIndex(HTTPMethod):
         
     def get(self):
         return 'brave.core.key.template.keyDetails', dict(
-            area='admin',
+            area='admin' if user.admin else 'keys',
             admin=True,
             record=self.key
         )
@@ -90,7 +90,9 @@ class KeyList(HTTPMethod):
         return 'brave.core.key.template.list', dict(
                 area='keys',
                 admin=admin,
-                records=credentials
+                records=credentials,
+                rec_mask=config['core.recommended_key_mask'],
+                rec_kind=config['core.recommended_key_kind']
             )
 
     @authenticate
