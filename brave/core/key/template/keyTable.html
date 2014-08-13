@@ -25,7 +25,7 @@
             <tr data-id="${record.id}">
                 <td class="key-id"><i class="fa fa-fw fa-${'check' if record.verified else 'times'}"></i> <a href="/key/${record.id}">${record.key | h}</a></td>
                 % if record.violation == "Character":
-                <td class="security-violation"><font color="red">Character Security Violation. <a href="https://wiki.braveineve.com/it/core#violations" target="_blank">help <i class="fa fa-external-link"></i></a></font></td>
+                <td class="security-violation"><font color="red">Character Security Violation. <a href="https://wiki.braveineve.com/it/core#violations" target="_blank">Help <i class="fa fa-external-link"></i></a></font></td>
                 % else:
                 <td class="security-violation" title="The BIA is always watching..."><font color="green">All clear!</font></td>
                 % endif
