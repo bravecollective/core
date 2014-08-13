@@ -90,12 +90,6 @@
                     //Necessary to allow for new popups to supersede old ones
                     self.popover('destroy');
                     
-                    //This indicates that the input does not match the necessary regular expression
-                    if(self.hasClass('regex'))
-                    {
-                        self.popoverT('The password entered contains invalid characters. Please only use non-whitespace ASCII characters.');
-                    }
-                    
                     //The password is not strong enough.
                     if(self.hasClass('validation'))
                     {
