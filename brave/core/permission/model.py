@@ -2,10 +2,7 @@
 
 from __future__ import unicode_literals
 
-from datetime import datetime
-from mongoengine import Document, EmbeddedDocument, EmbeddedDocumentField, StringField, EmailField, URLField, DateTimeField, BooleanField, ReferenceField, ListField, IntField
-
-from brave.core.util.signal import update_modified_timestamp
+from mongoengine import Document, StringField
 
 
 log = __import__('logging').getLogger(__name__)
@@ -16,8 +13,8 @@ GRANT_WILDCARD = '*'
 class Permission(Document):
     meta = dict(
         collection='Permissions',
-        allow_inheritance = True,
-        indexes = [
+        allow_inheritance=True,
+        indexes=[
             dict(fields=['id'])
         ],
     )
@@ -119,7 +116,7 @@ class WildcardPermission(Permission):
             if GRANT_WILDCARD != self_segments[-1]:
                 return False
         
-        # Loops through each segment of the wildcardPerm and permission id. 'core.example.*.test.*' would have 
+        # Loops through each segment of the wildcardPerm and permission id. 'core.example.*.test.*' would have
         # segments of 'core', 'example', '*', 'test', and '*' in that order.
         for (s_seg, perm_seg) in zip(self_segments, perm_segments):
             # We loop through looking for something wrong, if there's nothing wrong then we return True.
@@ -134,4 +131,3 @@ class WildcardPermission(Permission):
                 return False
         
         return True
-

@@ -7,7 +7,7 @@ from web.core.http import HTTPFound, HTTPNotFound
 from marrow.util.bunch import Bunch
 
 from brave.core.character.model import EVECharacter
-from brave.core.util.predicate import authorize, authenticate, is_administrator
+from brave.core.util.predicate import authenticate
 from brave.core.util import post_only
 from brave.core.permission.util import user_has_permission
 from brave.core.permission.model import Permission, WildcardPermission, GRANT_WILDCARD
@@ -70,6 +70,7 @@ class CharacterInterface(HTTPMethod):
         p = Permission.objects(id=permission).first()
         self.char.personal_permissions.remove(p)
         self.char.save()
+
 
 class CharacterList(HTTPMethod):
     @authenticate

@@ -68,7 +68,6 @@ class AuthorizeHandler(HTTPMethod):
             if not u.has_permission(ar.application.authorize_perm):
                 return ('brave.core.template.authorize',
                 dict(success=False, message=_("You do not have permission to use this application."), ar=ar))
-            return 'brave.core.template.authorize', dict(success=True, ar=ar, characters=characters, default=default)
 
             chars = []
             for c in characters:
@@ -82,7 +81,6 @@ class AuthorizeHandler(HTTPMethod):
                      ar=ar))
             return 'brave.core.template.authorize', dict(success=True, ar=ar, characters=chars, default=default)
 
-        
         ngrant = ApplicationGrant(user=u, application=ar.application, mask=grant.mask, expires=datetime.utcnow() + timedelta(days=ar.application.expireGrantDays), character=grant.character)
         ngrant.save()
         

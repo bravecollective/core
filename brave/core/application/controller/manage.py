@@ -14,7 +14,7 @@ from web.core.http import HTTPFound, HTTPNotFound
 
 from brave.core.application.model import Application
 from brave.core.application.form import manage_form
-from brave.core.util.predicate import authorize, authenticate, is_administrator
+from brave.core.util.predicate import authenticate
 from brave.core.permission.util import user_has_permission
 from brave.core.permission.model import Permission
 from brave.core.permission.controller import createPerms

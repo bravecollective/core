@@ -1,5 +1,6 @@
 from brave.core.permission.model import Permission, WildcardPermission, GRANT_WILDCARD
 
+
 def createPerms(permString, app=None):
     perms = permString.split("\n")
     
@@ -31,10 +32,11 @@ def createPerms(permString, app=None):
         permission.save()
     return True
 
+
 def init_perms():
     f = open('permissions.txt', 'r')
     permString = ""
     for line in f:
-        permString += line+"\n"
+        permString += line + "\n"
     
     createPerms(permString)

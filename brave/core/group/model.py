@@ -7,7 +7,7 @@ from mongoengine import Document, EmbeddedDocument, EmbeddedDocumentField, Strin
 
 from brave.core.util.signal import update_modified_timestamp
 from brave.core.group.acl import ACLRule
-from brave.core.permission.model import Permission, WildcardPermission, GRANT_WILDCARD
+from brave.core.permission.model import Permission, WildcardPermission
 
 
 log = __import__('logging').getLogger(__name__)
