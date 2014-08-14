@@ -46,6 +46,8 @@ class KeyIndex(HTTPMethod):
 
 
 class KeyInterface(Controller):
+    
+    @authenticate
     def __init__(self, key):
         super(KeyInterface, self).__init__()
         

@@ -14,6 +14,8 @@ from brave.core.permission.model import Permission, WildcardPermission, GRANT_WI
 
 
 class CharacterInterface(HTTPMethod):
+    
+    @authenticate
     def __init__(self, char):
         super(CharacterInterface, self).__init__()
 
@@ -51,7 +53,7 @@ class CharacterInterface(HTTPMethod):
     
     @post_only
     @user_has_permission(Permission.GRANT_PERM, permission_id='permission')
-    def addPerm(self, permission=None):
+    def add_perm(self, permission=None):
         p = Permission.objects(id=permission)
         if len(p):
             p = p.first()
@@ -66,7 +68,7 @@ class CharacterInterface(HTTPMethod):
     
     @post_only
     @user_has_permission(Permission.REVOKE_PERM, permission_id='permission')
-    def deletePerm(self, permission=None):
+    def delete_perm(self, permission=None):
         p = Permission.objects(id=permission).first()
         self.char.personal_permissions.remove(p)
         self.char.save()
