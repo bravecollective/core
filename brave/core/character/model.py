@@ -291,6 +291,19 @@ class EVECharacter(EVEEntity):
             permission = permission.first()
         
         return(permission in self.permissions())
+        
+    def has_any_permission(self, permission):
+        """Returns true if the character has a permission that would be granted by permission."""
+        p = WildcardPermission.objects(id=permission)
+        if len(p):
+            p = p.first()
+        else:
+            p = WildcardPermission(id=permission)
+        for permID in self.permissions():
+            if p.grants_permission(permID.id):
+                return True
+                
+        return False
     
     def credential_for(self, mask):
         """Return the least-permissive API key that can satisfy the given mask."""
