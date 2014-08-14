@@ -549,8 +549,8 @@ border-bottom-right-radius: 4px;">
                             <tr name="${char.name}">
                                 <td><span onclick="$(this).selectText()">${char.name | h}</span></td>
                                 <td style="text-align: center;">
-                                    <button class="btn btn-success btn-small acceptRequest"><i class="fa fa-plus"></i></button>
-                                    <button class="btn btn-danger btn-small denyRequest"><i class="fa fa-times"></i></button>
+                                    <a class="btn btn-success btn-small acceptRequest" href="" title="${_('Approve Request')}" rel="tooltip" data-placement="bottom"><i class="fa fa-check"></i></a>
+                                    <a class="btn btn-danger btn-small denyRequest" href="" title="${_('Deny Request')}" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i></a>
                                 </td>
                             </tr>
                         % endfor
@@ -584,7 +584,7 @@ border-bottom-right-radius: 4px;">
                             <tr name="${char.name}">
                                 <td><span onclick="$(this).selectText()">${char.name | h}</span></td>
                                 <td style="text-align: center;">
-                                    <button class="btn btn-danger btn-small kickMember"><i class="fa fa-times"></i></button>
+                                    <a class="btn btn-danger btn-small kickMember" href="" title="${_('Remove From Group')}" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i></a>
                                 </td>
                             </tr>
                         % endfor
