@@ -58,7 +58,17 @@ class Permission(Document):
             For instance, when evaluating whether a WildcardPermission grants access to a run-time permission."""
         
         return(self.id == perm_string)
+    
+    @staticmethod
+    def set_grants_permission(perms, granted_perm):
+        """Loops through a set of permissions and checks if any of them grants the desired permission."""
         
+        for p in perms:
+            if p.grants_permission(granted_perm):
+                return True
+        
+        return False
+    
     def __eq__(self, other):
         if isinstance(other, Permission):
             return self.id == other.id
