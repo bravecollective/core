@@ -172,7 +172,7 @@ def selected(bool):
             
             $(document).on('click', '.deletePerm', function()
             {
-                var row = $(this).parents('li');
+                var row = $(this).parents('tr');
                 $.post('/group/${group.id}/delete_perm', { permission: row.attr("id") }).
                 done(function()
                 {
@@ -392,40 +392,62 @@ def selected(bool):
                 </tbody>
             </table>
         </div>
-        <div>
-            Add new rule:
-            <button class="addrule" data-rule="list" data-kind="c">by character</button>
-            <button class="addrule" data-rule="list" data-kind="o">by corporation</button>
-            <button class="addrule" data-rule="list" data-kind="a">by alliance</button>
-            <button class="addrule" data-rule="key">by key type</button>
-            <button class="addrule" data-rule="title">by corporate title</button>
-            <button class="addrule" data-rule="role">by corporate role</button>
-            <button class="addrule" data-rule="mask">by key mask</button>
+
+        <div style="padding-top:10px;border-top:1px solid #ccc">
+
+            <div class="btn-group">
+              <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+                Add new ACL rule
+                <span class="caret"></span>
+              </a>
+              <ul class="dropdown-menu">
+                <li class="addrule" data-rule="list" data-kind="c">By Character Name</li>
+                <li class="addrule" data-rule="list" data-kind="o">By Corporation Name</li>
+                <li class="addrule" data-rule="list" data-kind="a">By Alliance Name</li>
+                <li class="addrule" data-rule="title">By Corporate Title</li>
+                <li class="addrule" data-rule="role">By Corporate Role</li>
+                <li class="addrule" data-rule="key">By Key Type</li>
+                <li class="addrule" data-rule="mask">By Key Mask</li>
+              </ul>
+            </div>
+
         </div>
         <button id="submit">submit</button>
         % endif
-        <br>
-        <br>
-        <br>
-        <br>
+
+        <div style="margin-top:40px"></div>
+
         % if web.user.has_permission(group.edit_perms_perm) and not rule_set:
-        <div class="row-fluid table">
-            Permissions:
-            <list>
-            <table id="perms">
-                <tbody class="sortable">
-                    % for perm in group._permissions:
-                        <li id="${perm.id}">${perm.id} : ${perm.description} <button class="btn btn-danger btn-small deletePerm"><i class="fa fa-times"></i></button></li>
-                    % endfor
-                </tbody>
-            </table>
-        </div>
-        <div>
-            Add permission:
-            <input class="permission" id="permission" type="text" placeholder="Permission Name" class="span2"/>
-            <button class="submitPerm">submit</button>
-        </div>
+            <div class="row-fluid table">
+                Permissions:
+                <table id="perms" class="table">
+                    <thead>
+                    <tr id="${perm.id}">
+                            <th>ID</th>
+                            <th>Description</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="sortable">
+                        % for perm in group._permissions:
+                        <tr id="${perm.id}">
+                            <td>${perm.id | h}</td>
+                            <td>${perm.description | h}</td>
+                            <td><button class="btn btn-danger btn-small deletePerm"><i class="fa fa-times"></i></button></li></td>
+                        </tr>
+                        % endfor
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <label>Add permission:</label>
+                <div class="input-append">
+                  <input class="permission" id="permission" type="text" placeholder="Permission Name" class="span2"/>
+                  <button class="btn submitPerm" type="button">Go!</button>
+                </div>
+            </div>
         % endif
+
         % if rule_set:
             Members in group from ${rule_set}ing this group:
             <ul>
@@ -434,6 +456,7 @@ def selected(bool):
             % endfor
             </ul>
         % endif
+
         % if rule_set == 'request':
             Pending requests:
             <ul>
@@ -442,6 +465,7 @@ def selected(bool):
             % endfor
             </ul>
         % endif
+
     </div>
 </div>
 
