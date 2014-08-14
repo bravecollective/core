@@ -125,9 +125,7 @@
                             <tr data-id="${group.id | h}">
                                 <td><a href="/group/${group.id | u}">${group.id | h}</a></td>
                                 <td>${group.title | h}</td>
-                                % if web.user.has_permission('core.group.delete.'+group.id):
-                                    <td><button class="btn btn-danger btn-small delete"><i class="fa fa-times"></i></button></td>
-                                % endif
+                                <td><button class="btn btn-danger btn-small delete"><i class="fa fa-times"></i></button></td>
                             </tr>
                         % endfor
                     </tbody>
