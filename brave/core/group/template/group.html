@@ -17,6 +17,11 @@ def selected(bool):
     <style type="text/css">
         .stringlistinput .remove {
             cursor: pointer;
+            padding: 2px 3px;
+        }
+
+        .stringlistinput .remove:hover {
+            color: #CE0000;
         }
 
         .handle {
@@ -24,9 +29,29 @@ def selected(bool):
             line-height: 200%;
         }
 
+        .handle:hover .rowdraghandle{
+            color: #5298E4;
+        }
+
+        .handle:active .rowdraghandle{
+            color: #C51E1E;
+        }
+
         #acl-rules select {
+            border: none;
+            outline: none;
+            display: inline-block;
+            cursor: pointer;
+            height: 22px;
+            line-height: 22px;
+            margin-top: -4px;
+            font-weight: bold;;
             padding: 0;
             width: auto;
+            font-size: 15px;
+
+            border-bottom: 1px solid;
+            border-radius: 0;
         }
 
         #acl-rules input {
@@ -35,9 +60,11 @@ def selected(bool):
 
         .stringlistinput li:not(:last-child) {
             border: 1px solid #ccc;
-            border-radius: 3px;
-            padding: 0 3px;
-            margin: 3px;
+            border-radius: 4px;
+            padding: 4px 3px 4px 6px;
+            margin: 0 3px;
+            float: left;
+            display: block;
         }
         .stringlistinput li:first-child {
             margin-left: 0px;
@@ -57,6 +84,32 @@ def selected(bool):
             border: 1px solid red;
         }
 
+        .acl_def{
+            font-size: 15px;
+            line-height: 24px;
+        }
+
+        ul.inline{
+            margin:0;
+            margin-top:5px;
+        }
+
+        .ui-sortable-placeholder{
+            background: #EBEBEB;
+            height:70px;
+        }
+
+        .ui-sortable-helper{
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+        }
+
+        .ui-state-highlight{
+            background: #EBEBEB;
+            height:70px;
+            border: none;
+        }
+
     </style>
 </%block>
 
@@ -67,6 +120,10 @@ def selected(bool):
         $(function() {
             $(".sortable").sortable({
                 handle: ".handle",
+                containment: "parent",
+                cursor: "move",
+                distance: 3,
+                placeholder: "ui-state-highlight",
                 update: function(event, ui) {
                     ui.item.parent().children().removeClass("first").filter(":first-child").addClass("first");
                 },
@@ -215,27 +272,45 @@ def selected(bool):
             });
             
         });
+
+        jQuery.fn.selectText = function(){
+            var doc = document
+                , element = this[0]
+                , range, selection
+            ;
+            if (doc.body.createTextRange) {
+                range = document.body.createTextRange();
+                range.moveToElementText(element);
+                range.select();
+            } else if (window.getSelection) {
+                selection = window.getSelection();
+                range = document.createRange();
+                range.selectNodeContents(element);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
+        };
     </script>
 </%block>
 
 <%def name="stringlistinput(input_name, list)">
-<div class="stringlistinput" data-input-name="${input_name}">
-    <ul class="inline">
-        % for item in list:
+    <div class="stringlistinput" data-input-name="${input_name}">
+        <ul class="inline">
+            % for item in list:
+                <li>
+                    <span onclick="$(this).selectText();">${item | h}</span>
+                    <input type="hidden" name="${input_name}" value="${item | h}" />
+                    <i class="remove fa fa-times"></i>
+                </li>
+            % endfor
             <li>
-                ${item | h}
-                <input type="hidden" name="${input_name}" value="${item | h}" />
-                <i class="remove fa fa-times"></i>
+                <div class="input-append">
+                    <input type="text"/>
+                    <button class="btn btn-info add">Add</button>
+                </div>
             </li>
-        % endfor
-        <li>
-            <div class="input-append">
-                <input type="text"/>
-                <button class="add add-on">add</button>
-            </div>
-        </li>
-    </ul>
-</div>
+        </ul>
+    </div>
 </%def>
 
 <%def name="aclrule(rule)">
@@ -256,40 +331,40 @@ def selected(bool):
 
 <%def name="select_grant(rule)">
     <select name="grant">
-        <option value="true" ${selected(rule.grant)}>grant</option>
-        <option value="false" ${selected(not rule.grant)}>deny</option>
+        <option value="true" ${selected(rule.grant)}>Grant</option>
+        <option value="false" ${selected(not rule.grant)}>Deny</option>
     </select>
 </%def>
 
 <%def name="acllist(rule)">
-    <div class="acllist" data-kind="${rule.kind}">
+    <div class="acllist acl_def" data-kind="${rule.kind}">
         <input type="hidden" name="type" value="list" />
         <input type="hidden" name="kind" value="${rule.kind}" />
         ${select_grant(rule)}
-        if character
+        If Character
         <select name="inverse">
-            <option value="false" ${selected(not rule.inverse)}>is</option>
-            <option value="true" ${selected(rule.inverse)}>is not</option>
+            <option value="false" ${selected(not rule.inverse)}>Is</option>
+            <option value="true" ${selected(rule.inverse)}>Is Not</option>
         </select>
         % if rule.kind == "c":
-            one of these characters:
+            One Of These Characters:
         % elif rule.kind == "o":
-            in one of these corporations:
+            In One Of These Corporations:
         % else:
-            in one of these alliances:
+            In One Of These Alliances:
         % endif
         ${stringlistinput("names", [o.name for o in rule.target_objects()])}
     </div>
 </%def>
 
 <%def name="aclkey(rule)">
-    <div class="aclkey">
+    <div class="aclkey acl_def">
         <input type="hidden" name="type" value="key" />
         ${select_grant(rule)}
-        if we
+        If We
         <select name="inverse">
-            <option value="false" ${selected(not rule.inverse)}>have</option>
-            <option value="true" ${selected(rule.inverse)}>don't have</option>
+            <option value="false" ${selected(not rule.inverse)}>Have</option>
+            <option value="true" ${selected(rule.inverse)}>Don't Have</option>
         </select>
         a(n)
         <select name="kind">
@@ -297,58 +372,58 @@ def selected(bool):
             <option value="Character" ${selected(rule.kind == "Character")}>Character</option>
             <option value="Corporation" ${selected(rule.kind == "Corporation (wtf?)")}>Corporation</option>
         </select>
-        key for this character
+        Key For This Character
     </div>
 </%def>
 
 <%def name="acltitle(rule)">
-    <div class="acltitle">
+    <div class="acltitle acl_def">
         <input type="hidden" name="type" value="title" />
         ${select_grant(rule)}
-        if character
+        If Character
         <select name="inverse">
-            <option value="false" ${selected(not rule.inverse)}>has any</option>
-            <option value="true" ${selected(rule.inverse)}>has none</option>
+            <option value="false" ${selected(not rule.inverse)}>Has Any</option>
+            <option value="true" ${selected(rule.inverse)}>Has None</option>
         </select>
-        of these titles:
+        Of These Titles:
         ${stringlistinput("titles", rule.titles)}
     </div>
 </%def>
 
 <%def name="aclrole(rule)">
-    <div class="aclrole">
+    <div class="aclrole acl_def">
         <input type="hidden" name="type" value="role" />
         ${select_grant(rule)}
-        if character
+        If Character
         <select name="inverse">
-            <option value="false" ${selected(not rule.inverse)}>has any</option>
-            <option value="true" ${selected(rule.inverse)}>has none</option>
+            <option value="false" ${selected(not rule.inverse)}>Has Any</option>
+            <option value="true" ${selected(rule.inverse)}>Has None</option>
         </select>
-        of these roles:
+        Of These Roles:
         ${stringlistinput("roles", rule.roles)}
     </div>
 </%def>
 
 <%def name="aclmask(rule)">
-    <div class="aclmask">
+    <div class="aclmask acl_def">
         <input type="hidden" name="type" value="mask" />
         ${select_grant(rule)}
-        if we
+        If We
         <select name="inverse">
             <option value="false" ${selected(not rule.inverse)}>have</option>
             <option value="true" ${selected(rule.inverse)}>don't have</option>
         </select>
-        a key for this character supporting permissions:
+        A Key For This Character Supporting Permissions:
         <input type="text" name="mask" value="${rule.mask}" />
     </div>
 </%def>
 
 <%def name="rule_row(rule)">
     <tr>
-        <td class="handle"><i class="fa fa-arrows-v"></i></td>
+        <td class="handle" style="width: 35px;"><i class="fa fa-arrows-v rowdraghandle" style="padding: 19px 12px 18px 14px; font-size: 20px;"></i></td>
         <td class="rule">${aclrule(rule) if rule else ""}</td>
-        <td>
-            <button class="btn btn-small deleterule" title="${_('Remove rule')}" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i></button>
+        <td style="text-align: center; width: 55px;">
+            <button class="btn btn-small btn-danger deleterule" title="${_('Remove rule')}" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i></button>
         </td>
     </tr>
 </%def>
@@ -371,12 +446,34 @@ def selected(bool):
 
     <div id="pad-wrapper">
         <div class="row-fluid header">
-            <h3>${group.id | h} - ${group.title | h}</h3>
+            <h3>Group: <span style="text-decoration: underline">${group.id | h}</span> - ${group.title | h}</h3>
         </div>
         % if web.user.has_permission(group.edit_acl_perm):
-        <div class="row-fluid table">
-            Rules:
-            <table id="acl-rules" data-action="/group/${group.id}/set_rules">
+        <div class="row-fluid table" style="margin: 0;">
+            <h3 style="margin: 0 0 20px 0;">
+                <div class="btn-group pull-right">
+                  <a class="btn btn-info dropdown-toggle" data-toggle="dropdown" href="#">
+                    Add New ACL Rule
+                    <span class="caret"></span>
+                  </a>
+                  <ul class="dropdown-menu">
+                    <li><a href="#" class="addrule" data-rule="list" data-kind="c">By Character Name</a></li>
+                    <li><a href="#" class="addrule" data-rule="list" data-kind="o">By Corporation Name</a></li>
+                    <li><a href="#" class="addrule" data-rule="list" data-kind="a">By Alliance Name</a></li>
+                    <li><a href="#" class="addrule" data-rule="title">By Corporate Title</a></li>
+                    <li><a href="#" class="addrule" data-rule="role">By Corporate Role</a></li>
+                    <li><a href="#" class="addrule" data-rule="key">By Key Type</a></li>
+                    <li><a href="#" class="addrule" data-rule="mask">By Key Mask</a></li>
+                  </ul>
+                </div>
+
+                Group ACL Rules
+            </h3>
+
+            <table id="acl-rules" data-action="/group/${group.id}/set_rules" class="table table-condensed table-bordered" style="min-height: 70px; border-left: 1px solid #dddddd;
+border-collapse: collapse;
+border-bottom-left-radius: 4px;
+border-bottom-right-radius: 4px;">
                 <tbody class="sortable">
                 <%  
                     if rule_set == 'join':
@@ -393,36 +490,29 @@ def selected(bool):
             </table>
         </div>
 
-        <div style="padding-top:10px;border-top:1px solid #ccc">
-
-            <div class="btn-group">
-              <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-                Add new ACL rule
-                <span class="caret"></span>
-              </a>
-              <ul class="dropdown-menu">
-                <li class="addrule" data-rule="list" data-kind="c">By Character Name</li>
-                <li class="addrule" data-rule="list" data-kind="o">By Corporation Name</li>
-                <li class="addrule" data-rule="list" data-kind="a">By Alliance Name</li>
-                <li class="addrule" data-rule="title">By Corporate Title</li>
-                <li class="addrule" data-rule="role">By Corporate Role</li>
-                <li class="addrule" data-rule="key">By Key Type</li>
-                <li class="addrule" data-rule="mask">By Key Mask</li>
-              </ul>
-            </div>
-
+        <div>
+            <button id="submit" class="btn btn-success">Save ACL Rules</button>
         </div>
-        <button id="submit">submit</button>
+
         % endif
 
         <div style="margin-top:40px"></div>
 
         % if web.user.has_permission(group.edit_perms_perm) and not rule_set:
             <div class="row-fluid table">
-                Permissions:
-                <table id="perms" class="table">
+                <h3>
+                    <div class="pull-right">
+                        <div class="input-append">
+                          <input class="permission" id="permission" type="text" placeholder="New Permission Name" class="span2"/>
+                          <button class="btn btn-success submitPerm" type="button">Add</button>
+                        </div>
+                    </div>
+                    Group Permissions
+                </h3>
+
+                <table id="perms" class="table table-condensed table-striped ">
                     <thead>
-                    <tr id="${perm.id}">
+                        <tr>
                             <th>ID</th>
                             <th>Description</th>
                             <th>Actions</th>
@@ -430,21 +520,14 @@ def selected(bool):
                     </thead>
                     <tbody class="sortable">
                         % for perm in group._permissions:
-                        <tr id="${perm.id}">
-                            <td>${perm.id | h}</td>
-                            <td>${perm.description | h}</td>
-                            <td><button class="btn btn-danger btn-small deletePerm"><i class="fa fa-times"></i></button></li></td>
-                        </tr>
+                            <tr id="${perm.id}">
+                                <td><span onclick="$(this).selectText()">${perm.id | h}</span></td>
+                                <td>${perm.description | h}</td>
+                                <td><button class="btn btn-danger btn-small deletePerm"><i class="fa fa-times"></i></button></li></td>
+                            </tr>
                         % endfor
                     </tbody>
                 </table>
-            </div>
-            <div>
-                <label>Add permission:</label>
-                <div class="input-append">
-                  <input class="permission" id="permission" type="text" placeholder="Permission Name" class="span2"/>
-                  <button class="btn submitPerm" type="button">Go!</button>
-                </div>
             </div>
         % endif
 
