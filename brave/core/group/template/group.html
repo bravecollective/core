@@ -216,7 +216,7 @@ def selected(bool):
                     }
                 });
             });
-            
+
             $(document).on('click', '.submitPerm', function()
             {
                 $.post('/group/${group.id}/add_perm', { permission: $(".permission").val() }).
@@ -226,7 +226,7 @@ def selected(bool):
                     window.location="/group/${group.id}"
                 });
             });
-            
+
             $(document).on('click', '.deletePerm', function()
             {
                 var row = $(this).parents('tr');
@@ -237,10 +237,10 @@ def selected(bool):
                     window.location="/group/${group.id}"
                 });
             });
-            
+
             $(document).on('click', '.acceptRequest', function()
             {
-                var row = $(this).parents('li');
+                var row = $(this).parents('tr');
                 $.post('/group/${group.id}/accept_request', { name: row.attr("name") }).
                 done(function()
                 {
@@ -248,10 +248,10 @@ def selected(bool):
                     window.location="/group/${group.id}/?rule_set=request"
                 });
             });
-            
+
             $(document).on('click', '.denyRequest', function()
             {
-                var row = $(this).parents('li');
+                var row = $(this).parents('tr');
                 $.post('/group/${group.id}/deny_request', { name: row.attr("name") }).
                 done(function()
                 {
@@ -259,10 +259,10 @@ def selected(bool):
                     window.location="/group/${group.id}?rule_set=request"
                 });
             });
-            
+
             $(document).on('click', '.kickMember', function()
             {
-                var row = $(this).parents('li');
+                var row = $(this).parents('tr');
                 $.post('/group/${group.id}/kick_member', { name: row.attr("name"), method: "${rule_set}" }).
                 done(function()
                 {
@@ -270,7 +270,7 @@ def selected(bool):
                     window.location="/group/${group.id}?rule_set=${rule_set}"
                 });
             });
-            
+
         });
 
         jQuery.fn.selectText = function(){
@@ -475,7 +475,7 @@ border-collapse: collapse;
 border-bottom-left-radius: 4px;
 border-bottom-right-radius: 4px;">
                 <tbody class="sortable">
-                <%  
+                <%
                     if rule_set == 'join':
                         rules = group.join_rules
                     elif rule_set == 'request':
@@ -515,7 +515,7 @@ border-bottom-right-radius: 4px;">
                         <tr>
                             <th>ID</th>
                             <th>Description</th>
-                            <th>Actions</th>
+                            <th style="width: 49px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="sortable">
@@ -523,7 +523,35 @@ border-bottom-right-radius: 4px;">
                             <tr id="${perm.id}">
                                 <td><span onclick="$(this).selectText()">${perm.id | h}</span></td>
                                 <td>${perm.description | h}</td>
-                                <td><button class="btn btn-danger btn-small deletePerm"><i class="fa fa-times"></i></button></li></td>
+                                <td style="text-align: center;"><button class="btn btn-danger btn-small deletePerm"><i class="fa fa-times"></i></button></li></td>
+                            </tr>
+                        % endfor
+                    </tbody>
+                </table>
+            </div>
+        % endif
+
+        % if rule_set == 'request':
+            <div class="row-fluid table">
+                <h3 style="margin-bottom: 20px;">
+                    Pending Membership Requests
+                </h3>
+
+                <table id="perms" class="table table-condensed table-striped ">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th style="width: 69px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="sortable">
+                        % for char in group.requests:
+                            <tr name="${char.name}">
+                                <td><span onclick="$(this).selectText()">${char.name | h}</span></td>
+                                <td style="text-align: center;">
+                                    <button class="btn btn-success btn-small acceptRequest"><i class="fa fa-plus"></i></button>
+                                    <button class="btn btn-danger btn-small denyRequest"><i class="fa fa-times"></i></button>
+                                </td>
                             </tr>
                         % endfor
                     </tbody>
@@ -532,21 +560,37 @@ border-bottom-right-radius: 4px;">
         % endif
 
         % if rule_set:
-            Members in group from ${rule_set}ing this group:
-            <ul>
-            % for char in getattr(group, rule_set + "_members"):
-                <li name="${char.name}">${char.name} <button class="btn btn-danger btn-small kickMember"><i class="fa fa-times"></i></button></li>
-            % endfor
-            </ul>
-        % endif
+            <%
+                lang = ''
+                if rule_set == 'join':
+                    lang = 'Joined'
+                else:
+                    lang = 'Requested'
+            %>
+            <div class="row-fluid table">
+                <h3 style="margin-bottom: 20px;">
+                    Members That Have <span style="font-weight: bold">${lang | h}</span> This Group
+                </h3>
 
-        % if rule_set == 'request':
-            Pending requests:
-            <ul>
-            % for char in group.requests:
-                <li name="${char.name}">${char.name} <button class="btn btn-success btn-small acceptRequest"><i class="fa fa-plus"></i></button> <button class="btn btn-danger btn-small denyRequest"><i class="fa fa-times"></i></button></li>
-            % endfor
-            </ul>
+                <table id="perms" class="table table-condensed table-striped ">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th style="width: 49px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="sortable">
+                        % for char in getattr(group, rule_set + "_members"):
+                            <tr name="${char.name}">
+                                <td><span onclick="$(this).selectText()">${char.name | h}</span></td>
+                                <td style="text-align: center;">
+                                    <button class="btn btn-danger btn-small kickMember"><i class="fa fa-times"></i></button>
+                                </td>
+                            </tr>
+                        % endfor
+                    </tbody>
+                </table>
+            </div>
         % endif
 
     </div>
