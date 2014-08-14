@@ -51,7 +51,7 @@ def selected(bool):
         % else:
             In One Of These Alliances:
         % endif
-        ${stringlistinput("names", rule.target_objects(), rule.kind)}
+        ${stringlistinput("names", rule.target_objects().order_by('name'), rule.kind)}
     </div>
 </%def>
 
