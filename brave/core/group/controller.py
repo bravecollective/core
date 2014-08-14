@@ -313,4 +313,4 @@ class GroupController(Controller):
     @user_has_permission('core.group.edit.*', accept_any_matching=True)
     def check_rule_reference_exists(self, kind, name):
         cls = ACLList.target_class(kind)
-        return "json:", dict(exists=bool(cls.objects(name=name)))
+        return "json:", dict(exists=bool(cls.objects(name__iexact=name.strip())))
