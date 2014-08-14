@@ -34,7 +34,7 @@ class OneGroupController(Controller):
     @post_only
     @user_has_permission(Group.EDIT_REQUESTS_PERM, group_id='self.group.id')
     def accept_request(self, name):
-        c = EVECharacter.objects(name=name).first()
+        c = EVECharacter.objects(name__iexact=name.strip()).first()
         if not c:
             return 'json:', dict(success=False, message=_("Character with that name not found."))
             
@@ -51,7 +51,7 @@ class OneGroupController(Controller):
     @post_only
     @user_has_permission(Group.EDIT_REQUESTS_PERM, group_id='self.group.id')
     def deny_request(self, name):
-        c = EVECharacter.objects(name=name).first()
+        c = EVECharacter.objects(name__iexact=name.strip()).first()
         if not c:
             return 'json:', dict(success=False, message=_("Character with that name not found."))
             
@@ -67,7 +67,7 @@ class OneGroupController(Controller):
     @post_only
     @user_has_permission(Group.EDIT_MEMBERS_PERM, group_id='self.group.id')
     def kick_member(self, name, method):
-        c = EVECharacter.objects(name=name).first()
+        c = EVECharacter.objects(name__iexact=name.strip()).first()
         if not c:
             return 'json:', dict(success=False, message=_("Character with that name not found."))
             
@@ -109,7 +109,7 @@ class OneGroupController(Controller):
             if r['type'] == "list":
                 listify(r, 'names')
                 cls = ACLList.target_class(r['kind'])
-                ids = [cls.objects(name=name).first().identifier for name in r['names']]
+                ids = [cls.objects(name__iexact=name.strip()).first().identifier for name in r['names']]
                 rule_objects.append(ACLList(grant=grant, inverse=inverse, kind=r['kind'], ids=ids))
             elif r['type'] == "key":
                 rule_objects.append(ACLKey(grant=grant, inverse=inverse, kind=r['kind']))

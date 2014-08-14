@@ -247,7 +247,7 @@ def selected(bool):
                                 <td><span onclick="$(this).selectText()">${perm.id | h}</span></td>
                                 <td>${perm.description | h}</td>
                                 <td style="text-align: center;">
-                                    <a class="btn btn-danger btn-small deletePerm" href="" title="${_('Revoke Permission')}" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i></a>
+                                    <a class="btn btn-danger btn-small deletePerm" href="#" title="${_('Revoke Permission')}" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i></a>
                                 </td>
                             </tr>
                         % endfor
@@ -274,8 +274,8 @@ def selected(bool):
                             <tr name="${char.name}">
                                 <td><span onclick="$(this).selectText()">${char.name | h}</span></td>
                                 <td style="text-align: center;">
-                                    <a class="btn btn-success btn-small acceptRequest" href="" title="${_('Approve Request')}" rel="tooltip" data-placement="bottom"><i class="fa fa-check"></i></a>
-                                    <a class="btn btn-danger btn-small denyRequest" href="" title="${_('Deny Request')}" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i></a>
+                                    <a class="btn btn-success btn-small acceptRequest" href="#" title="${_('Approve Request')}" rel="tooltip" data-placement="bottom"><i class="fa fa-check"></i></a>
+                                    <a class="btn btn-danger btn-small denyRequest" href="#" title="${_('Deny Request')}" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i></a>
                                 </td>
                             </tr>
                         % endfor
@@ -309,7 +309,7 @@ def selected(bool):
                             <tr name="${char.name}">
                                 <td><span onclick="$(this).selectText()">${char.name | h}</span></td>
                                 <td style="text-align: center;">
-                                    <a class="btn btn-danger btn-small kickMember" href="" title="${_('Remove From Group')}" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i></a>
+                                    <a class="btn btn-danger btn-small kickMember" href="#" title="${_('Remove From Group')}" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i></a>
                                 </td>
                             </tr>
                         % endfor
@@ -545,18 +545,23 @@ def selected(bool):
                 });
             });
 
-            $(document).on('click', '.submitPerm', function()
+            $(document).on('click', '.submitPerm', function(e)
             {
+                e.preventDefault();
+
                 $.post('/group/${group.id}/add_perm', { permission: $(".permission").val() }).
                 done(function()
                 {
                     //Should probably add the permission here... WTB CSRF for normal POST requests
                     window.location="/group/${group.id}"
                 });
+
             });
 
-            $(document).on('click', '.deletePerm', function()
+            $(document).on('click', '.deletePerm', function(e)
             {
+                e.preventDefault();
+
                 var row = $(this).parents('tr');
                 $.post('/group/${group.id}/delete_perm', { permission: row.attr("id") }).
                 done(function()
@@ -566,8 +571,10 @@ def selected(bool):
                 });
             });
 
-            $(document).on('click', '.acceptRequest', function()
+            $(document).on('click', '.acceptRequest', function(e)
             {
+                e.preventDefault();
+
                 var row = $(this).parents('tr');
                 $.post('/group/${group.id}/accept_request', { name: row.attr("name") }).
                 done(function()
@@ -577,8 +584,10 @@ def selected(bool):
                 });
             });
 
-            $(document).on('click', '.denyRequest', function()
+            $(document).on('click', '.denyRequest', function(e)
             {
+                e.preventDefault();
+
                 var row = $(this).parents('tr');
                 $.post('/group/${group.id}/deny_request', { name: row.attr("name") }).
                 done(function()
@@ -590,6 +599,8 @@ def selected(bool):
 
             $(document).on('click', '.kickMember', function()
             {
+                e.preventDefault();
+
                 var row = $(this).parents('tr');
                 $.post('/group/${group.id}/kick_member', { name: row.attr("name"), method: "${rule_set}" }).
                 done(function()
