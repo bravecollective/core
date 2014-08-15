@@ -186,6 +186,12 @@ class EVECharacter(EVEEntity):
         
         return OrderedDict((i, mapping[i]) for i in sorted(mapping.keys(), key=titlesort))
     
+    @property
+    def has_verified_key(self):
+        for k in self.credentials:
+            if k.verified:
+                return k
+    
     def credential_for(self, mask):
         """Return the least-permissive API key that can satisfy the given mask."""
         
