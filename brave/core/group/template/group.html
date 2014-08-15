@@ -11,9 +11,9 @@ def selected(bool):
 
 <%block name="title">${group.id | h} - ${group.title | h}</%block>
 
-<%def name="aclrule(rule)">
+<%def name="aclrule(rule, group)">
     % if isinstance(rule, ACLList):
-        ${acllist(rule)}
+        ${acllist(rule, group)}
     % elif isinstance(rule, ACLKey):
         ${aclkey(rule)}
     % elif isinstance(rule, ACLTitle):
@@ -34,7 +34,7 @@ def selected(bool):
     </select>
 </%def>
 
-<%def name="acllist(rule)">
+<%def name="acllist(rule, group)">
     <div class="acllist acl_def" data-kind="${rule.kind}">
         <input type="hidden" name="type" value="list" />
         <input type="hidden" name="kind" value="${rule.kind}" />
@@ -51,7 +51,10 @@ def selected(bool):
         % else:
             In One Of These Alliances:
         % endif
-        ${stringlistinput("names", rule.target_objects().order_by('name'), rule.kind)}
+
+        <%! from brave.core.util.sorting import sort_object_insensitive_alpha %>
+
+        ${stringlistinput("names", sort_object_insensitive_alpha(rule.target_objects(), 'name'), rule.kind, group)}
     </div>
 </%def>
 
@@ -84,7 +87,7 @@ def selected(bool):
             <option value="true" ${selected(rule.inverse)}>Has None</option>
         </select>
         Of These Titles:
-        ${stringlistinput("titles", rule.titles, None)}
+        ${stringlistinput("titles", rule.titles, None, None)}
     </div>
 </%def>
 
@@ -98,7 +101,7 @@ def selected(bool):
             <option value="true" ${selected(rule.inverse)}>Has None</option>
         </select>
         Of These Roles:
-        ${stringlistinput("roles", rule.roles, None)}
+        ${stringlistinput("roles", rule.roles, None, None)}
     </div>
 </%def>
 
@@ -108,28 +111,42 @@ def selected(bool):
         ${select_grant(rule)}
         If We
         <select name="inverse">
-            <option value="false" ${selected(not rule.inverse)}>have</option>
-            <option value="true" ${selected(rule.inverse)}>don't have</option>
+            <option value="false" ${selected(not rule.inverse)}>Have</option>
+            <option value="true" ${selected(rule.inverse)}>Don't Have</option>
         </select>
         A Key For This Character Supporting Permissions:
-        <input type="text" name="mask" value="${rule.mask}" />
+        <div style="margin: 7px 3px 2px 3px;">
+            <input type="text" name="mask" value="${rule.mask}" />
+        </div>
     </div>
 </%def>
 
-<%def name="rule_row(rule)">
+<%def name="rule_row(rule, group)">
     <tr>
         <td class="handle" style="width: 35px;"><i class="fa fa-arrows-v rowdraghandle" style="padding: 19px 12px 18px 14px; font-size: 20px;"></i></td>
-        <td class="rule">${aclrule(rule) if rule else ""}</td>
+        <td class="rule">${aclrule(rule, group) if rule else ""}</td>
         <td style="text-align: center; width: 55px;">
             <button class="btn btn-small btn-danger deleterule" title="${_('Remove rule')}" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i></button>
         </td>
     </tr>
 </%def>
 
-<%def name="stringlistinput(input_name, list, type)">
+<%def name="stringlistinput(input_name, list, type, group)">
     <div class="stringlistinput" data-input-name="${input_name}">
         <ul class="inline">
             % for item in list:
+
+                <%
+                    style=""
+                    if type == "c":
+
+                        in_group = group.id in item.tags
+                        if in_group:
+                            style=""
+                        else:
+                            style="color:#DB8C00"
+                %>
+
                 <li>
                     % if type == "c":
                         <img src="https://image.eveonline.com/Character/${item.identifier}_32.jpg" style="width: 20px; height: 20px; border-radius: 4px; margin-top: -5px;" alt="" />
@@ -138,10 +155,11 @@ def selected(bool):
                     % elif type == "a":
                         <img src="https://image.eveonline.com/Alliance/${item.identifier}_32.png" style="width: 20px; height: 20px; border-radius: 4px; margin-top: -5px;" alt="" />
                     % endif
-                    <span onclick="$(this).selectText();">${item | h}</span>
+                    <span onclick="$(this).selectText();" style="${style}}">${item | h}</span>
                     <input type="hidden" name="${input_name}" value="${item | h}" />
                     <i class="remove fa fa-times"></i>
                 </li>
+
             % endfor
             <li>
                 <div class="input-append">
@@ -196,21 +214,17 @@ def selected(bool):
                 Group ACL Rules
             </h3>
 
-            <table id="acl-rules" data-action="/group/${group.id}/set_rules" class="table table-condensed table-bordered" style="min-height: 70px; border-left: 1px solid #dddddd;border-collapse: collapse;border-bottom-left-radius: 4px;border-bottom-right-radius: 4px;">
-                <tbody class="sortable">
-                <%
-                    if rule_set == 'join':
-                        rules = group.join_rules
-                    elif rule_set == 'request':
-                        rules = group.request_rules
-                    else:
-                        rules = group.rules
-                %>
-                % for rule in rules:
-                    ${rule_row(rule)}
-                % endfor
-                </tbody>
-            </table>
+            <table id="acl-rules" data-action="/group/${group.id}/set_rules" class="table table-condensed table-bordered sortable" style="min-height: 70px; border-left: 1px solid #dddddd;border-collapse: collapse;border-bottom-left-radius: 4px;border-bottom-right-radius: 4px;"><%
+                if rule_set == 'join':
+                    rules = group.join_rules
+                elif rule_set == 'request':
+                    rules = group.request_rules
+                else:
+                    rules = group.rules
+
+                for rule in rules:
+                    print rule_row(rule, group)
+            %></table>
         </div>
 
         <div>
@@ -322,16 +336,16 @@ def selected(bool):
 </div>
 
 <table style="display: none" id="row-template-container">
-    ${rule_row(None)}
+    ${rule_row(None, None)}
 </table>
 <div style="display: none" id="acl-templates">
-    ${aclrule(ACLList(grant=True, kind='c', ids=[]))}
-    ${aclrule(ACLList(grant=True, kind='o', ids=[]))}
-    ${aclrule(ACLList(grant=True, kind='a', ids=[]))}
-    ${aclrule(ACLKey(grant=True, kind='Account'))}
-    ${aclrule(ACLTitle(grant=True, titles=[]))}
-    ${aclrule(ACLRole(grant=True, roles=[]))}
-    ${aclrule(ACLMask(grant=True, mask=0))}
+    ${aclrule(ACLList(grant=True, kind='c', ids=[]), group)}
+    ${aclrule(ACLList(grant=True, kind='o', ids=[]), group)}
+    ${aclrule(ACLList(grant=True, kind='a', ids=[]), group)}
+    ${aclrule(ACLKey(grant=True, kind='Account'), None)}
+    ${aclrule(ACLTitle(grant=True, titles=[]), None)}
+    ${aclrule(ACLRole(grant=True, roles=[]), None)}
+    ${aclrule(ACLMask(grant=True, mask=0), None)}
 </div>
 
 <%block name="pre">
@@ -379,6 +393,16 @@ def selected(bool):
 
             border-bottom: 1px solid;
             border-radius: 0;
+        }
+
+        table#acl-rules:empty::before {
+            content: "No Rules Exist Yet, Add Some!";
+            font-style: italic;
+        }
+
+        table#acl-rules:empty {
+            min-height: 0 !important;
+            border: none !important;
         }
 
         #acl-rules input {
@@ -459,7 +483,7 @@ def selected(bool):
 
             function get_rule_data() {
                 var a = [];
-                $("#acl-rules > tbody > tr").each(function() {
+                $("#acl-rules > tr").each(function() {
                     a.push($(this).find(":input").serializeAssoc());
                 });
                 return a;
@@ -494,7 +518,7 @@ def selected(bool):
                 var editor = $("#acl-templates").find(template_selector).clone(true);
                 var row = $("#row-template-container tr").clone().removeClass("first");
                 row.find(".rule").append(editor);
-                $("#acl-rules tbody").append(row);
+                $("#acl-rules").append(row);
             });
 
             $("body").on("click", ".deleterule", function() {
