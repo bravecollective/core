@@ -48,7 +48,9 @@ class CharacterInterface(HTTPMethod):
         
         return 'brave.core.character.template.charDetails', dict(
             char=self.char,
-            area='admin' if user.admin else 'chars'
+            area='admin' if user.admin else 'chars',
+            can_grant_some_permission=any(p.id.startswith('core.permission.grant')
+                                          for p in user.permissions),
         )
     
     @post_only

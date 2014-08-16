@@ -82,19 +82,8 @@
                 </div>
             
                 <div class="permission-box" style ="padding-right: 25px;">
-                <% 
-                can_view_permissions = False
-                if web.user.has_permission('core.character.view.{0}'.format(char.id)):
-                    can_view_permissions = True
-                can_grant_permission = False
-                for p in web.user.permissions:
-                    if p.id.startswith('core.permission.grant'):
-                        can_grant_permission = True
-                        break
-                %>
-                % if can_view_permissions:
                 <h4>${_("Personal Permissions")}</h4>
-                % if can_grant_permission:
+                % if can_grant_some_permission:
                     <div>
                         Add permission:
                         <input class="permission" id="permission" type="text" placeholder="Permission Name" class="span2"/>
@@ -107,7 +96,6 @@
                         <li id="${p.id}">${p.id} <button class="btn btn-danger btn-small deletePerm"><i class="fa fa-times"></i></button></li>
                     % endfor
                     </ul>
-                % endif
                 % endif
                 </div>
             </div>
