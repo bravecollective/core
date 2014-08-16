@@ -230,6 +230,7 @@ class User(Document):
         """Returns the permission required to view this user's account details."""
         return self.VIEW_PERM.format(account_id=str(self.id))
 
+
 class LoginHistory(Document):
     meta = dict(
             collection = "AuthHistory",

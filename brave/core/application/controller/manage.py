@@ -14,7 +14,7 @@ from web.core.http import HTTPFound, HTTPNotFound
 
 from brave.core.application.model import Application
 from brave.core.application.form import manage_form
-from brave.core.util.predicate import authorize, authenticate, is_administrator
+from brave.core.util.predicate import authenticate
 from brave.core.permission.util import user_has_permission
 from brave.core.permission.model import Permission
 from brave.core.permission.controller import createPerms
@@ -32,7 +32,7 @@ class ApplicationInterface(HTTPMethod):
         except Application.DoesNotExist:
             raise HTTPNotFound()
 
-        if self.app.owner.id != user.id and not user.has_permission(app.edit_perm):
+        if self.app.owner.id != user.id and not user.has_permission(self.app.edit_perm):
             raise HTTPNotFound()
     
     def get(self):
@@ -103,8 +103,10 @@ class ApplicationInterface(HTTPMethod):
         
         if user.admin:
             app.expireGrantDays = valid['expire'] or 30
-        
-        if not createPerms(valid['perms'], app.short):
+            
+        app.short = valid['short'] or app.name.replace(" ", "").lower()
+
+        if valid['perms'] and not createPerms(valid['perms'], app.short):
             return 'json:', dict(
                     success=False,
                     message=_("Stop being bad and only include permissions for your app."))
@@ -133,9 +135,11 @@ class ApplicationList(HTTPMethod):
     @authenticate
     def get(self):
         adminRecords = set()
-            
+        
+        user_perms = user.permissions
+        
         for app in Application.objects():
-            if app.owner.id != user.id and user.has_permission(app.edit_perm):
+            if app.owner.id != user.id and Permission.set_grants_permission(user_perms, app.edit_perm):
                 adminRecords.add(app)
         
         records = Application.objects(owner=user._current_obj())
@@ -185,7 +189,7 @@ class ApplicationList(HTTPMethod):
 
         app.short = valid['short'] or app.name.replace(" ", "").lower()
         
-        if not createPerms(valid['perms'], app.short):
+        if valid['perms'] and not createPerms(valid['perms'], app.short):
             return 'json:', dict(
                     success=False,
                     message=_("Stop being bad and only include permissions for your app."))

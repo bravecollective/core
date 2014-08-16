@@ -7,10 +7,10 @@ areas = [
         ('keys',     'key',          "API Keys",       "/key/"),
         ('apps',     'puzzle-piece', "Applications",   "/application/"),
         ('chars',    'user',         "Characters",     "/character/"),
+        ('group',    'group',        "Groups",         "/group/"),
     ]
 if web.auth.authenticated and web.user.admin:
     areas += [
-        ('group',    'group',        "Groups",         "/group/"),
         ('admin',    'dashboard',    "Admin Panel",    "/admin/"),
     ]
 

@@ -7,13 +7,15 @@ from web.core.http import HTTPFound, HTTPNotFound
 from marrow.util.bunch import Bunch
 
 from brave.core.character.model import EVECharacter
-from brave.core.util.predicate import authorize, authenticate, is_administrator
+from brave.core.util.predicate import authenticate
 from brave.core.util import post_only
 from brave.core.permission.util import user_has_permission
 from brave.core.permission.model import Permission, WildcardPermission, GRANT_WILDCARD
 
 
 class CharacterInterface(HTTPMethod):
+    
+    @authenticate
     def __init__(self, char):
         super(CharacterInterface, self).__init__()
 
@@ -51,7 +53,7 @@ class CharacterInterface(HTTPMethod):
     
     @post_only
     @user_has_permission(Permission.GRANT_PERM, permission_id='permission')
-    def addPerm(self, permission=None):
+    def add_perm(self, permission=None):
         p = Permission.objects(id=permission)
         if len(p):
             p = p.first()
@@ -66,10 +68,11 @@ class CharacterInterface(HTTPMethod):
     
     @post_only
     @user_has_permission(Permission.REVOKE_PERM, permission_id='permission')
-    def deletePerm(self, permission=None):
+    def delete_perm(self, permission=None):
         p = Permission.objects(id=permission).first()
         self.char.personal_permissions.remove(p)
         self.char.save()
+
 
 class CharacterList(HTTPMethod):
     @authenticate

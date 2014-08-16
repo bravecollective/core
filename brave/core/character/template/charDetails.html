@@ -27,7 +27,7 @@
 
         $(document).on('click', '.submitPerm', function()
         {
-            $.post('/character/${char.id}/addPerm', { permission: $(".permission").val() }).
+            $.post('/character/${char.id}/add_perm', { permission: $(".permission").val() }).
             done(function()
             {
                 //Should probably add the permission here... WTB CSRF for normal POST requests
@@ -39,7 +39,7 @@
         $(document).on('click', '.deletePerm', function()
         {
             var row = $(this).parents('li');
-            $.post('/character/${char.id}/deletePerm', { permission: row.attr("id") }).
+            $.post('/character/${char.id}/delete_perm', { permission: row.attr("id") }).
             done(function()
             {
                 //Should probably add the permission here... WTB CSRF for normal POST requests
@@ -82,18 +82,32 @@
                 </div>
             
                 <div class="permission-box" style ="padding-right: 25px;">
+                <% 
+                can_view_permissions = False
+                if web.user.has_permission('core.character.view.{0}'.format(char.id)):
+                    can_view_permissions = True
+                can_grant_permission = False
+                for p in web.user.permissions:
+                    if p.id.startswith('core.permission.grant'):
+                        can_grant_permission = True
+                        break
+                %>
+                % if can_view_permissions:
                 <h4>${_("Personal Permissions")}</h4>
+                % if can_grant_permission:
                     <div>
                         Add permission:
                         <input class="permission" id="permission" type="text" placeholder="Permission Name" class="span2"/>
                         <button class="submitPerm">submit</button>
                     </div>
                     <ul>
+                % endif
                 % if char.personal_permissions:
                     % for p in char.personal_permissions:
                         <li id="${p.id}">${p.id} <button class="btn btn-danger btn-small deletePerm"><i class="fa fa-times"></i></button></li>
                     % endfor
                     </ul>
+                % endif
                 % endif
                 </div>
             </div>
