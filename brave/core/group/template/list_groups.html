@@ -8,119 +8,126 @@
     ${parent.post()}
 
     <script type="text/javascript" charset="utf-8">
-        $(function() {
-            $('#new-group-create').click(function() {
-                var form = $(this).parents(".modal-content").find("form");
-                var id = form.find('input[name=id]').val();
-                var title = form.find('input[name=title]').val();
-                $.post('/group/', {
-                        id: id,
-                        title: title,
-                    }, function(data) {
-                        if (data.success) {
-                            window.location = "/group/" + data.id;
-                        } else {
-                            alert(data.message);
-                        }
-                    }
-                );
-            });
-        });
-    </script>
-
-    <script type="text/javascript" charset="utf-8">
-        $(function()
+        $(document).on('click', '.leave', function()
         {
-
-            $(document).on('click', '.delete', function()
+            var row = $(this).parents('tr');
+            $.post('/group/',
             {
-                var row = $(this).parents('tr');
-
-                confirm(
-                    "Are you really, <em>really</em> sure?",
-                    "By deleting this group you may be removing something that applications depend on.<br />" +
-                        "It may even make octopuses cry. Please, think of the friendly deep-sea octopuses.",
-                    {
-                        label: "Remove Group",
-                        kind: 'btn-danger'
-                    },
-                    function()
-                    {
-                        $.post('/group/' + row.attr('data-id') + '/delete').
-                        done(function()
-                        {
-                            row.remove();
-                        });
-                    }
-                );
+                id:row.attr('data-id'),
+                action: 'leave'
+            }).
+            done(function()
+            {
+                window.location = '/group/'
             });
-        });
+        })
+        
+        $(document).on('click', '.withdraw', function()
+        {
+            var row = $(this).parents('tr');
+            $.post('/group/',
+            {
+                id:row.attr('data-id'),
+                action: 'withdraw'
+            }).
+            done(function()
+            {
+                window.location = '/group/'
+            });
+        })
+        
+        $(document).on('click', '.join', function()
+        {
+            var row = $(this).parents('tr');
+            $.post('/group/', {
+                id:row.attr('data-id'),
+                action: 'join'
+            }).
+            done(function()
+            {
+                window.location = '/group/'
+            });
+        })
+        
+        $(document).on('click', '.request', function()
+        {
+            var row = $(this).parents('tr');
+            $.post('/group/', {
+                id:row.attr('data-id'),
+                action: 'request'
+            }).
+            done(function()
+            {
+                window.location = '/group/'
+            });
+        })
     </script>
 </%block>
 
-<div class="modal fade" id="new-group">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title">Create group</h4>
-            </div>
-            <div class="modal-body">
-                <form>
-                    <table class="table">
-                        <tr>
-                            <td>ID</td>
-                            <td><input name="id" type="text" pattern="^[a-zA-Z0-9]+$" required /></td>
-                            <td>A brief, unique string. No spaces or special characters.</td>
-                        </tr>
-                        <tr>
-                            <td>Title</td>
-                            <td><input name="title" type="text"jrequired /></td>
-                            <td>A human-readable description.</td>
-                        </tr>
-                    </table>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="new-group-create">Create group</button>
-            </div>
-        </div><!-- /.modal-content -->
-    </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
-
 <div class="container-fluid">
+    % if web.user.has_any_permission('core.group.edit.*'):
+    <div id="tabs-wrapper">
+        <div class="row-fluid">
+            <a class="span3 tab active" href="/group/">
+                ${_("Join")}
+            </a>
+            <a class="span3 tab" href="/group/manage">
+                ${_("Manage")}
+            </a>
+        </div>
+    </div>
+    % endif
+
     <div id="pad-wrapper">
-         % if web.user.has_permission('core.group.create'):
-            <div class="row-fluid header">
-                <a class="btn btn-success pull-right add" data-toggle="modal" data-target="#new-group"><i class="fa fa-plus"></i> Create Group</a>
-                <h3>Groups</h3>
-            </div>
-        % endif
         <div class="row-fluid table">
-            % if not len(groups):
-                <p class="subtext" style="text-transform: uppercase;"><strong>There seem to be no groups.</strong></p>
+            % if not len(groups) or not web.user.primary:
+                <p class="subtext" style="text-transform: uppercase;"><strong>You do not seem to be able to join any groups.</strong></p>
             % else:
+                % for c in categories:
+                <h3>${c.name}</h3><br>
                 <table class="table table-hover">
                     <thead>
                         <tr>
-                            <th>id</th>
-                            <th>title</th>
-                            <th>delete?</th>
+                            <th class="span2">id</th>
+                            <th class="span4">title</th>
+                            <th class="span3">status</th>
+                            <th class="span3">actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        % for group in groups:
-                            <tr data-id="${group.id | h}">
-                                <td><a href="/group/${group.id | u}">${group.id | h}</a></td>
-                                <td>${group.title | h}</td>
-                                % if web.user.has_permission('core.group.delete.'+group.id):
-                                    <td><button class="btn btn-danger btn-small delete"><i class="fa fa-times"></i></button></td>
+                        % for g in c.members:
+                        <%
+                            if g not in groups:
+                                continue
+                        %>
+                            <tr data-id="${g.id | h}">
+                                <td><a href="/group/${g.id | u}">${g.id | h}</a></td>
+                                <td>${g.title | h}</td>
+                                <td>
+                                % if g in web.user.primary.groups:
+                                    Member
+                                % elif web.user.primary in g.requests:
+                                    Request pending
                                 % endif
+                                </td>
+                                <td>
+                                % if g in web.user.primary.groups:
+                                    <button class="btn btn-danger btn-small leave"><i class="fa fa-times"></i> Leave Group</button>
+                                % elif g in joinableGroups:
+                                    <button class="btn btn-success btn-small join"><i class="fa fa-plus"></i> Join Group</button>
+                                % elif web.user.primary in g.requests:
+                                    <button class="btn btn-warning btn-small withdraw"><i class="fa fa-times"></i> Withdraw Request</button>
+                                % elif g in requestableGroups:
+                                    <button class="btn btn-success btn-small request"><i class="fa fa-plus"></i> Request Access</button>
+                                % else:
+                                    None?
+                                % endif
+                                </td>
                             </tr>
                         % endfor
                     </tbody>
                 </table>
+                % endfor
             % endif
         </div>
     </div>

@@ -180,6 +180,20 @@ class User(Document):
                 
         return None
         
+    def has_any_permission(self, permission):
+        """Returns true if the character has a permission that would be granted by permission."""
+        from brave.core.permission.model import WildcardPermission
+        p = WildcardPermission.objects(id=permission)
+        if len(p):
+            p = p.first()
+        else:
+            p = WildcardPermission(id=permission)
+        for permID in self.permissions:
+            if p.grants_permission(permID.id):
+                return True
+                
+        return False
+        
     @staticmethod
     def add_duplicate(acc, other, IP=False):
         """Marks other as a duplicate account to this account.
