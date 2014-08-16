@@ -292,6 +292,12 @@ class EVECharacter(EVEEntity):
         
         return(permission in self.permissions())
     
+    @property
+    def has_verified_key(self):
+        for k in self.credentials:
+            if k.verified:
+                return k
+    
     def credential_for(self, mask):
         """Return the least-permissive API key that can satisfy the given mask."""
         

@@ -10,6 +10,8 @@ from mongoengine.fields import LongField
 from brave.core.util.signal import update_modified_timestamp
 from brave.core.util.field import PasswordField, IPAddressField
 
+from web.core import config
+
 
 log = __import__('logging').getLogger(__name__)
 
@@ -245,7 +247,8 @@ class LoginHistory(Document):
     user = ReferenceField(User)
     success = BooleanField(db_field='s', default=True)
     location = IPAddressField(db_field='l')
-    expires = DateTimeField(db_field='e', default=lambda: datetime.utcnow() + timedelta(days=30))
+    # Will throw an exception if the config has a non integer config value
+    expires = DateTimeField(db_field='e', default=lambda: datetime.utcnow() + timedelta(days=int(config['core.login_history_days'])))
     
     def __repr__(self):
         return 'LoginHistory({0}, {1}, {2}, {3})'.format(

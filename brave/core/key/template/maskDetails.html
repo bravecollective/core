@@ -18,13 +18,15 @@
 <div class="container-fluid">
     <div id="pad-wrapper">
         <h2>
-        % if kind == 'char':
+        % if kind == 'Character':
         Character
-        % elif kind == 'corp':
+        % elif kind == 'Corporation':
         Corporation
         % endif
         Key Mask ${mask}
         </h2><br/>
+        
+        <h4><a href=https://community.eveonline.com/support/api-key/CreatePredefined?accessMask=${mask|u}>Create an API Key with this mask.</a></h4>
 
         <%include file="brave.core.key.template.maskTable" args="type=kind, functions=functions"/>
     </div>

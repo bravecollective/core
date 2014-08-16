@@ -90,12 +90,6 @@
                     //Necessary to allow for new popups to supersede old ones
                     self.popover('destroy');
                     
-                    //This indicates that the input does not match the necessary regular expression
-                    if(self.hasClass('regex'))
-                    {
-                        self.popoverT('The password entered contains invalid characters. Please only use non-whitespace ASCII characters.');
-                    }
-                    
                     //The password is not strong enough.
                     if(self.hasClass('validation'))
                     {
@@ -233,7 +227,7 @@
 <div class="span4 box">
     <div class="content-wrap authentication">
         <h6>${_("Create Account")}</h6>
-
+        <div style="margin-bottom:15px; padding:0px 5px 10px"><span class="label label-info" style="padding: 5px 10px"><a style="color:#fff; font-size:16px" href="https://wiki.braveineve.com/it/core" target="_blank">${_("Learn how to set up a Core Account")}</a></span></div>
         ${form}
 
         <div class="overlay fa-4x wait"><i class="fa fa-spinner fa-spin fa-4x"></i></div>
