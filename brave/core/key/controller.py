@@ -174,7 +174,7 @@ class CorpKeyMaskInterface(HTTPMethod):
             mask=self.mask,
             area='keys',
             functions=funcs,
-            kind="o"
+            kind="Corporation"
         )
         
         
@@ -199,7 +199,7 @@ class KeyMaskInterface(HTTPMethod):
             mask=self.mask,
             area='keys',
             functions=funcs,
-            kind="c"
+            kind="Character"
         )
         
         
