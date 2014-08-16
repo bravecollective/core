@@ -52,7 +52,7 @@ def selected(bool):
             In One Of These Alliances:
         % endif
 
-        ${stringlistinput("names", list(sorted(rule.target_objects(), key=lambda x: x.name)), rule.kind, group)}
+        ${stringlistinput("names", list(sorted(rule.target_objects(), key=lambda x: x.name.lower())), rule.kind, group)}
     </div>
 </%def>
 
