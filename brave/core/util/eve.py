@@ -389,8 +389,7 @@ class EVEKeyMask:
     def has_access(self, mask):
         if isinstance(mask, EVEKeyMask):
             mask = mask.mask
-        
-        if self.mask & mask:
+        if self.mask & mask == mask:
             return True
             
         return False

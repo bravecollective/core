@@ -8,7 +8,7 @@ from mongoengine import Document, StringField, DateTimeField, ReferenceField, In
 from brave.core.util.signal import update_modified_timestamp
 from brave.core.key.model import EVECredential
 from brave.core.util.eve import api
-from brave.core.permission.model import Permission, WildcardPermission, GRANT_WILDCARD
+from brave.core.permission.model import Permission, WildcardPermission
 from brave.core.application.model import Application
 
 
@@ -212,9 +212,6 @@ class EVECharacter(EVEEntity):
         """Return all permissions that the character has that start with core or app.
            An app of None returns all of the character's permissions."""
         
-        # Import Group here to avoid circular dependecies.
-        from brave.core.group.model import Group
-        
         # Use a set so we don't need to worry about characters having a permission from multiple groups.
         permissions = set()
         
@@ -263,7 +260,7 @@ class EVECharacter(EVEEntity):
         """Returns just the string for the permissions owned by this character."""
         
         perms = self.permissions(application)
-        permissions =  list()
+        permissions = list()
         
         for p in perms:
             permissions.append(p.id)
@@ -307,6 +304,12 @@ class EVECharacter(EVEEntity):
                 return True
                 
         return False
+    
+    @property
+    def has_verified_key(self):
+        for k in self.credentials:
+            if k.verified:
+                return k
     
     def credential_for(self, mask):
         """Return the least-permissive API key that can satisfy the given mask."""

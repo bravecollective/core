@@ -8,19 +8,19 @@ from collections import OrderedDict
 from web.auth import user
 from web.core import Controller, HTTPMethod, request
 from web.core.locale import _
-from web.core.http import HTTPFound, HTTPNotFound, HTTPForbidden
+from web.core.http import HTTPNotFound
 
-from brave.core.character.model import EVECharacter, EVECorporation, EVEAlliance
+from brave.core.character.model import EVECharacter
 from brave.core.group.model import Group, GroupCategory
 from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
 from brave.core.util import post_only
-from brave.core.util.predicate import authorize, is_administrator
 from brave.core.permission.util import user_has_permission
 from brave.core.permission.model import Permission, WildcardPermission, GRANT_WILDCARD
 
 import json
 
 log = __import__('logging').getLogger(__name__)
+
 
 class OneGroupController(Controller):
     def __init__(self, id):
@@ -176,6 +176,7 @@ class OneGroupController(Controller):
         self.group.delete()
         return 'json:', dict(success=True)
 
+
 class GroupList(HTTPMethod):
     def get(self):
         groups = sorted(Group.objects(), key=lambda g: g.id)
@@ -295,9 +296,11 @@ class ManageGroupList(HTTPMethod):
         deletePerm = Permission(g.delete_perm, "Ability to delete Group {0}".format(g.id))
         primary.personal_permissions.append(editPerm)
         primary.personal_permissions.append(deletePerm)
+        primary.personal_permissions.append(editPermsPerm)
         user.save(cascade=True)
         
         return 'json:', dict(success=True, id=g.id)
+
 
 class GroupController(Controller):
     index = GroupList()

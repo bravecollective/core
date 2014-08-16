@@ -10,6 +10,8 @@ from mongoengine.fields import LongField
 from brave.core.util.signal import update_modified_timestamp
 from brave.core.util.field import PasswordField, IPAddressField
 
+from web.core import config
+
 
 log = __import__('logging').getLogger(__name__)
 
@@ -244,6 +246,7 @@ class User(Document):
         """Returns the permission required to view this user's account details."""
         return self.VIEW_PERM.format(account_id=str(self.id))
 
+
 class LoginHistory(Document):
     meta = dict(
             collection = "AuthHistory",
@@ -258,7 +261,8 @@ class LoginHistory(Document):
     user = ReferenceField(User)
     success = BooleanField(db_field='s', default=True)
     location = IPAddressField(db_field='l')
-    expires = DateTimeField(db_field='e', default=lambda: datetime.utcnow() + timedelta(days=30))
+    # Will throw an exception if the config has a non integer config value
+    expires = DateTimeField(db_field='e', default=lambda: datetime.utcnow() + timedelta(days=int(config['core.login_history_days'])))
     
     def __repr__(self):
         return 'LoginHistory({0}, {1}, {2}, {3})'.format(
