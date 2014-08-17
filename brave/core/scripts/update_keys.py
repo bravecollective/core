@@ -1,40 +1,47 @@
-from time import sleep
-from brave.core.key.model import EVECredential
 import random
-from threading import Thread
+
+from collections import defaultdict
 from datetime import datetime, timedelta
+from math import ceil
+from mutex import mutex
+from time import sleep
+from threading import Lock, Thread
 from requests.exceptions import HTTPError
 
+from brave.core.key.model import EVECredential
+
+keys_by_timeslot = defaultdict(list)
+keys_lock = Lock()
+
 class CredentialUpdateThread(Thread):
-    def __init__(self, indices, separation):
+    def __init__(self, key_group_indexes, start_time, interval):
         super(CredentialUpdateThread, self).__init__()
-        self.indices = indices
-        self.separation = separation
-    
-    @property
-    def next_index(self):
-        for i in self.indices:
-            if i > UpdateKeys.current_index:
-                return i
-        return self.indices[0]
+        self.key_group_indexes = key_group_indexes
+        self.wake_time = start_time
+        self.interval = interval
+        self.group = 0
     
     def run(self):
         while True:
-            now = datetime.now()
-            index = self.next_index
-            next_index = now + timedelta(minutes=(self.next_index-UpdateKeys.current_index) if self.next_index > UpdateKeys.current_index else self.separation)
-            next_index = next_index - timedelta(microseconds=(next_index.microsecond + next_index.second*1000000))
-            sleep((next_index-datetime.now()).total_seconds())
-            # There must've been a delay somewhere, recalulate when it's this thread's turn to run
-            if not UpdateKeys.current_index + 1 == index and not UpdateKeys.current_index + 1 == index + self.separation:
-                continue
-            UpdateKeys.current_index = index
-            if UpdateKeys.current_index not in UpdateKeys.keys.keys():
-                continue
-            for k in UpdateKeys.keys[UpdateKeys.current_index]:
+            if datetime.now() > self.wake_time:
+                print "warning: no delay between groups! Likely falling behind requested time between pulls."
+            
+            # wait for the next wake time to arrive
+            while datetime.now() < self.wake_time:
+                sleep((self.wake_time - datetime.now()).total_seconds())
+            
+            # grab a copy of the list of keys to update
+            with keys_lock:
+                keys_to_update = keys_by_timeslot[self.key_group_indexes[self.group]]
+            
+            # do the update
+            for k in keys_to_update:
                 self.update_key(k)
-        
-                    
+            
+            # update for the next pass
+            self.group = (self.group + 1) % len(self.key_group_indexes)
+            self.wake_time += self.interval
+    
     @staticmethod
     def update_key(k):
         key = EVECredential.objects(key=k).first()
@@ -45,38 +52,46 @@ class CredentialUpdateThread(Thread):
             print("Error {}: {}".format(e.response.status_code, e.response.text))
         if not key_result:
             print("Removed disabled key {0} from account {1} with characters {2}".format(k, key.owner, key.characters))
-            
-            
-class UpdateKeys():
+
+def refresh_keylist(num_timeslots):
+    global keys_by_timeslot
     
-    keys = dict()
-    # Start at -1 so that the script has time to delegate keys to the threads.
-    current_index = -1
-    
-    @staticmethod
-    def main(time_between_pulls=1440, threads=1):
-        """ Setting time_between_pulls less than threads will probably cause problems, so don't do it. This script makes
-            no guarantee of thread safety, so using more than 1 thread is strongly discouraged if you value your 
-            database's integrity."""
-        # Seed the keys into a dictionary
-        index = 0
-        for k in EVECredential.objects():
-            print "Assigning key {0} to {1}".format(k.key, index)
-            if index in UpdateKeys.keys.keys():
-                UpdateKeys.keys[index].append(k.key)
-            else:
-                UpdateKeys.keys[index] = [k.key]
-            index += 1
-            
-            if index >= time_between_pulls:
-                index = 0
-    
-    
-        for i in range(0, threads):
-            indices = []
-            for d in range(0, time_between_pulls):
-                if d % threads == i:
-                    indices.append(d)
-            t = CredentialUpdateThread(indices, threads)
-            t.start()
+    with keys_lock:
+        keys_by_timeslot = defaultdict(list)
         
+        for k in EVECredential.objects():
+            index = hash(k.id) % num_timeslots
+            print "Assigning key {0} to timeslot {1}".format(k.key, index)
+            keys_by_timeslot[index].append(k.key)
+
+def main(minutes_between_pulls=1440, threads=1):
+    """
+    minutes_between_pulls will be rounded up to a multiple of threads. A batch of keys will be
+    pulled every minute, so minutes_between_pulls is also the number of batches, and each thread
+    will begin a batch once every `threads` minutes.
+    """
+    
+    # round up to a multiple of threads
+    minutes_between_pulls = int(ceil(float(minutes_between_pulls) / threads) * threads)
+    
+    refresh_keylist(num_timeslots=minutes_between_pulls)
+    
+    first_start_time = datetime.now() + timedelta(seconds=5)
+    interval = timedelta(minutes=threads)
+    for i in range(0, threads):
+        key_group_indexes = list(range(i, minutes_between_pulls, threads))
+        start_time = first_start_time+timedelta(minutes=i)
+        t = CredentialUpdateThread(key_group_indexes, start_time=start_time, interval=interval)
+        t.daemon = True
+        t.start()
+    
+    # Once every minutes_between_pulls, update the list of keys to pull
+    wake_time = datetime.now() + timedelta(minutes=minutes_between_pulls)
+    while True:
+        while datetime.now() < wake_time:
+            sleep((wake_time - datetime.now()).total_seconds())
+        
+        print "refreshing keylist"
+        refresh_keylist(num_timeslots=minutes_between_pulls)
+        
+        wake_time += timedelta(minutes=minutes_between_pulls)
