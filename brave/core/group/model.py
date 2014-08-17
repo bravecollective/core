@@ -58,6 +58,11 @@ class Group(Document):
         return 'Group({0})'.format(self.id).encode('ascii', 'backslashreplace')
     
     def evaluate(self, user, character):
+        
+        # If the character has no owner (and therefore no API key), deny them access to every group.
+        if not character.owner:
+            return False
+        
         for rule in self.rules:
             result = rule.evaluate(user, character)
             if result is not None:

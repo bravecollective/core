@@ -181,9 +181,6 @@ class EVECharacter(EVEEntity):
     def tags(self):
         from brave.core.group.model import Group
         mapping = dict()
-
-        if not self.owner:
-            return dict()
         
         for group in Group.objects:
             if group.evaluate(self.owner, self):
