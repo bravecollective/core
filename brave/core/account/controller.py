@@ -160,7 +160,7 @@ class Recover(HTTPMethod):
         #remove recovery key
         recovery.delete()
 
-        authenticate(user.username, data.password)
+        web_authenticate(user.username, data.password)
 
         return 'json:', dict(success=True, message=_("Password changed, forwarding ..."), location="/")
 
@@ -207,7 +207,7 @@ class Register(HTTPMethod):
             return 'json:', dict(success=False, message=_("Either the username or email address provided is "
                                                           "already taken."), data=data)
         
-        authenticate(user.username, data.password)
+        web_authenticate(user.username, data.password)
         
         return 'json:', dict(success=True, location="/")
 
