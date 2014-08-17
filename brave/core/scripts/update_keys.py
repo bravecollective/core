@@ -6,35 +6,30 @@ from datetime import datetime, timedelta
 from requests.exceptions import HTTPError
 
 class CredentialUpdateThread(Thread):
-    def __init__(self, indices, separation):
+    def __init__(self, key_groups, start_time, interval):
         super(CredentialUpdateThread, self).__init__()
-        self.indices = indices
-        self.separation = separation
-    
-    @property
-    def next_index(self):
-        for i in self.indices:
-            if i > UpdateKeys.current_index:
-                return i
-        return self.indices[0]
+        self.key_groups = key_groups
+        self.wake_time = start_time
+        self.interval = interval
+        self.group = 0
     
     def run(self):
         while True:
-            now = datetime.now()
-            index = self.next_index
-            next_index = now + timedelta(minutes=(self.next_index-UpdateKeys.current_index) if self.next_index > UpdateKeys.current_index else self.separation)
-            next_index = next_index - timedelta(microseconds=(next_index.microsecond + next_index.second*1000000))
-            sleep((next_index-datetime.now()).total_seconds())
-            # There must've been a delay somewhere, recalulate when it's this thread's turn to run
-            if not UpdateKeys.current_index + 1 == index and not UpdateKeys.current_index + 1 == index + self.separation:
-                continue
-            UpdateKeys.current_index = index
-            if UpdateKeys.current_index not in UpdateKeys.keys.keys():
-                continue
-            for k in UpdateKeys.keys[UpdateKeys.current_index]:
+            if datetime.now() > self.wake_time:
+                print "warning: no delay between groups! Likely falling behind requested time between pulls."
+            
+            # wait for the next wake time to arrive
+            while datetime.now() < self.wake_time:
+                sleep((self.wake_time - datetime.now()).total_seconds())
+            
+            # process the next batch of keys
+            for k in self.key_groups[self.group]:
                 self.update_key(k)
-        
-                    
+            
+            # update for the next pass
+            self.group = (self.group + 1) % len(self.key_groups)
+            self.wake_time = self.wake_time + self.interval
+    
     @staticmethod
     def update_key(k):
         key = EVECredential.objects(key=k).first()
@@ -47,25 +42,27 @@ class CredentialUpdateThread(Thread):
             print("Removed disabled key {0} from account {1} with characters {2}".format(k, key.owner, key.characters))
             
             
-class UpdateKeys():
+def main(minutes_between_pulls=1440, threads=1):
+    """
+    minutes_between_pulls will be rounded up to a multiple of threads. A batch of keys will be
+    pulled every minute, so minutes_between_pulls is also the number of batches, and each thread
+    will begin a batch once every `threads` minutes.
+    """
     
-    keys = defaultdict(list)
-    # Start at -1 so that the script has time to delegate keys to the threads.
-    current_index = -1
+    # round up to a multiple of threads
+    minutes_between_pulls = (minutes_between_pulls + threads - 1) % threads
     
-    @staticmethod
-    def main(time_between_pulls=1440, threads=1):
-        """ Setting time_between_pulls less than threads will probably cause problems, so don't do it. This script makes
-            no guarantee of thread safety, so using more than 1 thread is strongly discouraged if you value your 
-            database's integrity."""
+    keys_by_timeslot = defaultdict(list)
     
-        for i, k in enumerate(EVECredential.objects()):
-            index = i % time_between_pulls
-            print "Assigning key {0} to time bucket {1}".format(k.key, index)
-            UpdateKeys.keys[index].append(k.key)
+    for i, k in enumerate(EVECredential.objects()):
+        index = i % minutes_between_pulls
+        print "Assigning key {0} to timeslot {1}".format(k.key, index)
+        keys_by_timeslot[index].append(k.key)
     
-        for i in range(0, threads):
-            indices = list(range(i, time_between_pulls, threads))
-            t = CredentialUpdateThread(indices, threads)
-            t.start()
-        
+    first_start_time = datetime.now() + timedelta(seconds=5)
+    interval = timedelta(minutes=threads)
+    for i in range(0, threads):
+        key_groups = list(keys_by_timeslot[i] for i in range(i, minutes_between_pulls, threads))
+        start_time = first_start_time+timedelta(minutes=i)
+        t = CredentialUpdateThread(key_groups, start_time=start_time, interval=interval)
+        t.start()
