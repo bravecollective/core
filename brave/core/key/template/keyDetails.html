@@ -94,7 +94,11 @@
         <br/>
         <b>Violation:</b> 
         % if record.violation == "Character":
-        <text class="security-violation"><font color="red">Character Security Violation. <a href="https://wiki.braveineve.com/it/core#violations" target="_blank">help <i class="fa fa-external-link"></i></a></font></text>
+        <text class="security-violation"><font color="red">Character Security Violation. <a href="https://wiki.braveineve.com/it/core#violations" target="_blank">Help <i class="fa fa-external-link"></i></a></font></text>
+        % elif record.violation == "Kind":
+        <text class="security-violation"><font color="red">Incorrect Key Type. <a href="https://wiki.braveineve.com/it/core#violations" target="_blank">Help <i class="fa fa-external-link"></i></a></font></text>
+        % elif record.violation == "Mask":
+        <text class="security-violation"><font color="red">Insufficient Access Mask. <a href="https://wiki.braveineve.com/it/core#violations" target="_blank">Help <i class="fa fa-external-link"></i></a></font></text>
         % else:
         <text class="security-violation" title="The BIA is always watching..."><font color="green">All clear!</font></text>
         % endif
