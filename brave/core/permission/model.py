@@ -10,6 +10,23 @@ log = __import__('logging').getLogger(__name__)
 GRANT_WILDCARD = '*'
 
 
+def create_permission(permission, description=None):
+    """This function creates and returns a permission object of the correct class (Permission vs. WildcardPermission).
+    As such, it is useful for creating a permission where you do not know at compile-time whether it is a Permission
+    or WildcardPermission. In the event of id conflicts (the permission already exists), this function returns False."""
+    
+    if Permission.objects(id=permission):
+        log.debug("Permission with id {0} already exists.".format(permission))
+        return False
+    
+    if GRANT_WILDCARD in permission:
+        perm = WildcardPermission(permission, description)
+    else:
+        perm = Permission(permission, description)
+        
+    return perm.save()
+
+
 class Permission(Document):
     meta = dict(
         collection='Permissions',
