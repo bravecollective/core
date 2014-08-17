@@ -49,7 +49,7 @@ class CredentialUpdateThread(Thread):
             
 class UpdateKeys():
     
-    keys = dict()
+    keys = defaultdict(list)
     # Start at -1 so that the script has time to delegate keys to the threads.
     current_index = -1
     
@@ -58,25 +58,14 @@ class UpdateKeys():
         """ Setting time_between_pulls less than threads will probably cause problems, so don't do it. This script makes
             no guarantee of thread safety, so using more than 1 thread is strongly discouraged if you value your 
             database's integrity."""
-        # Seed the keys into a dictionary
-        index = 0
-        for k in EVECredential.objects():
-            print "Assigning key {0} to {1}".format(k.key, index)
-            if index in UpdateKeys.keys.keys():
-                UpdateKeys.keys[index].append(k.key)
-            else:
-                UpdateKeys.keys[index] = [k.key]
-            index += 1
-            
-            if index >= time_between_pulls:
-                index = 0
     
+        for i, k in enumerate(EVECredential.objects()):
+            index = i % time_between_pulls
+            print "Assigning key {0} to time bucket {1}".format(k.key, index)
+            UpdateKeys.keys[index].append(k.key)
     
         for i in range(0, threads):
-            indices = []
-            for d in range(0, time_between_pulls):
-                if d % threads == i:
-                    indices.append(d)
+            indices = list(range(i, time_between_pulls, threads))
             t = CredentialUpdateThread(indices, threads)
             t.start()
         
