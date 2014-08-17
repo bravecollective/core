@@ -71,7 +71,7 @@ def main(minutes_between_pulls=1440, threads=1):
     """
     
     # round up to a multiple of threads
-    minutes_between_pulls = (minutes_between_pulls + threads - 1) // threads * threads
+    minutes_between_pulls = int(ceil(float(minutes_between_pulls) / threads) * threads)
     
     refresh_keylist(num_timeslots=minutes_between_pulls)
     
