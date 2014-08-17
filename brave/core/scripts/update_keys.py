@@ -1,9 +1,12 @@
-from time import sleep
-from brave.core.key.model import EVECredential
 import random
-from threading import Thread
+
+from collections import defaultdict
 from datetime import datetime, timedelta
+from time import sleep
+from threading import Thread
 from requests.exceptions import HTTPError
+
+from brave.core.key.model import EVECredential
 
 class CredentialUpdateThread(Thread):
     def __init__(self, key_groups, start_time, interval):
