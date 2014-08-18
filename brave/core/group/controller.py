@@ -291,13 +291,14 @@ class ManageGroupList(HTTPMethod):
                                  
         primary = user.primary if user.primary else user.characters[0]
         # Give the creator of the group the ability to edit it and delete it.
-        editPerm = Permission(g.edit_acl_perm, "Ability to edit ACLs for Group {0}".format(g.id))
-        editPermsPerm = Permission(g.edit_perms_perm, "Ability to edit permissions for Group {0}".format(g.id))
-        deletePerm = Permission(g.delete_perm, "Ability to delete Group {0}".format(g.id))
+        editPerm = Permission(g.edit_acl_perm, "Ability to edit ACLs for Group {0}".format(g.id)).save()
+        editPermsPerm = Permission(g.edit_perms_perm, "Ability to edit permissions for Group {0}".format(g.id)).save()
+        deletePerm = Permission(g.delete_perm, "Ability to delete Group {0}".format(g.id)).save()
         primary.personal_permissions.append(editPerm)
         primary.personal_permissions.append(deletePerm)
         primary.personal_permissions.append(editPermsPerm)
-        user.save(cascade=True)
+        primary.save()
+        user.save()
         
         return 'json:', dict(success=True, id=g.id)
 
