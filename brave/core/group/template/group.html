@@ -557,27 +557,32 @@ def selected(bool):
                 }
             });
 
-            $('.stringlistinput input').bind('keypress', 'return', function()
+            $('.stringlistinput input').bind('keypress', function(e)
             {
-                var $ul = $(this).closest('ul');
-                var $text_input = $(this);
-                var input_name = $(this).closest('.stringlistinput').data('input-name');
-                var new_string = $text_input.val();
+                if ( e.which == 13 )
+                {
+                    event.preventDefault();
 
-                function finish() {
-                    var $li = $('<li>').text(new_string + " ")
-                                       .append($('<input type="hidden">').attr('name', input_name).val(new_string))
-                                       .append($('<i class="remove fa fa-times">'))
-                                       .insertBefore($ul.children().last());
-                    $text_input.val("");
-                }
+                    var $ul = $(this).closest('ul');
+                    var $text_input = $(this);
+                    var input_name = $(this).closest('.stringlistinput').data('input-name');
+                    var new_string = $text_input.val();
 
-                var validate_input = $(this).closest('.stringlistinput').data('validate-input');
-                if (validate_input) {
-                    validate_input($text_input, finish);
-                }
-                else {
-                    finish();
+                    function finish() {
+                        var $li = $('<li>').text(new_string + " ")
+                                           .append($('<input type="hidden">').attr('name', input_name).val(new_string))
+                                           .append($('<i class="remove fa fa-times">'))
+                                           .insertBefore($ul.children().last());
+                        $text_input.val("");
+                    }
+
+                    var validate_input = $(this).closest('.stringlistinput').data('validate-input');
+                    if (validate_input) {
+                        validate_input($text_input, finish);
+                    }
+                    else {
+                        finish();
+                    }
                 }
             });
 
