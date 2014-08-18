@@ -2,7 +2,7 @@
 
 from marrow.util.bunch import Bunch
 from marrow.mailer.validator import EmailValidator
-from web.auth import authenticate, deauthenticate, user
+from web.auth import authenticate as web_authenticate, deauthenticate, user
 from web.core import Controller, HTTPMethod, request, config
 from web.core.http import HTTPFound, HTTPSeeOther, HTTPForbidden, HTTPNotFound
 from web.core.locale import _
@@ -12,7 +12,7 @@ from brave.core.account.model import User, PasswordRecovery
 from brave.core.account.form import authenticate as authenticate_form, register as register_form, \
     recover as recover_form, reset_password as reset_password_form
 from brave.core.account.authentication import lookup_email, send_recover_email
-from brave.core.util.predicate import is_administrator
+from brave.core.util.predicate import is_administrator, authenticate
 
 from yubico import yubico
 from marrow.util.convert import boolean
@@ -54,12 +54,12 @@ class Authenticate(HTTPMethod):
 
     def post(self, identity, password, remember=False, redirect=None):
         # First try with the original input
-        success = authenticate(identity, password)
+        success = web_authenticate(identity, password)
 
         if not success:
             # Try lowercase if it's an email or username, but not if it's an OTP
             if '@' in identity or len(identity) != 44:
-                success = authenticate(identity.lower(), password)
+                success = web_authenticate(identity.lower(), password)
 
         if not success:
             if request.is_xhr:
@@ -402,6 +402,7 @@ class Settings(HTTPMethod):
 class AccountInterface(HTTPMethod):
     """Handles the individual user pages."""
     
+    @authenticate
     def __init__(self, userID):
         super(AccountInterface, self).__init__()
         
@@ -415,10 +416,11 @@ class AccountInterface(HTTPMethod):
 
         if self.user.id != user.id and not user.has_permission(self.user.view_perm):
             raise HTTPNotFound()
-            
+    
+    @authenticate
     def get(self):
         return 'brave.core.account.template.accountdetails', dict(
-            area='admin',
+            area='admin' if user.admin else 'account',
             account=self.user,
         )
 
@@ -458,7 +460,7 @@ class AccountController(Controller):
     def deauthenticate(self):
         deauthenticate()
         raise HTTPSeeOther(location='/')
-        
+    
     def __lookup__(self, user, *args, **kw):
         request.path_info_pop()  # We consume a single path element.
         return AccountInterface(user), args

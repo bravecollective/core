@@ -45,8 +45,11 @@ class AuthorizeHandler(HTTPMethod):
         except AuthenticationRequest.DoesNotExist:
             raise HTTPNotFound()
     
-    def get(self, ar):
+    def get(self, ar=None):
         from brave.core.application.model import ApplicationGrant
+
+        if ar is None:
+            raise HTTPBadRequest()
         
         ar = self.ar(ar)
         u = user._current_obj()
@@ -56,18 +59,39 @@ class AuthorizeHandler(HTTPMethod):
             # TODO: We need a 'just logged in' flag in the request.
             
             characters = list(u.characters.order_by('name').all())
-            if len(characters):
-                default = u.primary or characters[0]
-            else:
+            if not len(characters):
                 return ('brave.core.template.authorize',
                 dict(success=False, message=_("This application requires that you have a character connected to your"
                                               " account. Please <a href=\"/key/\">add an API key</a> to your account."),
                      ar=ar))
-            if not u.has_permission('core.application.authorize.{0}'.format(ar.application.short)):
+
+            if not u.has_permission(ar.application.authorize_perm):
                 return ('brave.core.template.authorize',
                 dict(success=False, message=_("You do not have permission to use this application."), ar=ar))
-            return 'brave.core.template.authorize', dict(success=True, ar=ar, characters=characters, default=default)
-        
+
+            chars = []
+            for c in characters:
+                if c.credential_for(ar.application.mask.required):
+                    chars.append(c)
+            
+            if not chars:
+                return ('brave.core.template.authorize',
+                dict(success=False, message=_("This application requires an API key with a mask of <a href='/key/mask/{0}'>{0}</a> or better, please add an API key with that mask to your account.".format(ar.application.mask.required)),
+                     ar=ar))
+            
+            chars = [c for c in chars
+                     if (c.has_verified_key or
+                         config['core.require_recommended_key'].lower() == 'false')]
+                    
+            if chars:
+                default = u.primary if u.primary in chars else chars[0]
+            else:
+                return ('brave.core.template.authorize',
+                dict(success=False, message=_("You do not have any API keys on your account which match the requirements for this service. Please add an {1} API key with a mask of <a href='/key/mask/{0}'>{0}</a> or better, please add an API key with that mask to your account.".format(config['core.recommended_key_mask'], config['core.recommended_key_kind'])),
+                     ar=ar))
+                     
+            return 'brave.core.template.authorize', dict(success=True, ar=ar, characters=chars, default=default)
+
         ngrant = ApplicationGrant(user=u, application=ar.application, mask=grant.mask, expires=datetime.utcnow() + timedelta(days=ar.application.expireGrantDays), character=grant.character)
         ngrant.save()
         
@@ -109,8 +133,9 @@ class AuthorizeHandler(HTTPMethod):
             log.exception("Error loading character.")
             return 'json:', dict(success=False, message="Error loading character.")
         
-        # TODO: Non-zero grants.
-        grant = ApplicationGrant(user=u, application=ar.application, mask=0, expires=datetime.utcnow() + timedelta(days=ar.application.expireGrantDays), character=character)
+        # TODO: Add support for 'optional' masks
+        mask = ar.application.mask.required
+        grant = ApplicationGrant(user=u, application=ar.application, _mask=mask, expires=datetime.utcnow() + timedelta(days=ar.application.expireGrantDays), character=character)
         grant.save()
         
         ar.user = u

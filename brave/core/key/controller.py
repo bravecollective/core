@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 from web.auth import user
 from web.core import Controller, HTTPMethod, request, config
 from web.core.locale import _
-from web.core.http import HTTPFound, HTTPNotFound, HTTPUnauthorized, HTTPForbidden
+from web.core.http import HTTPFound, HTTPNotFound, HTTPForbidden
 from web.core.templating import render
 from marrow.util.convert import boolean
 from marrow.util.bunch import Bunch
@@ -14,9 +14,8 @@ from mongoengine.errors import NotUniqueError
 
 from brave.core.account.model import User
 from brave.core.key.model import EVECredential
-from brave.core.util.predicate import authorize, authenticate, is_administrator
+from brave.core.util.predicate import authenticate
 from brave.core.util.eve import EVECharacterKeyMask, EVECorporationKeyMask
-from brave.core.permission.util import user_has_permission
 
 
 log = __import__('logging').getLogger(__name__)
@@ -40,13 +39,15 @@ class KeyIndex(HTTPMethod):
         
     def get(self):
         return 'brave.core.key.template.keyDetails', dict(
-            area='admin',
+            area='admin' if user.admin else 'keys',
             admin=True,
             record=self.key
         )
 
 
 class KeyInterface(Controller):
+    
+    @authenticate
     def __init__(self, key):
         super(KeyInterface, self).__init__()
         
@@ -90,7 +91,9 @@ class KeyList(HTTPMethod):
         return 'brave.core.key.template.list', dict(
                 area='keys',
                 admin=admin,
-                records=credentials
+                records=credentials,
+                rec_mask=config['core.recommended_key_mask'],
+                rec_kind=config['core.recommended_key_kind']
             )
 
     @authenticate
@@ -173,7 +176,7 @@ class CorpKeyMaskInterface(HTTPMethod):
             mask=self.mask,
             area='keys',
             functions=funcs,
-            kind="o"
+            kind="Corporation"
         )
         
         
@@ -198,7 +201,7 @@ class KeyMaskInterface(HTTPMethod):
             mask=self.mask,
             area='keys',
             functions=funcs,
-            kind="c"
+            kind="Character"
         )
         
         

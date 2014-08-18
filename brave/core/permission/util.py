@@ -2,13 +2,8 @@
 
 from __future__ import unicode_literals
 
-from datetime import datetime
-from mongoengine import Document, EmbeddedDocument, EmbeddedDocumentField, StringField, EmailField, URLField, DateTimeField, BooleanField, ReferenceField, ListField, IntField
-
-from brave.core.util.signal import update_modified_timestamp
-from brave.core.permission.model import Permission, WildcardPermission, GRANT_WILDCARD
-from brave.core.account.model import User
-from web.core.http import HTTPForbidden, HTTPUnauthorized
+from brave.core.permission.model import WildcardPermission
+from web.core.http import HTTPForbidden
 from brave.core.util.predicate import authenticate
 import web.auth
 
@@ -18,8 +13,8 @@ log = __import__('logging').getLogger(__name__)
 
 def user_has_permission(perm=None, accept_any_matching=False, **runkw):
     """accept_any_matching=True means that any permission that perm would grant will return true.
-        @user_has_permission('core.group.edit.*', accept_any_matching=True) would work for any user with the ability to 
-        edit anything about any group (for instance, a user with core.group.edit.acl.bob would be granted access when 
+        @user_has_permission('core.group.edit.*', accept_any_matching=True) would work for any user with the ability to
+        edit anything about any group (for instance, a user with core.group.edit.acl.bob would be granted access when
         accept_any_matching=True, but not when wild=False."""
         
     def decorator(function):

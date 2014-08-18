@@ -2,10 +2,7 @@
 
 from __future__ import unicode_literals
 
-from datetime import datetime
-from mongoengine import Document, EmbeddedDocument, EmbeddedDocumentField, StringField, EmailField, URLField, DateTimeField, BooleanField, ReferenceField, ListField, IntField
-
-from brave.core.util.signal import update_modified_timestamp
+from mongoengine import Document, StringField
 
 
 log = __import__('logging').getLogger(__name__)
@@ -16,8 +13,8 @@ GRANT_WILDCARD = '*'
 class Permission(Document):
     meta = dict(
         collection='Permissions',
-        allow_inheritance = True,
-        indexes = [
+        allow_inheritance=True,
+        indexes=[
             dict(fields=['id'])
         ],
     )
@@ -61,7 +58,17 @@ class Permission(Document):
             For instance, when evaluating whether a WildcardPermission grants access to a run-time permission."""
         
         return(self.id == perm_string)
+    
+    @staticmethod
+    def set_grants_permission(perms, granted_perm):
+        """Loops through a set of permissions and checks if any of them grants the desired permission."""
         
+        for p in perms:
+            if p.grants_permission(granted_perm):
+                return True
+        
+        return False
+    
     def __eq__(self, other):
         if isinstance(other, Permission):
             return self.id == other.id
@@ -119,7 +126,7 @@ class WildcardPermission(Permission):
             if GRANT_WILDCARD != self_segments[-1]:
                 return False
         
-        # Loops through each segment of the wildcardPerm and permission id. 'core.example.*.test.*' would have 
+        # Loops through each segment of the wildcardPerm and permission id. 'core.example.*.test.*' would have
         # segments of 'core', 'example', '*', 'test', and '*' in that order.
         for (s_seg, perm_seg) in zip(self_segments, perm_segments):
             # We loop through looking for something wrong, if there's nothing wrong then we return True.
@@ -134,4 +141,3 @@ class WildcardPermission(Permission):
                 return False
         
         return True
-
