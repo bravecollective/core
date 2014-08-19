@@ -34,7 +34,7 @@ class ACLRule(EmbeddedDocument):
                 'if not' if self.inverse else 'if',
             )
 
-    def human_readable_repr(self):
+    def __unicode__(self):
         return repr(self)
 
 
@@ -86,7 +86,7 @@ class ACLList(ACLRule):
                 self.ids
             )
 
-    def human_readable_repr(self):
+    def __unicode__(self):
         return "{grant} if character is{not_}{prep} {set}".format(
                 grant='grant' if self.grant else 'deny',
                 not_=' not' if self.inverse else '',
@@ -121,7 +121,7 @@ class ACLKey(ACLRule):
                 self.KINDS[self.kind]
             )
 
-    def human_readable_repr(self):
+    def __unicode__(self):
         return '{grant} if user has{not_} submitted a {kind} key'.format(
                 grant='grant' if self.grant else 'deny',
                 not_=' not' if self.inverse else '',
@@ -148,7 +148,7 @@ class ACLTitle(ACLRule):
                 self.titles
             )
 
-    def human_readable_repr(self):
+    def __unicode__(self):
         return "{grant} if user {has} the corporate title {set}".format(
                 grant='grant' if self.grant else 'deny',
                 has="doesn't have" if self.inverse else 'has',
@@ -175,7 +175,7 @@ class ACLRole(ACLRule):
                 self.roles
             )
 
-    def human_readable_repr(self):
+    def __unicode__(self):
         return "{grant} if user {has} the corporate role {set}".format(
                 grant='grant' if self.grant else 'deny',
                 has="doesn't have" if self.inverse else 'has',
@@ -204,7 +204,7 @@ class ACLMask(ACLRule):
                 self.mask
             )
 
-    def human_readable_repr(self):
+    def __unicode__(self):
         return '{grant} if user has{not_} submitted a key supporting permissions {mask}'.format(
                 grant='grant' if self.grant else 'deny',
                 not_=' not' if self.inverse else '',

@@ -72,7 +72,7 @@ class OneGroupController(Controller):
 
         if not really:
             log.debug("not really")
-            return "json:", "\n".join([r.human_readable_repr() for r in rule_objects])
+            return "json:", "\n".join([unicode(r) for r in rule_objects])
 
         log.debug("really!")
         self.group.rules = rule_objects
