@@ -263,8 +263,11 @@ class ManageGroupList(HTTPMethod):
         groups = sorted(Group.objects(), key=lambda g: g.id)
         
         visibleGroups = list()
+        
+        user_perms = user.permissions
+        
         for g in groups:
-            if user.has_permission(g.view_perm):
+            if Permission.set_grants_permission(user_perms, g.view_perm):
                 visibleGroups.append(g)
         
         return 'brave.core.group.template.manage_groups', dict(
