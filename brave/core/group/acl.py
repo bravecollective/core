@@ -46,6 +46,11 @@ class ACLList(ACLRule):
             ('o', "Corporation"),
             ('a', "Alliance")
         ])
+    KIND_CLS = OrderedDict([
+            ('c', EVECharacter),
+            ('o', EVECorporation),
+            ('a', EVEAlliance)
+        ])
     
     kind = StringField(db_field='k', choices=KINDS.items())
     ids = ListField(IntField(), db_field='i')
@@ -66,17 +71,8 @@ class ACLList(ACLRule):
         # this acl rule doesn't match or is not applicable
         return self.grant if self.inverse else None
 
-    @staticmethod
-    def target_class(kind):
-        if kind == 'c':
-            return EVECharacter
-        elif kind == 'o':
-            return EVECorporation
-        elif kind == 'a':
-            return EVEAlliance
-
     def target_objects(self):
-        return self.target_class(self.kind).objects(identifier__in=self.ids)
+        return self.KIND_CLS[self.kind].objects(identifier__in=self.ids)
     
     def __repr__(self):
         return "ACLList({0} {1} {2} {3!r})".format(
