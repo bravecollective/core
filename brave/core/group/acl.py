@@ -222,7 +222,7 @@ class ACLVerySecure(ACLRule):
         return self.grant if self.inverse else None
     
     def __repr__(self):
-        return "ACLVerySecure({0})".format(self.human_readable_repr)
+        return "ACLVerySecure({0})".format(self.human_readable_repr())
     
     def human_readable_repr(self):
         # We usually call this __unicode__ in Python 2, __str__ in Python 3.  Then you can just
