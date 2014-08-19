@@ -10,6 +10,8 @@ from mongoengine.fields import LongField
 from brave.core.util.signal import update_modified_timestamp
 from brave.core.util.field import PasswordField, IPAddressField
 
+from web.core import config
+
 
 @update_modified_timestamp.signal
 class User(Document):
@@ -37,6 +39,11 @@ class User(Document):
     modified = DateTimeField(db_field='m', default=datetime.utcnow)
     seen = DateTimeField(db_field='s')
     host = IPAddressField(db_field='h')
+    
+    # Distinguish how we identified the other core accounts as being owned by this one
+    # because IP address IDing can cause mis-IDs
+    other_accs_char_key = ListField(ReferenceField('User'), db_field='otherAccountsCharKey')
+    other_accs_IP = ListField(ReferenceField('User'), db_field='otherAccountsIP')
     
     # Python Magic Methods
     
@@ -110,6 +117,72 @@ class User(Document):
         
         other.delete()
 
+    def delete(self):
+
+        for c in self.characters:
+            c.detach()
+            
+        self.credentials.delete()
+        self.grants.delete()
+        self.attempts.delete()
+        self.recovery_keys.delete()
+        
+        dups = set(self.other_accs_char_key)
+        
+        for other in dups:
+            self.remove_duplicate(self, other)
+            
+        dups = set(self.other_accs_IP)
+        
+        for other in dups:
+            self.remove_duplicate(self, other, IP=True)
+        
+        super(User, self).delete()
+        
+    @staticmethod
+    def add_duplicate(acc, other, IP=False):
+        """Marks other as a duplicate account to this account.
+        And marks this account as duplicate to other."""
+        
+        # If the 2 accounts supplied are the same, do nothing
+        if acc.id == other.id:
+            return
+        
+        if not IP:
+            if other not in acc.other_accs_char_key:
+                acc.other_accs_char_key.append(other)
+            if acc not in other.other_accs_char_key:
+                other.other_accs_char_key.append(acc)
+        else:
+            if other not in acc.other_accs_IP:
+                acc.other_accs_IP.append(other)
+            if acc not in other.other_accs_IP:
+                other.other_accs_IP.append(acc)
+                
+        acc.save()
+        other.save()
+        
+    @staticmethod
+    def remove_duplicate(acc, other, IP=False):
+        """Removes a duplicate account connection for both accounts."""
+        
+        # If the 2 accounts supplied are the same, do nothing
+        if acc.id == other.id:
+            return
+        
+        if not IP:
+            if other in acc.other_accs_char_key:
+                acc.other_accs_char_key.remove(other)
+            if acc in other.other_accs_char_key:
+                other.other_accs_char_key.remove(acc)
+        else:
+            if other in acc.other_accs_IP:
+                acc.other_accs_IP.remove(other)
+            if acc in other.other_accs_IP:
+                other.other_accs_IP.remove(acc)
+                
+        acc.save()
+        other.save()
 
 class LoginHistory(Document):
     meta = dict(
@@ -125,13 +198,14 @@ class LoginHistory(Document):
     user = ReferenceField(User)
     success = BooleanField(db_field='s', default=True)
     location = IPAddressField(db_field='l')
-    expires = DateTimeField(db_field='e', default=lambda: datetime.utcnow() + timedelta(days=30))
+    # Will throw an exception if the config has a non integer config value
+    expires = DateTimeField(db_field='e', default=lambda: datetime.utcnow() + timedelta(days=int(config['core.login_history_days'])))
     
     def __repr__(self):
         return 'LoginHistory({0}, {1}, {2}, {3})'.format(
                 self.id.generation_time.isoformat(),
                 'PASS' if self.success else 'FAIL',
-                self.user_id,
+                self.user.username,
                 self.location
             )
 
@@ -157,6 +231,6 @@ class PasswordRecovery(Document):
     def __repr__(self):
         return 'PasswordRecovery({0}, {1}, {2})'.format(
             self.id.generation_time.isoformat(),
-            self.user_id,
+            self.user.username,
             self.recovery_key
         )

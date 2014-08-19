@@ -1,0 +1,61 @@
+<%page args="records, admin"/>
+
+<div class="row-fluid table">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th class="span2 sortable key-id">${_("Key ID")}</th>
+                <th class="span2 sortable security-violation"><span class="line"></span>${_("Security Violation")}</th>
+                % if not admin:
+                <th class="span3 sortable key-code"><span class="line"></span>${_("Verification Code")}</th>
+                % else:
+                <th class="span1 sortable key-code"><span class="line"></span>${_("Code")}</th>
+                % endif
+                <th class="span2 sortable characters hidden-tablet hidden-phone"><span class="line"></span>${_("Characters")}</th>
+                <th class="span2 sortable key-date hidden-phone"><span class="line"></span>${_("Added")}</th>
+                % if admin:
+                <th class="span2 sortable username"><span class="line"></span>${_("User")}</th>
+                % else:
+                <th class="span1 actions"><span class="line"></span>${_("Actions")}</th>
+                % endif
+            </tr>
+        </thead>
+        <tbody>
+            % for record in records:
+            <tr data-id="${record.id}">
+                <td class="key-id"><i class="fa fa-fw fa-${'check' if record.verified else 'times'}"></i> <a href="/key/${record.id}">${record.key | h}</a></td>
+                % if record.violation == "Character":
+                <td class="security-violation"><font color="red">Character Security Violation. <a href="https://wiki.braveineve.com/it/core#violations" target="_blank">Help <i class="fa fa-external-link"></i></a></font></td>
+                % elif record.violation == "Kind":
+                <td class="security-violation"><font color="red">Incorrect Key Type. <a href="https://wiki.braveineve.com/it/core#violations" target="_blank">Help <i class="fa fa-external-link"></i></a></font></td>
+                % elif record.violation == "Mask":
+                <td class="security-violation"><font color="red">Insufficient Access Mask. <a href="https://wiki.braveineve.com/it/core#violations" target="_blank">Help <i class="fa fa-external-link"></i></a></font></td>
+                % else:
+                <td class="security-violation" title="The BIA is always watching..."><font color="green">All clear!</font></td>
+                % endif
+                % if not admin:
+                <td class="key-code"><span class="ellipsis">${record.code[:10]| h}...</span></td>
+                % else:
+                <td class="key-code"><span class="ellipsis">Redacted.</span></td>
+                % endif
+                <td class="characters hidden-tablet hidden-phone">
+                    % for char in record.characters:
+                    <a href="/character/${char.id}">
+                    <img src="//image.eveonline.com/Character/${char.identifier}_32.jpg" style="vertical-align: middle; margin-right: 5px; border-radius: 3px; width: 24px; height: 24px;" title="${char.name | h}">
+                    </a>
+                    % endfor
+                </td>
+                <td class="key-date hidden-phone"><time datetime="${record.id.generation_time.isoformat().replace('+00:00', 'Z')}">${record.id.generation_time.isoformat(' ').replace('+00:00', '')}</time></td>
+                % if admin:
+                <td class="username"><a href="/account/${record.owner.id}">${record.owner | h}</a></td>
+                % else:
+                <td class="actions">
+                    <button class="btn btn-default btn-small refresh" title="Refresh API Key" rel="tooltip" data-placement="bottom"><i class="fa fa-refresh"></i></button>
+                    <button class="btn btn-danger btn-small delete" title="Remove API Key" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i></button>
+                </td>
+                %endif
+            </tr>
+            % endfor
+        </tbody>
+    </table>
+</div>

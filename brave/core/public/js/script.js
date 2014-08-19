@@ -105,6 +105,7 @@ $(function(){
     $('[rel="popover"],[data-rel="popover"]').popover();
     
     // A little CSS helper.
+    // Note to other readers: we theorize this exists because the igb does not understand :first-child.
     $('tr:first-child').addClass('first');
     
     // Automatically destroy all modal dialogs.  Keep the DOM clean.
@@ -113,7 +114,10 @@ $(function(){
     // Hook CSRF token support into jQuery AJAX.
     $(document).ajaxSend(function(event, xhr, settings) {
         // Exit early if this is a foreign XHR request.
-        if ( /^http(s)?:.*/.test(settings.url) )
+        var parser = document.createElement('a');
+        parser.href = settings.url;
+        if ( parser.protocol != window.location.protocol ||
+             parser.host != window.location.host )
             return;
         
         var token = $.cookie('csrf');

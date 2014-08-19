@@ -1,0 +1,44 @@
+## encoding: utf-8
+
+<%inherit file="brave.core.template.master"/>
+
+<%block name="title">Search Characters</%block>
+
+<div class="container-fluid">
+    <div id="pad-wrapper">
+        <div class="row-fluid header">
+            <h3>Administrative Search</h3>
+        </div>
+        <div class="span12">
+            <form method="GET" action="/admin/search/char" id="search" class="form-inline">
+                <div class="span2">
+                    <input name="character" type="text" placeholder="Character Name" class="span2"/>
+                </div>
+                <div class="span2">
+                    <select name="charMethod" form ="search" class="input-block-level">
+                        <option value='contains'>Contains (Character)</option>
+                        <option value='starts'>Starts With</option>
+                        <option value='is'>Is</option>
+                    </select>
+                </div>
+                <div class="span2">
+                    <input name="alliance" type="text" placeholder="Alliance Name" class="span2"/>
+                </div>
+                <div class="span2">
+                    <input name="corporation" type="text" placeholder="Corporation Name" class="span2"/>
+                </div>
+                <div class="span2">
+                    <input name="group" type="text" placeholder="Group Name" class="span2"/>
+                </div>
+                <br>
+                <br>
+                <div class="span5"></div>
+                <input type="submit" name="submit" class="btn btn-default" value="Search" />
+            </form>
+        </div>
+        
+        % if success:
+            <%include file="brave.core.character.template.charTable" args="records=result, admin=True"/>
+        % endif
+    </div>
+</div>

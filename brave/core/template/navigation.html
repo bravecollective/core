@@ -1,5 +1,5 @@
 ## encoding: utf-8
-<%!
+<%
 
 areas = [
         # ID         Icon            Label             Destination
@@ -7,8 +7,11 @@ areas = [
         ('keys',     'key',          "API Keys",       "/key/"),
         ('apps',     'puzzle-piece', "Applications",   "/application/"),
         ('chars',    'user',         "Characters",     "/character/"),
+    ]
+if web.auth.authenticated and web.user.admin:
+    areas += [
         ('group',    'group',        "Groups",         "/group/"),
-        ('admin',    'dashboard',    "Maintenance",    "/admin/"),
+        ('admin',    'dashboard',    "Admin Panel",    "/admin/"),
     ]
 
 %>
@@ -23,7 +26,7 @@ areas = [
 % if web.auth.authenticated:
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                    <i class="fa fa-user"></i><span class="hidden-phone"> ${web.user.username}</span>
+                    <i class="fa fa-user"></i><span class="hidden-phone"> ${web.user.username | h}</span>
                     <b class="caret"></b>
                 </a>
                 <ul class="dropdown-menu">

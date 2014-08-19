@@ -4,7 +4,7 @@ import sys, os
 from setuptools import setup, find_packages
 
 setup(
-        name = "Brave Core Services",
+        name = "brave.core",
         version = "0.1",
         description = "EVE Online authentication, authorization, and API proxy service.",
         author = "Alice Bevan-McGregor",
@@ -21,11 +21,14 @@ setup(
         test_suite = 'nose.collector',
         
         install_requires = [
+                'requests==1.1.0',
+                'marrow.tags',
+                'marrow.templating',
+                'brave.api',
                 'WebCore>=1.1.2',
                 'MongoEngine>=0.7.999',
                 'Mako>=0.4.1',
                 'beaker>=1.5',
-                'requests==1.1.0',
                 'blinker',
                 'pyyaml',
                 'ecdsa',
@@ -38,6 +41,8 @@ setup(
                 'marrow.mailer',
                 'yubico',
                 'futures',
+                'zxcvbn',
+                'flake8',
             ],
         
     )

@@ -1,0 +1,33 @@
+## encoding: utf-8
+
+<%inherit file="brave.core.template.master"/>
+
+<%block name="title">${_("EVE API Keys")}</%block>
+
+<%block name="header">
+    ${parent.header()}
+    
+    <style>
+        .modal-body form { margin-bottom: 0; }
+        .modal-body form input.input-block-level:last-child { margin-bottom: 0; }
+        table.table { table-layout: fixed; width: 100%; }
+        span.ellipsis { display: inline-block; width: 100%; overflow: hidden !important; white-space: nowrap !important; text-overflow: ellipsis !important; word-break: break-all !important; word-wrap: break-word !important; }
+    </style>
+</%block>
+
+<div class="container-fluid">
+    <div id="pad-wrapper">
+        <h2>
+        % if kind == 'Character':
+        Character
+        % elif kind == 'Corporation':
+        Corporation
+        % endif
+        Key Mask ${mask}
+        </h2><br/>
+        
+        <h4><a href=https://community.eveonline.com/support/api-key/CreatePredefined?accessMask=${mask|u}>Create an API Key with this mask.</a></h4>
+
+        <%include file="brave.core.key.template.maskTable" args="type=kind, functions=functions"/>
+    </div>
+</div>

@@ -11,9 +11,9 @@ from marrow.util.url import URL
 from marrow.util.object import load_object as load
 from marrow.util.convert import boolean
 
-from brave.core.application.model import Application
 from brave.core.api.model import AuthenticationBlacklist, AuthenticationRequest
 from brave.core.api.util import SignedController
+from brave.core.util.eve import EVECharacterKeyMask, api
 
 
 log = __import__('logging').getLogger(__name__)
@@ -77,9 +77,9 @@ class CoreAPI(SignedController):
         
         # Deny localhost/127.0.0.1 loopbacks and 192.* and 10.* unless in development mode.
         
-        if not boolean(config.get('debug', False)) and success.host in ('localhost', '127.0.0.1') or \
+        if not boolean(config.get('debug', False)) and (success.host in ('localhost', '127.0.0.1') or \
                 success.host.startswith('192.168.') or \
-                success.host.startswith('10.'):
+                success.host.startswith('10.')):
             response.status_int = 400
             return dict(
                     status = 'error',
@@ -101,7 +101,7 @@ class CoreAPI(SignedController):
             return dict(
                     status = 'error',
                     code = 'blacklist',
-                    message = "You have been blacklisted.  To dispute, contact hostmaster@bravecollective.net"
+                    message = "You have been blacklisted.  To dispute, contact {0}".format(config['mail.blackmail.author'])
                 )
         
         # TODO: Check DNS.  Yes, really.
@@ -144,13 +144,11 @@ class CoreAPI(SignedController):
             if group.evaluate(token.user, character):
                 tags.append(group.id)
         
-        # TODO: Verify continued character ownership.
-        
         return dict(
                 character = dict(id=character.identifier, name=character.name),
                 corporation = dict(id=character.corporation.identifier, name=character.corporation.name),
                 alliance = dict(id=character.alliance.identifier, name=character.alliance.name) if character.alliance else None,
                 tags = tags,
                 expires = None,
-                mask = token.mask
+                mask = token.mask.mask if token.mask else 0
             )

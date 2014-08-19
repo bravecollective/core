@@ -1,23 +1,29 @@
 # encoding: utf-8
 
 from marrow.util.bunch import Bunch
-from web.auth import authenticate, deauthenticate
+from marrow.mailer.validator import EmailValidator
+from web.auth import authenticate, deauthenticate, user
 from web.core import Controller, HTTPMethod, request, config
-from web.core.http import HTTPFound, HTTPSeeOther, HTTPForbidden
+from web.core.http import HTTPFound, HTTPSeeOther, HTTPForbidden, HTTPNotFound
 from web.core.locale import _
+from mongoengine import ValidationError, NotUniqueError
 
 from brave.core.account.model import User, PasswordRecovery
 from brave.core.account.form import authenticate as authenticate_form, register as register_form, \
     recover as recover_form, reset_password as reset_password_form
 from brave.core.account.authentication import lookup_email, send_recover_email
+from brave.core.util.predicate import is_administrator
 
 from yubico import yubico
 from marrow.util.convert import boolean
 
+import zxcvbn
 import re
 
 log = __import__('logging').getLogger(__name__)
 
+
+MINIMUM_PASSWORD_STRENGTH = 3
 
 def _check_password(passwd1, passwd2):
     """checks the passed passwords for equality and length
@@ -47,10 +53,15 @@ class Authenticate(HTTPMethod):
         return 'brave.core.account.template.signin', dict(form=form)
 
     def post(self, identity, password, remember=False, redirect=None):
-        #Ensures that the provided identity is lowercase if it's an email or username, but leaves it alone if it's an OTP
-        if('@' in identity or len(identity) != 44): 
-            identity = identity.lower()
-        if not authenticate(identity, password):
+        # First try with the original input
+        success = authenticate(identity, password)
+
+        if not success:
+            # Try lowercase if it's an email or username, but not if it's an OTP
+            if '@' in identity or len(identity) != 44:
+                success = authenticate(identity.lower(), password)
+
+        if not success:
             if request.is_xhr:
                 return 'json:', dict(success=False, message=_("Invalid user name or password."))
 
@@ -68,6 +79,8 @@ class Recover(HTTPMethod):
         if not email:
             return None
         user = lookup_email(email)
+        if not user:
+            user = lookup_email(email.lower())
         if not user:
             return None
         recovery = PasswordRecovery.objects(user=user, recovery_key=recovery_key).first()
@@ -110,6 +123,8 @@ class Recover(HTTPMethod):
 
         user = lookup_email(data.email)
         if not user:
+            user = lookup_email(data.email.lower())
+        if not user:
             # FixMe: possibly do send success any way, to prevent email address confirmation
             #   - would be necessary for register as well
             return 'json:', dict(success=False, message=_("Unknown email."), data=post)
@@ -132,6 +147,10 @@ class Recover(HTTPMethod):
         passwd_ok, error_msg = _check_password(data.password, data.pass2)
         if not passwd_ok:
             return 'json:', dict(success=False, message=error_msg)
+
+        #If the password isn't strong enough, reject it
+        if(zxcvbn.password_strength(data.password).get("score") < MINIMUM_PASSWORD_STRENGTH):
+            return 'json:', dict(success=False, message=_("Password provided is too weak. please add more characters, or include lowercase, uppercase, and special characters."), data=data)
 
         #set new password
         user = recovery.user
@@ -165,26 +184,30 @@ class Register(HTTPMethod):
         
         if not data.username or not data.email or not data.password or data.password != data.pass2:
             return 'json:', dict(success=False, message=_("Missing data or passwords do not match."), data=data)
-        
+
         #Make sure that the provided email address is a valid form for an email address
-        #TODO: Support IDNs and make RFC 822 compliant
-        emailSearch = re.search('[a-zA-Z0-9\.\+]+@[a-zA-Z0-9\.\+]+\.[a-zA-Z0-9]+', data.email)
-        if emailSearch == None:
+        v = EmailValidator()
+        email = data.email
+        email, err = v.validate(email)
+        if err:
             return 'json:', dict(success=False, message=_("Invalid email address provided."), data=data)
-         
-        #Prevents Mongodb validation check from hanging thread, plus all tlds are at least 2 characters.
-        tldSearch = re.findall('\.[a-zA-Z0-9]+', data.email)
-        tld = tldSearch.pop()
-        #tld includes the leading '.'
-        if len(tld) < 3:
-            return 'json:', dict(success=False, message=_("Invalid email address provided."), data=data)
+        
+        #If the password isn't strong enough, reject it
+        if(zxcvbn.password_strength(data.password).get("score") < MINIMUM_PASSWORD_STRENGTH):
+            return 'json:', dict(success=False, message=_("Password provided is too weak. please add more characters, or include lowercase, uppercase, and special characters."), data=data)
         
         #Ensures that the provided username and email are lowercase
         user = User(data.username.lower(), data.email.lower(), active=True)
         user.password = data.password
-        user.save()
+        try:
+            user.save()
+        except ValidationError:
+            return 'json:', dict(success=False, message=_("Invalid email address or username provided."), data=data)
+        except NotUniqueError:
+            return 'json:', dict(success=False, message=_("Either the username or email address provided is "
+                                                          "already taken."), data=data)
         
-        authenticate(data.username.lower(), data.password)
+        authenticate(user.username, data.password)
         
         return 'json:', dict(success=True, location="/")
 
@@ -206,10 +229,12 @@ class Settings(HTTPMethod):
         query = dict(active=True)
         query[b'username'] = data.id
 
-        user = User.objects(**query).first()
+        query_user = User.objects(**query).first()
+        if query_user.id != user.id:
+            raise HTTPForbidden
 
         if data.form == "changepassword":
-            passwd_ok, error_msg = _check_password(data.password, data.pass2)
+            passwd_ok, error_msg = _check_password(data.passwd, data.passwd1)
 
             if not passwd_ok:
                 return 'json:', dict(success=False, message=error_msg, data=data)
@@ -219,6 +244,10 @@ class Settings(HTTPMethod):
 
             if not User.password.check(user.password, data.old):
                 return 'json:', dict(success=False, message=_("Old password incorrect."), data=data)
+
+            #If the password isn't strong enough, reject it
+            if(zxcvbn.password_strength(data.passwd).get("score") < MINIMUM_PASSWORD_STRENGTH):
+                return 'json:', dict(success=False, message=_("Password provided is too weak. please add more characters, or include lowercase, uppercase, and special characters."), data=data)
 
             user.password = data.passwd
             user.save()
@@ -262,7 +291,7 @@ class Settings(HTTPMethod):
             
             user.rotp = rotp
             user.save()
-			
+            
         #Handle the user attempting to delete their account
         elif data.form == "deleteaccount":
             if isinstance(data.passwd, unicode):
@@ -281,16 +310,117 @@ class Settings(HTTPMethod):
                 return 'json:', dict(success=False, message=_("Delete was either misspelled or not lowercase."), data=data)
             
             #Delete the user account and then deauthenticate the browser session
+            log.info("User %s authorized the deletion of their account.", user)
             user.delete()
             deauthenticate()
             
             #Redirect user to the root of the server instead of the settings page
             return 'json:', dict(success=True, location="/")
-			
+            
+        #Handle the user attempting to change the email address associated with their account
+        elif data.form == "changeemail":
+            if isinstance(data.passwd, unicode):
+                data.passwd = data.passwd.encode('utf-8')
+        
+            #Check whether the user's supplied password is correct
+            if not User.password.check(user.password, data.passwd):
+                return 'json:', dict(success=False, message=_("Password incorrect."), data=data)
+
+            #Check that the two provided email addresses match
+            if not data.newEmail.lower() == data.newEmailConfirm.lower():
+                return 'json:', dict(success=False, message=_("Provided email addresses do not match."), data=data)
+            
+            #Make sure that the provided email address is a valid form for an email address
+            v = EmailValidator()
+            email = data.newEmail
+            email, err = v.validate(email)
+            if err:
+                return 'json:', dict(success=False, message=_("Invalid email address provided."), data=data)
+                
+            #Make sure that the new email address is not already taken
+            count = User.objects.filter(**{"email": data.newEmail.lower()}).count()
+            if not count == 0:
+                return 'json:', dict(success=False, message=_("The email address provided is already taken."), data=data)
+       
+            #Change the email address in the database and catch any email validation exceptions that mongo throws
+            user.email = data.newEmail.lower()
+            try:
+                user.save()
+            except ValidationError:
+                return 'json:', dict(success=False, message=_("Invalid email address provided."), data=data)
+            except NotUniqueError:
+                return 'json:', dict(success=False, message=_("The email address provided is already taken."), data=data)
+        
+        #Handle the user attempting to merge 2 accounts together
+        elif data.form == "mergeaccount":
+            if isinstance(data.passwd, unicode):
+                data.passwd = data.passwd.encode('utf-8')
+                
+            if isinstance(data.passwd2, unicode):
+                data.passwd2 = data.passwd2.encode('utf-8')
+                
+            #Make the user enter their username so they know what they're doing.
+            if user.username != data.username.lower() and user.username != data.username:
+                return 'json:', dict(success=False, message=_("First username incorrect."), data=data)
+                
+            #Check whether the user's supplied password is correct
+            if not User.password.check(user.password, data.passwd):
+                return 'json:', dict(success=False, message=_("First password incorrect."), data=data)
+                
+            #Make sure the user isn't trying to merge their account into itself.
+            if data.username.lower() == data.username2.lower():
+                return 'json:', dict(success=False, message=_("You can't merge an account into itself."), data=data)
+                
+            #Make the user enter the second username so we can get the User object they want merged in.
+            if not User.objects(username=data.username2.lower()) and not User.objects(username=data.username2):
+                return 'json:', dict(success=False, message=_("Unable to find user by second username."), data=data)
+                
+            other = User.objects(username=data.username2).first()
+            if not other:
+                other = User.objects(username=data.username2.lower()).first()
+                
+            #Check whether the user's supplied password is correct
+            if not User.password.check(other.password, data.passwd2):
+                return 'json:', dict(success=False, message=_("Second password incorrect."), data=data)
+                
+            #Make them type "merge" exactly
+            if data.confirm != "merge":
+                return 'json:', dict(success=False, message=_("Merge was either misspelled or not lowercase."), data=data)
+                
+            log.info("User %s merged account %s into %s.", user.username, other.username, user.username)
+            user.merge(other)
+            
+            #Redirect user to the root of the server instead of the settings page
+            return 'json:', dict(success=True, location="/")
+            
         else:
             return 'json:', dict(success=False, message=_("Form does not exist."), location="/")
         
         return 'json:', dict(success=True, location="/account/settings")
+
+
+class AccountInterface(HTTPMethod):
+    """Handles the individual user pages."""
+    
+    def __init__(self, userID):
+        super(AccountInterface, self).__init__()
+        
+        try:
+            self.user = User.objects.get(id=userID)
+        except User.DoesNotExist:
+            raise HTTPNotFound()
+        except ValidationError:
+            # Handles improper objectIDs
+            raise HTTPNotFound()
+
+        if self.user.id != user.id and not user.admin:
+            raise HTTPNotFound()
+            
+    def get(self):
+        return 'brave.core.account.template.accountdetails', dict(
+            area='admin' if user.admin else 'account',
+            account=self.user,
+        )
 
 
 class AccountController(Controller):
@@ -305,10 +435,30 @@ class AccountController(Controller):
         if set(query.keys()) - {'username', 'email'}:
             raise HTTPForbidden()
         
-        count = User.objects.filter(**{str(k): v for k, v in query.items()}).count()
+        count = User.objects.filter(**{str(k): v.lower() for k, v in query.items()}).count()
         return 'json:', dict(available=not bool(count), query={str(k): v for k, v in query.items()})
+        
+    def entropy(self, **query):
+        # Remove the timestamp
+        query.pop('ts', None)
+        
+        # Make sure the user provides only a password
+        if set(query.keys()) - {'password'}:
+            raise HTTPForbidden()
+        
+        password = query.get("password")
+        strong = False
+        
+        # If the password has a score of greater than 2, allow it
+        if(zxcvbn.password_strength(password).get("score") > 2):
+            strong = True
+        
+        return 'json:', dict(approved=strong, query={str(k): v for k, v in query.items()})
     
     def deauthenticate(self):
         deauthenticate()
         raise HTTPSeeOther(location='/')
-
+        
+    def __lookup__(self, user, *args, **kw):
+        request.path_info_pop()  # We consume a single path element.
+        return AccountInterface(user), args

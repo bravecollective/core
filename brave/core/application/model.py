@@ -55,8 +55,9 @@ class Application(Document):
     
     mask = EmbeddedDocumentField(ApplicationMasks, db_field='m', default=lambda: ApplicationMasks())
     groups = ListField(StringField(), db_field='g', default=list)
-    
-    # TODO: "Development"-only applications.
+    development = BooleanField(db_field='dev')
+    # Number of days that grants for this application should last.
+    expireGrantDays = IntField(db_field='e', default=30)
     
     owner = ReferenceField('User', db_field='o')
     
@@ -88,12 +89,26 @@ class ApplicationGrant(Document):
     application = ReferenceField(Application, db_field='a')
     
     character = ReferenceField('EVECharacter', db_field='c')
-    mask = IntField(db_field='m', default=0)
+    _mask = IntField(db_field='m', default=0)
     
     immutable = BooleanField(db_field='i', default=False)  # Onboarding is excempt from removal by the user.
     expires = DateTimeField(db_field='x')  # Default grant is 30 days, some applications exempt.  (Onboarding, Jabber, TeamSpeak, etc.)
     
     # Python Magic Methods
+    
+    @property
+    def mask(self):
+        """Returns a Key Mask object instead of just the integer."""
+        from brave.core.util.eve import EVECharacterKeyMask
+        
+        if self._mask:
+            return EVECharacterKeyMask(self._mask)
+        return None
+        
+    @mask.setter
+    def mask(self, value):
+        """Sets the value of the Key Mask"""
+        self._mask = value
     
     def __repr__(self):
         return 'Grant({0}, "{1}", "{2}", {3})'.format(self.id, self.user, self.application, self.mask).encode('ascii', 'backslashreplace')

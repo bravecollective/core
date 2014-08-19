@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<meta charset="utf-8">
-		<title>Welcome to Brave Collective Core Services</title>
-	</head>
-	<body>
-		<p>
-			Welcome to the <a href="http://www.bravecollective.net/">Brave Collective</a> core services site!  Access to this site will let you register your own applications, centrally manage your EVE API keys and characters, and access additional sites (such as forums, wiki, and more!) securely.
-		</p>
-		
-		<p>
-			Before you get started you should probably verify your account or it might get removed during a weekly purge.  To do so, just <a href="http://auth.bravecollective.net/verify/${code}">use this link</a>.
-		</p>
-	</body>
+    <head>
+        <meta charset="utf-8">
+        <title>Welcome to Brave Collective Core Services</title>
+    </head>
+    <body>
+        <p>
+            Welcome to the <a href="${web.url.complete('/')}">Brave Collective</a> core services site!
+            Access to this site will let you register your own applications, centrally manage your EVE API keys and characters, and access additional sites (such as forums, wiki, and more!) securely.
+        </p>
+        
+        <p>
+            Before you get started you should probably verify your account or it might get removed during a weekly purge.
+            To do so, just <a href="${web.url.complete('/verify/' + code)}">use this link</a>.
+        </p>
+    </body>
 </html>

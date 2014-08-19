@@ -1,0 +1,39 @@
+#This file includes instructions and notices for admins that they should keep in mind when
+#updating their core installations to a new version.
+#WARNING: Backup your database regularly and before making any changes to it.
+
+***v0.5:***
+5ec0143: All usernames and email addresses in the database need to be lowercased.
+    brave/core/scripts/case_migration.py should resolve this for you.
+ad709e0: It is highly recommended that admins remove all characters whose owners no longer have a valid API key for them.
+    brave/core/scripts/delete_orphan_characters.py should resolve this.
+3016b8b: KeyID is made unique in the Credentials collection; all duplicate keys must be 
+    purged from the database prior to upgrading. brave/core/scripts/fix_key_duplicates.py should resolve this for you.
+    Removal of orphaned characters (see ad709e0) is now required.
+
+***v0.5.2+***
+6b3c4a5: Changes were made to the populate_calls function. Admins must run populate_calls(True) from paster shell after
+    updating to this version. 
+    Commands: 
+        from brave.core.util.eve import populate_calls
+        populate_calls(True)                    
+
+***0.6.3***
+8ac784f: The config value 'core.minimum_key_id' should be added to the production config file. Recommended
+    value of 3283828
+    
+***DEVELOP***
+feature/authenticated: The config value 'web.auth.intercept' should be added to the production config file with a value 
+    of 401.
+
+feature/recommendedKeyMask: The config value 'core.recommended_key_mask' should be added to the production config file with
+    a value equal to that which the admin wants to be recommended for users as the standard key.
+
+feature/accountKeys: The config value 'core.recommended_key_kind' should be added to the production config file with
+    a value of the kind of key the admin wants users to add ("Character", "Account", or "Corporation")
+
+feature/configLoginHistory: The config value 'core.login_history_days' should be added to the production config file 
+    with the number of days the admin wishes to retain login history (prior setting: 30)
+    
+feature/requireKeys: The config value 'core.require_recommended_key' should be added to the config to indicate whether
+    the recommended key settings are required to authorize any application.

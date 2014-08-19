@@ -1,0 +1,49 @@
+<%page args="type, functions"/>
+
+<%
+from brave.core.util.eve import EVECharacterKeyMask, EVECorporationKeyMask
+from web.core.http import HTTPNotFound
+import math
+colors = []
+if type == "c" or type == "Character" or type == "Account" or type == "a":
+    all_functions = EVECharacterKeyMask.functions()
+elif type == "o" or type == "Corporation":
+    all_functions = EVECorporationKeyMask.functions()
+else:
+    raise HTTPNotFound()
+for func in all_functions:
+    if func in functions:
+        colors.append("<font color=\"green\">")
+    else:
+        colors.append("<font color=\"red\">")
+            
+x = 0
+%>
+<br/>
+<div class="row-fluid table">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th class="span2 sortable function">${_("Function")}</th>
+                <th class="span2 sortable function">${_("Function")}<span class="line"></th>
+                <th class="span2 sortable function">${_("Function")}<span class="line"></th>
+                <th class="span2 sortable function">${_("Function")}<span class="line"></th>
+                <th class="span2 sortable function">${_("Function")}<span class="line"></th>
+                <th class="span2 sortable function">${_("Function")}<span class="line"></th>
+            </tr>
+        </thead>
+        <tbody>
+            % for func in all_functions:
+                % if x % 6 == 0:
+                    <tr>
+                % endif
+                <td>${colors[x]}${all_functions[x].name[5:]}
+                % if x % 6 == 5:
+                    </tr>
+                % endif
+                <% x += 1 %>
+            % endfor
+            
+        </tbody>
+    </table>
+</div>

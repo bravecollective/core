@@ -1,0 +1,35 @@
+## encoding: utf-8
+
+<%inherit file="brave.core.template.master"/>
+
+<%block name="title">Search Keys</%block>
+
+<div class="container-fluid">
+    <div id="pad-wrapper">
+        <div class="row-fluid header">
+            <h3>Administrative Search</h3>
+            <h4>Valid violation values as of this release are 'Character' and 'None'.</h4>
+        </div>
+        <div class="span12">
+            <form method="GET" action="/admin/search/key" id="search" class="form-inline">
+                <div class="span2">
+                    <input name="keyID" type="text" placeholder="Key ID" class="span2"/>
+                </div>
+                <div class="span2">
+                    <input name="keyMask" type="text" placeholder="Key Mask" class="span2"/>
+                </div>
+                <div class="span2">
+                    <input name="violation" type="text" placeholder="Violation" class="span2"/>
+                </div>
+                <br>
+                <br>
+                <div class="span3"></div>
+                <input type="submit" name="submit" class="btn btn-default" value="Search" />
+            </form>
+        </div>
+        
+        % if success:
+            <%include file="brave.core.key.template.keyTable" args="records=result, admin=True"/>
+        % endif
+    </div>
+</div>

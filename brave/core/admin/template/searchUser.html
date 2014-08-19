@@ -1,0 +1,42 @@
+## encoding: utf-8
+
+<%inherit file="brave.core.template.master"/>
+
+<%block name="title">Search Users</%block>
+
+<div class="container-fluid">
+    <div id="pad-wrapper">
+        <div class="row-fluid header">
+            <h3>Administrative Search</h3>
+            <h4>Duplicate accepts values of 'char' and 'ip'.</h4>
+        </div>
+        <div class="span12">
+            <form method="GET" action="/admin/search/user" id="search" class="form-inline">
+                <div class="span2">
+                    <input name="username" type="text" placeholder="Username" class="span2"/>
+                </div>
+                <div class="span2">
+                    <select name="userMethod" form ="search" class="input-block-level">
+                        <option value='contains'>Contains (Username)</option>
+                        <option value='starts'>Starts With</option>
+                        <option value='is'>Is</option>
+                    </select>
+                </div>
+                <div class="span2">
+                    <input name="ip" type="text" placeholder="IP Address" class="span2"/>
+                </div>
+                <div class="span2">
+                    <input name="duplicate" type="text" placeholder="Duplicate" class="span2"/>
+                </div>
+                <br>
+                <br>
+                <div class="span4"></div>
+                <input type="submit" name="submit" class="btn btn-default" value="Search" />
+            </form>
+        </div>
+        
+        % if success:
+            <%include file="brave.core.account.template.accountTable" args="records=result, admin=True"/>
+        % endif
+    </div>
+</div>

@@ -173,6 +173,9 @@ class EVECharacter(EVEEntity):
     def tags(self):
         from brave.core.group.model import Group
         mapping = dict()
+
+        if not self.owner:
+            return dict()
         
         for group in Group.objects:
             if group.evaluate(self.owner, self):
@@ -183,16 +186,57 @@ class EVECharacter(EVEEntity):
         
         return OrderedDict((i, mapping[i]) for i in sorted(mapping.keys(), key=titlesort))
     
+    @property
+    def has_verified_key(self):
+        for k in self.credentials:
+            if k.verified:
+                return k
+    
     def credential_for(self, mask):
         """Return the least-permissive API key that can satisfy the given mask."""
         
-        candidates = [i for i in self.credentials if not mask or not i.mask or i.mask & mask == mask]
+        candidates = [i for i in self.credentials if not mask or not i.mask or i.mask.has_access(mask)]
         
         lowest = None
         lowest_count = None
         for candidate in candidates:
-            bc = bin(candidate.mask).count('1')
+            bc = candidate.mask.number_of_functions()
             if lowest_count is None or bc < lowest_count:
                 lowest, lowest_count = candidate, bc
-        
+                
         return lowest
+        
+    def credential_multi_for(self, masks):
+        """Returns the lowest permission API key that can satisfy the highest possible given mask."""
+        
+        for mask in masks:
+            if self.credential_for(mask):
+                return mask, self.credential_for(mask)
+                
+        return None, None
+        
+    def delete(self):
+        """Deletes the character. This is not recommended for typical use."""
+        
+        if self.owner:
+            self.detach()
+                
+        super(EVECharacter, self).delete()
+        
+    def detach(self):
+        """Removes all references to this character that imply ownership of the character."""
+        if not self.owner:
+            return
+        
+        # If this character is the primary character for the account, wipe that field for the user.
+        if self == self.owner.primary:
+            self.owner.primary = None
+            self.owner.save()
+                    
+        # Delete any application grants associated with the character.
+        for grant in self.owner.grants:
+            if self == grant.character:
+                grant.delete()
+        
+        self.owner = None
+        self.save()

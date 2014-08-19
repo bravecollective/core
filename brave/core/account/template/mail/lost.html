@@ -1,20 +1,22 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<meta charset="utf-8">
-		<title>Password Recovery - Brave Collective Core Services</title>
-	</head>
-	<body>
-		<p>
-			We're sorry to hear you're having trouble signing into the Brave Collective core services site.
+    <head>
+        <meta charset="utf-8">
+        <title>Password Recovery - Brave Collective Core Services</title>
+    </head>
+    <body>
+        <p>
+            We're sorry to hear you're having trouble signing into the Brave Collective core services site.
         </p>
         <p>
             You can use <a href="${web.url.complete('/account/recover', params)}">this link</a> to reset your password.
         </p>
         <p>
             You can also copy the following url into your browser:<br>
-            <code>    ${web.url.complete('/account/recover', params)}</code>
-		</p>
-        <p>Note that this link will only work once, and only work for 15 minutes!</p>
-	</body>
+            <code>${web.url.complete('/account/recover', params)}</code>
+        </p>
+        <p>
+            Note that this link will only work once, and only work for 15 minutes!
+        </p>
+    </body>
 </html>

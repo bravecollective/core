@@ -14,22 +14,22 @@ from web.core.http import HTTPFound, HTTPNotFound
 
 from brave.core.application.model import Application
 from brave.core.application.form import manage_form
-from brave.core.util.predicate import authorize, authenticated, is_administrator
+from brave.core.util.predicate import authorize, authenticate, is_administrator
 
 
 log = __import__('logging').getLogger(__name__)
 
 
-class OwnApplicationInterface(HTTPMethod):
+class ApplicationInterface(HTTPMethod):
     def __init__(self, app):
-        super(OwnApplicationInterface, self).__init__()
+        super(ApplicationInterface, self).__init__()
         
         try:
             self.app = Application.objects.get(id=app)
         except Application.DoesNotExist:
             raise HTTPNotFound()
 
-        if self.app.owner.id != user.id:
+        if self.app.owner.id != user.id and not user.admin:
             raise HTTPNotFound()
     
     def get(self):
@@ -44,18 +44,20 @@ class OwnApplicationInterface(HTTPMethod):
                             description = app.description,
                             site = app.site,
                             contact = app.contact,
+                            development = app.development,
                             key = dict(
                                     public = app.key.public,
                                     private = app.key.private,
                                 ),
                             required = app.mask.required,
                             optional = app.mask.optional,
-                            groups = app.groups
+                            groups = app.groups,
+                            expire = app.expireGrantDays
                         )
                 )
         
         key = SigningKey.from_string(unhexlify(app.key.private), curve=NIST256p, hashfunc=sha256)
-        return 'brave.core.application.template.view_own_app', dict(
+        return 'brave.core.application.template.view_app', dict(
                 app = app,
                 key = hexlify(key.get_verifying_key().to_string()),
                 pem = key.get_verifying_key().to_pem()
@@ -68,7 +70,7 @@ class OwnApplicationInterface(HTTPMethod):
         app = self.app
         valid, invalid = manage_form().native(kw)
         
-        for k in ('name', 'description', 'groups', 'site', 'contact'):
+        for k in ('name', 'description', 'groups', 'site', 'contact', 'development'):
             setattr(app, k, valid[k])
         
         if valid['key']['public'].startswith('-'):
@@ -79,6 +81,9 @@ class OwnApplicationInterface(HTTPMethod):
         app.mask.required = valid['required'] or 0
         app.mask.optional = valid['optional'] or 0
         
+        if user.admin:
+            app.expireGrantDays = valid['expire'] or 30
+        
         app.save()
         
         return 'json:', dict(
@@ -86,7 +91,7 @@ class OwnApplicationInterface(HTTPMethod):
             )
     
     def delete(self):
-        log.info("APPDEL %r %r", self.app, self.app.owner)
+        log.info("Deleted application %s owned by %s", self.app, self.app.owner)
         
         self.app.delete()
 
@@ -99,9 +104,14 @@ class OwnApplicationInterface(HTTPMethod):
         raise HTTPFound(location='/application/manage/')
 
 
-class OwnApplicationList(HTTPMethod):
-    @authorize(authenticated)
+class ApplicationList(HTTPMethod):
+    @authenticate
     def get(self):
+        if user.admin:
+            adminRecords = {record for record in Application.objects() if record.owner != user._current_obj()}
+        else:
+            adminRecords = {}
+        
         records = Application.objects(owner=user._current_obj())
         
         if request.is_xhr:
@@ -111,12 +121,13 @@ class OwnApplicationList(HTTPMethod):
                     data = None,
                 )
         
-        return 'brave.core.application.template.list_own_apps', dict(
+        return 'brave.core.application.template.manage_apps', dict(
                 area = 'apps',
-                records = records
+                records = records,
+                adminRecords = adminRecords
             )
     
-    @authorize(authenticated)
+    @authenticate
     def post(self, **kw):
         if not request.is_xhr:
             raise HTTPNotFound()
@@ -130,6 +141,11 @@ class OwnApplicationList(HTTPMethod):
         app.mask.required = valid['required'] or 0
         app.mask.optional = valid['optional'] or 0
         
+        if valid['development'] == "true" or valid['development'] == "True":
+            app.development = True
+        else:
+            app.development = False
+        
         app.save()
         
         return 'json:', dict(
@@ -139,8 +155,8 @@ class OwnApplicationList(HTTPMethod):
 
 
 class ManagementController(Controller):
-    index = OwnApplicationList()
+    index = ApplicationList()
     
     def __lookup__(self, app, *args, **kw):
         request.path_info_pop()  # We consume a single path element.
-        return OwnApplicationInterface(app), args
+        return ApplicationInterface(app), args

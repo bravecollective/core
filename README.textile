@@ -2,7 +2,7 @@ h1(#title). Brave Collective Core Services
 
 bq(subtitle). An EVE online authentication and mediated API access application.
 
-bq(byline). (C) 2013, Alice Bevan-McGregor and contributors.
+bq(byline). (C) 2013-2014, Alice Bevan-McGregor and contributors.
 
 bq(byline). "https://github.com/bravecollective/core":github-project
 
@@ -37,22 +37,12 @@ Once you have this, enter and activate the virtual environment:
 <pre><code>cd brave
 source bin/activate</code></pre>
 
-Now bootstrap the web framework:
-
-<pre><code>pip install WebCore</code></pre>
-
-Additionally, there are some requirements you will need to manually install as Core Services require features present in as-yet unreleased packages.  You will need to perform the following steps:
-
-<pre><code>(git clone https://github.com/marrow/marrow.templating.git; cd marrow.templating; python setup.py develop)
-(git clone https://github.com/marrow/marrow.tags.git; cd marrow.tags; python setup.py develop)
-(git clone https://github.com/bravecollective/api.git; cd api; python setup.py develop)</code></pre>
-
 Installing the current development version of the Core Service requires "Git":git, a distributed source code management system.  Compilation additionally requires the Python development headers and the OpenSSL development headers.  In Debian/Ubuntu, these are found in packages `python-dev` and `libssl-dev`.
 Run the following to download the development version with Git, and _link_ it into your Python runtime:
 
 <pre><code>git clone https://github.com/bravecollective/core.git
 cd core
-python setup.py develop</code></pre>
+pip install -r requirements.txt -e .</code></pre>
 
 Once you have successfully compiled the Core Service, copy `development.ini` to `local.ini`, and make changes as appropriate.  Finally, bootstrap the EVE API system by running:
 
@@ -82,15 +72,28 @@ Make a copy of @development.ini@ called @local.ini@, update all relevant directi
 This will start a development server and present the URL you need to access.  (Generally "http://127.0.0.1:8080":http://127.0.0.1:8080.)  If you wish the server to automatically restart in the event of a change to one of the source files (templates and statically served content are exempt) add the @--reload@ switch.
 
 
+h2(#admin). %4.% Common admin tasks
+
+There will be UI for these, but in the meantime, here are some hints for doing admin tasks from the paster shell. Do apply common-sense checking along your way to make sure you're touching the right objects.
+
+h3(). %4.1% Adding a user to a group
+
+<pre><code>from brave.core.account.model import User
+from brave.core.group.model import Group
+u = User.objects(username=USERNAME_HERE)[0]
+g = Group.objects(title=GROUP_TITLE_HERE)[0]
+g.rules[APPROPRIATE_INDEX].ids.append(u.primary.identifier)
+g.save()
+</code></pre>
+
 
 h2(#license). %4.% License
 
-Brave Collective Core Services has been released under the MIT Open Source license.  All contributors agree to transfer ownership of their code to Alice Bevan-McGregor for release under this license.  (This is to mitigate issues in the future.)
-
+Brave Collective Core Services has been released under the MIT Open Source license. 
 
 h3(#license-mit). %4.1.% The MIT License
 
-Copyright (C) 2013 Alice Bevan-McGregor and contributors.
+Copyright (C) 2013-2014 Alice Bevan-McGregor and contributors.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 

@@ -2,7 +2,7 @@
 
 <%inherit file="brave.core.template.master"/>
 
-<%block name="title">${app} — Application Details</%block>
+<%block name="title">${app | h} — Application Details</%block>
 
 <%block name="header">
     ${parent.header()}
@@ -20,7 +20,10 @@
 <div class="container-fluid">
     <div id="pad-wrapper">
         <div class="header">
-            <h3>${app}</h3>
+            <h3>${app | h}</h3>
+            <p>Your application id is:</p>
+            <pre><code>${app.id}</code></pre>
+            <br>
             <p>Your server public key is:</p>
             <pre><code>HEX
 
