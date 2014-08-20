@@ -33,8 +33,10 @@ class ACLRule(EmbeddedDocument):
         raise NotImplementedError()
     
     def __repr__(self):
-        return "{0}({1} {2})".format(
-                self.__class__.__name__,
+        return "{0}({1} {2})".format(self.__class__.__name__, self)
+    
+    def __unicode__(self):
+        return '{0} {1}'.format(
                 'grant' if self.grant else 'deny',
                 'if not' if self.inverse else 'if',
             )
@@ -85,9 +87,9 @@ class ACLList(ACLRule):
             )
 
     def __unicode__(self):
-        return "{grant} if character is{not_}{prep} {set}".format(
+        return "{grant} if character {is}{prep} {set}".format(
                 grant='grant' if self.grant else 'deny',
-                not_=' not' if self.inverse else '',
+                not_='is not' if self.inverse else 'is',
                 prep=' in' if self.kind != 'c' else '',
                 set=' or '.join([o.name for o in self.target_objects()]),
             )
@@ -113,10 +115,10 @@ class ACLKey(ACLRule):
         return self.grant if self.inverse else None
     
     def __unicode__(self):
-        return '{grant} if user has{not_} submitted a {kind} key'.format(
+        return '{grant} if user {has} submitted a {kind} key'.format(
                 grant='grant' if self.grant else 'deny',
-                not_=' not' if self.inverse else '',
-                kind=self.KINDS[self.kind]
+                not_='has not' if self.inverse else 'has',
+                kind=self.KINDS[self.kind].lower()
         )
 
 
@@ -175,8 +177,8 @@ class ACLMask(ACLRule):
         return self.grant if self.inverse else None
     
     def __unicode__(self):
-        return '{grant} if user has{not_} submitted a key supporting permissions {mask}'.format(
+        return '{grant} if user {has} submitted a key supporting permissions {mask}'.format(
                 grant='grant' if self.grant else 'deny',
-                not_=' not' if self.inverse else '',
+                has='has not' if self.inverse else 'has',
                 mask=self.mask,
         )
