@@ -39,9 +39,6 @@ class ACLRule(EmbeddedDocument):
                 'if not' if self.inverse else 'if',
             )
 
-    def __unicode__(self):
-        return repr(self)
-
 
 class ACLList(ACLRule):
     """Grant or deny access based on the character's ID, corporation ID, or alliance ID."""
@@ -115,13 +112,6 @@ class ACLKey(ACLRule):
         
         return self.grant if self.inverse else None
     
-    def __repr__(self):
-        return "ACLKey({0} {1} {2})".format(
-                'grant' if self.grant else 'deny',
-                'if not' if self.inverse else 'if',
-                self.KINDS[self.kind]
-            )
-
     def __unicode__(self):
         return '{grant} if user has{not_} submitted a {kind} key'.format(
                 grant='grant' if self.grant else 'deny',
@@ -142,13 +132,6 @@ class ACLTitle(ACLRule):
         # this acl rule doesn't match or is not applicable
         return self.grant if self.inverse else None
     
-    def __repr__(self):
-        return "ACLTitle({0} {1} {2!r})".format(
-                'grant' if self.grant else 'deny',
-                'if not' if self.inverse else 'if',
-                self.titles
-            )
-
     def __unicode__(self):
         return "{grant} if user {has} the corporate title {set}".format(
                 grant='grant' if self.grant else 'deny',
@@ -169,13 +152,6 @@ class ACLRole(ACLRule):
         # this acl rule doesn't match or is not applicable
         return self.grant if self.inverse else None
     
-    def __repr__(self):
-        return "ACLRole({0} {1} {2!r})".format(
-                'grant' if self.grant else 'deny',
-                'if not' if self.inverse else 'if',
-                self.roles
-            )
-
     def __unicode__(self):
         return "{grant} if user {has} the corporate role {set}".format(
                 grant='grant' if self.grant else 'deny',
@@ -198,13 +174,6 @@ class ACLMask(ACLRule):
         
         return self.grant if self.inverse else None
     
-    def __repr__(self):
-        return "ACLMask({0} {1} {2})".format(
-                'grant' if self.grant else 'deny',
-                'if not' if self.inverse else 'if',
-                self.mask
-            )
-
     def __unicode__(self):
         return '{grant} if user has{not_} submitted a key supporting permissions {mask}'.format(
                 grant='grant' if self.grant else 'deny',
