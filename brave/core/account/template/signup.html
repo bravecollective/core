@@ -1,5 +1,7 @@
 ## encoding: utf-8
 
+<%! from brave.core.account.controller import MINIMUM_PASSWORD_STRENGTH %>
+
 <%inherit file="brave.core.template.light"/>
 
 <%block name="title">${_("Sign Up")}</%block>
@@ -37,8 +39,7 @@
                 }).popover('show');
         }
 
-        var ZXCVBN_RESULT_STRINGS = ['Fail', 'Really Shit', 'Shit', 'Fine, I Guess', 'Impregnable!'],
-        MINIMUM_PASSWORD_SCORE = 3;
+        var ZXCVBN_RESULT_STRINGS = ['Fail', 'Really Shit', 'Shit', 'Fine, I Guess', 'Impregnable!'];
     
         $(function(){
             //Handle checking of available usernames.
@@ -132,7 +133,7 @@
                 var zxcvbnResult = zxcvbn(self.val());
                 $(".password-verdict").text(ZXCVBN_RESULT_STRINGS[zxcvbnResult.score]);
                 $(".password-meter .bar").width( Math.min(100, zxcvbnResult.entropy + 20) + "%");
-                if( zxcvbnResult.score < MINIMUM_PASSWORD_SCORE )
+                if( zxcvbnResult.score < ${MINIMUM_PASSWORD_STRENGTH} )
                 {
                     $(".progress .bar").removeClass("bar-success");
                     $(".progress .bar").addClass("bar-danger");
