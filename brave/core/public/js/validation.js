@@ -55,7 +55,7 @@ $.fn.validated = function(callback){
                 var data = {};
                 data[settings.key || 'value'] = value;
                 
-                $.post(settings.url + '?ts=' + (+ new Date()), data, function(data){
+                $.post(settings.url, data, function(data){
                     if ( !data[settings.check || 'success'] )
                         return err(data.message || "Invalid validation.", "validation");
                     
