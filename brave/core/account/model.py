@@ -82,6 +82,10 @@ class User(Document):
     def recovery_keys(self):
         return PasswordRecovery.objects(user=self)
 
+    @property
+    def otp_required(self):
+        return self.rotp and len(user.otp)
+
     # Functions to manage YubiKey OTP
 
     def addOTP(self, yid):
