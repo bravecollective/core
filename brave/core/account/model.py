@@ -84,7 +84,7 @@ class User(Document):
 
     @property
     def otp_required(self):
-        return self.rotp and len(user.otp)
+        return self.rotp and len(self.otp)
 
     # Functions to manage YubiKey OTP
 
