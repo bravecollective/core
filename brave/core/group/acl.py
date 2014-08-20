@@ -14,6 +14,11 @@ log = __import__('logging').getLogger(__name__)
 
 
 class ACLRule(EmbeddedDocument):
+    """The basic data structure and abstract API for ACL rules.
+    
+    See: https://github.com/bravecollective/core/wiki/Groups
+    """
+    
     meta = dict(
             abstract = True,
             allow_inheritance = True,
