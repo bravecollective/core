@@ -74,7 +74,7 @@ class ACLList(ACLRule):
         
         # this acl rule doesn't match or is not applicable
         return self.grant if self.inverse else None
-
+    
     def target_objects(self):
         return self.KIND_CLS[self.kind].objects(identifier__in=self.ids)
     
@@ -93,7 +93,6 @@ class ACLList(ACLRule):
                 prep=' in' if self.kind != 'c' else '',
                 set=' or '.join([o.name for o in self.target_objects()]),
             )
-
 
 
 class ACLKey(ACLRule):
