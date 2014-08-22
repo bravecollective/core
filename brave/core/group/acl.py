@@ -216,7 +216,7 @@ class ACLVerySecure(ACLRule):
     """Grant or deny access based on mandatory use of an OTP."""
     
     def evaluate(self, user, character):
-        if user.rotp and len(user.otp):
+        if user.otp_required:
             return None if self.inverse else self.grant
         
         return self.grant if self.inverse else None
