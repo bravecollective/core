@@ -37,3 +37,6 @@ feature/configLoginHistory: The config value 'core.login_history_days' should be
     
 feature/requireKeys: The config value 'core.require_recommended_key' should be added to the config to indicate whether
     the recommended key settings are required to authorize any application.
+    
+feature/configPassReqs: The config value 'core.required_pass_strength' should be added to the config to the value of
+    the zxcvbn score the admin wants to require of all passwords.
