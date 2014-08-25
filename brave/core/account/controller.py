@@ -8,7 +8,7 @@ from web.core.http import HTTPFound, HTTPSeeOther, HTTPForbidden, HTTPNotFound
 from web.core.locale import _
 from mongoengine import ValidationError, NotUniqueError
 
-from brave.core.account.model import User, PasswordRecovery
+from brave.core.account.model import User, PasswordRecovery, TimeOTP, YubicoOTP
 from brave.core.account.form import authenticate as authenticate_form, register as register_form, \
     recover as recover_form, reset_password as reset_password_form
 from brave.core.account.authentication import lookup_email, send_recover_email
@@ -251,7 +251,7 @@ class Settings(HTTPMethod):
 
             user.password = data.passwd
             user.save()
-        elif data.form == "addotp":
+        elif data.form == "addyubicootp":
             if isinstance(data.password, unicode):
                 data.password = data.password.encode('utf-8')
 
@@ -272,14 +272,27 @@ class Settings(HTTPMethod):
 
             if not status:
                 return 'json:', dict(success=False, message=_("Failed to verify key."), data=data)
+            
+            otp = YubicoOTP.create(identifier)
+            
+            if not user.add_otp(otp):
+                return 'json:', dict(success=False, message=_("User already has an OTP enabled."), data=data)
+        elif data.form == "addtimeotp":
+            if isinstance(data.password, unicode):
+                data.password = data.password.encode('utf-8')
 
-            if not User.addOTP(user, identifier[:12]):
-                return 'json:', dict(success=False, message=_("YubiKey already exists."), data=data)
+            if not User.password.check(user.password, data.password):
+                return 'json:', dict(success=False, message=_("Password incorrect."), data=data)
+            
+            otp = TimeOTP.create()
+            
+            if not user.add_otp(otp):
+                return 'json:', dict(success=False, message=_("User already has an OTP enabled."), data=data)
         elif data.form == "removeotp":
             identifier = data.otp
 
-            if not User.removeOTP(user, identifier[:12]):
-                return 'json:', dict(success=False, message=_("YubiKey invalid."), data=data)
+            if not user.remove_otp():
+                return 'json:', dict(success=False, message=_("User has no OTP set up on their account."), data=data)
 
         elif data.form == "configureotp":
             if isinstance(data.password, unicode):

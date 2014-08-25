@@ -41,3 +41,5 @@ feature/requireKeys: The config value 'core.require_recommended_key' should be a
 feature/otp: The 'otp' and 'rotp' fields in the 'Users' collection has been removed, so users who previously had OTP set
     up on their accounts will no longer have it enabled. The database itself has not been changed, so admins may wish to
     manually delete those fields from their databases to conserve space.
+    
+    The package 'pyotp' is now required. Running 'python setup.py develop' again should set it up for you.

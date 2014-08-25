@@ -508,7 +508,7 @@
                         '<table class="table table-hover">' +
                             '<thead>' +
                                 '<tr>' +
-                                    '<th>YubiKey ID</th>' +
+                                    '<th>OTP</th>' +
                                     '<th style="width: 16px;"></th>' +
                                 '</tr>' +
                             '</thead>' +
@@ -516,10 +516,10 @@
 
                         % if web.user.otp:
                             +
-                            '<tr id="otp-${web.user.otp}">' +
-                                '<td>${web.user.otp}</td>' +
+                            '<tr id="otp-${web.user.otp.identifier}">' +
+                                '<td>${web.user.otp.identifier}</td>' +
                                 '<td>' +
-                                    '<button data-otpusername="${web.user.username}" data-otp="${web.user.otp}" class="btn btn-danger btn-small delete"><i class="fa fa-times"></i></button>' +
+                                    '<button data-otpusername="${web.user.username}" data-otp="${web.user.otp.identifier}" class="btn btn-danger btn-small delete"><i class="fa fa-times"></i></button>' +
                                 '</td>' +
                             '</tr>'
                         +
@@ -571,10 +571,10 @@
             });
             
             % if not web.user.otp:
-            $('.addotp').on('click', function()
+            $('.addyubicootp').on('click', function()
             {
                 confirm(
-                    "Add OTP",
+                    "Add Yubico OTP",
                     '<p>' +
                         'Fill in the form below to add an YubiKey' +
                     '</p>' +
@@ -582,11 +582,69 @@
                         '<form>' +
                             '<input id="id" name="id" type="hidden" class="input-block-level" value="${web.user.username}" required>'
                                 +
-                            '<input id="form" name="form" type="hidden" class="input-block-level" value="addotp" required>'
+                            '<input id="form" name="form" type="hidden" class="input-block-level" value="addyubicootp" required>'
                                 +
                             '<input id="password" name="password" type="password" class="input-block-level" placeholder="Current Password" maxlength="100" autocomplete="off" required>'
                                 +
                             '<input id="otp" name="otp" type="text" class="input-block-level" placeholder="OTP" maxlength="44" autocomplete="off" required>'
+                                +
+                        '</form>' +
+                    '</p>',
+                    {
+                        label: "Save",
+                        kind: 'btn-success'
+                    },
+                    function()
+                    {
+                        $('#modal form .alert').remove();
+                        error = false;
+                        if ($('#password').val().length <= 0) {
+                            $('#password').addClass('error');
+                            $('#modal form input[name="password"]').after(
+                                '<div class="alert alert-error">' +
+                                    '<strong>Current password required</strong>' +
+                                '</div>'
+                            );
+                            error = true
+                        }
+                        
+                        if (error == true)
+                            return error   
+                        
+                        $('.overlay.wait').fadeIn(250);
+                        $.post('/account/settings', $('#modal form').serialize(), function(data)
+                        {
+                            console.log(data);
+                            $('.overlay.wait').fadeOut(125, function(){
+                                if (data.success) {
+                                   $('.overlay.success').fadeIn(250, function(){ window.location = data.location; });                                
+                                } else {
+                                    $('.overlay.fail').fadeIn(250, function(){
+                                        $('.overlay.fail').fadeOut(250);
+                                    });
+                                }
+                            });
+
+                        });
+                    }
+                );
+                
+            });
+            
+            $('.addtimeotp').on('click', function()
+            {
+                confirm(
+                    "Add Time-based OTP",
+                    '<p>' +
+                        'Fill in the form below to add a time-based OTP' +
+                    '</p>' +
+                    '<p>' +
+                        '<form>' +
+                            '<input id="id" name="id" type="hidden" class="input-block-level" value="${web.user.username}" required>'
+                                +
+                            '<input id="form" name="form" type="hidden" class="input-block-level" value="addtimeotp" required>'
+                                +
+                            '<input id="password" name="password" type="password" class="input-block-level" placeholder="Current Password" maxlength="100" autocomplete="off" required>'
                                 +
                         '</form>' +
                     '</p>',
@@ -648,7 +706,10 @@
             <a class="btn change"><i class="fa fa-cog"></i> Change Password</a><br /><br />
             <a class="btn changeemail"><i class="fa fa-cog"></i> Change Email Address</a><br /><br />
             <a class="btn configureotp"><i class="fa fa-cog"></i> Configure OTP</a><br /><br />
-            <a class="btn addotp"><i class="fa fa-cog"></i> Add OTP</a><br /><br />
+            % if not web.user.otp:
+            <a class="btn addyubicootp"><i class="fa fa-cog"></i> Add Yubico OTP</a><br /><br />
+            <a class="btn addtimeotp"><i class="fa fa-cog"></i> Add Time OTP</a><br /><br />
+            % endif
             <a class="btn mergeacct"><i class="fa fa-times"></i> Merge Account</a><br /><br />
             <a class="btn deleteacct"><i class="fa fa-times"></i> Delete Account</a><br /><br />
     </div>

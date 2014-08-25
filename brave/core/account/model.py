@@ -10,6 +10,7 @@ from yubico import yubico
 
 from brave.core.util.signal import update_modified_timestamp
 from brave.core.util.field import PasswordField, IPAddressField
+from pyotp import TOTP, random_base32
 
 from web.core import config
 
@@ -28,17 +29,63 @@ class OTP(EmbeddedDocument):
     # Whether the OTP is required.
     required = BooleanField(db_field='r', default=True)
     
-    def validate(self, response):
+    def verify(self, response):
         """Validates the response to see if it matches our computed value."""
         raise NotImplementedError
     
+
+class TimeOTP(OTP):
+    """OTP sub-class for an RFC 4226 compliant one time password."""
+    
+    def __init__(self, identifier, *args, **kwargs):
+        """Check that the provided identifier is 16 characters. This was done to ensure that the identifier
+        field is a StringField across all subclasses, and as far as I know, it is not possible to add additional
+        restrictions to a field that is declared in a parent class. Note that the identifier in this case is the
+        shared secret."""
+        
+        if len(identifier) != 16:
+            raise ValidationError('The identifier for TimeOTPs must be 16 characters.')
+            
+        super(TimeOTP, self).__init__(identifier=identifier, *args, **kwargs)
+        
+    def verify(self, response):
+        """Checks response for validity, taking into account the current time."""
+        
+        return self.otp.verify(response)
+    
+    @property
+    def uri(self):
+        """Returns the provisioning URI for this OTP object."""
+        
+        owner = User.objects(otp__identifier=self.identifier).first()
+        
+        if not owner:
+            log.warning("Apparently no one owns the OTP with identifier {0}".format(self.identifier))
+            return None
+            
+        return self.otp.provisioning_uri("Core Auth - " + self.owner.username) 
+            
+        
+    @property
+    def otp(self):
+        """Returns the PyOTP TOTP representation of this object. This is used for things such as creating provisioning
+        URIs, QR Codes, and verifying user responses."""
+        
+        return TOTP(self.identifier)
+    
+    @classmethod
+    def create(cls):
+        """Creates and returns a new TimeOTP object."""
+        otp = cls(identifier=random_base32(), required=True)
+        return otp
+
 
 class YubicoOTP(OTP):
     """OTP sub-class for handling Yubico OTPs registered to user accounts."""
     
     def __init__(self, identifier, *args, **kwargs):
         """Check that the provided identifier is 12 or fewer characters. This was done to ensure that the identifier
-        field is a StringField across all sdubclasses, and as far as I know, it is not possible to add additional
+        field is a StringField across all subclasses, and as far as I know, it is not possible to add additional
         restrictions to a field that is declared in a parent class."""
         
         if len(identifier) > 12:
@@ -46,7 +93,7 @@ class YubicoOTP(OTP):
             
         super(YubicoOTP, self).__init__(identifier=identifier, *args, **kwargs)
         
-    def validate(self, response):
+    def verify(self, response):
         client = yubico.Yubico(
             config['yubico.client'],
             config['yubico.key'],
@@ -62,6 +109,12 @@ class YubicoOTP(OTP):
             return False
             
         return True
+    
+    @classmethod
+    def create(cls, yid):
+        yid = yid[:12]
+        otp = YubicoOTP(identifier=yid, required=True)
+        return otp
 
 
 @update_modified_timestamp.signal
@@ -135,24 +188,26 @@ class User(Document):
     def otp_required(self):
         return self.otp and self.otp.required
 
-    # Functions to manage YubiKey OTP
+    # Functions to manage OTPs
 
-    def addOTP(self, yid):
-        yid = yid[:12]
-        if self.otp and yid == self.otp.identifier:
+    def add_otp(self, otp):
+        """Adds otp as the user's otp value iff the user has no otp set currently."""
+        if not isinstance(otp, OTP):
             return False
-        self.otp = YubicoOTP(identifier=yid, required=True).save()
+        
+        if self.otp:
+            return False
+        
+        self.otp = otp
         self.save()
         return True
 
-    def removeOTP(self, yid):
-        yid = yid[:12]
-        if not self.otp or yid == self.otp.identifier:
-            return False
+    def remove_otp(self):
+        """Removes the user's OTP, even if it's already been disabled."""
         self.otp = None
         self.save()
         return True
-    
+        
     def merge(self, other):
         """Consumes other and takes its children."""
         
