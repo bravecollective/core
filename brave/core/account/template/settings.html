@@ -497,7 +497,7 @@
                             '<input id="password" name="password" type="password" class="input-block-level" placeholder="Current Password" maxlength="100" autocomplete="off" required>' 
                                 +
                             '<label><input type="checkbox" id="rotp" name="rotp"'
-                                %if web.user.rotp:
+                                %if web.user.otp and web.user.otp.required:
                                 +
                                 ' checked'
                                 %endif 
@@ -512,18 +512,20 @@
                                     '<th style="width: 16px;"></th>' +
                                 '</tr>' +
                             '</thead>' +
-                            '<tbody>'
+                            '<tbody>' 
 
-                        %for otp in web.user.otp:
+                        % if web.user.otp:
                             +
-                            '<tr id="otp-${otp}">' +
-                                '<td>${otp}</td>' +
+                            '<tr id="otp-${web.user.otp}">' +
+                                '<td>${web.user.otp}</td>' +
                                 '<td>' +
-                                    '<button data-otpusername="${web.user.username}" data-otp="${otp}" class="btn btn-danger btn-small delete"><i class="fa fa-times"></i></button>' +
+                                    '<button data-otpusername="${web.user.username}" data-otp="${web.user.otp}" class="btn btn-danger btn-small delete"><i class="fa fa-times"></i></button>' +
                                 '</td>' +
                             '</tr>'
-                        %endfor
                         +
+                        % else:
+                            +
+                        % endif
                             '</tbody>' +
                         '</table>' +
                     '</p>',
@@ -567,7 +569,8 @@
                 );
                 
             });
-
+            
+            % if not web.user.otp:
             $('.addotp').on('click', function()
             {
                 confirm(
@@ -627,6 +630,7 @@
                 );
                 
             });
+            % endif
         });
     </script>
 </%block>

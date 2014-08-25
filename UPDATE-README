@@ -37,3 +37,7 @@ feature/configLoginHistory: The config value 'core.login_history_days' should be
     
 feature/requireKeys: The config value 'core.require_recommended_key' should be added to the config to indicate whether
     the recommended key settings are required to authorize any application.
+    
+feature/otp: The 'otp' and 'rotp' fields in the 'Users' collection has been removed, so users who previously had OTP set
+    up on their accounts will no longer have it enabled. The database itself has not been changed, so admins may wish to
+    manually delete those fields from their databases to conserve space.

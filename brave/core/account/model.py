@@ -2,15 +2,66 @@
 
 from __future__ import unicode_literals
 
-from itertools import chain
+from marrow.util.convert import boolean
 from datetime import datetime, timedelta
-from mongoengine import Document, StringField, EmailField, DateTimeField, BooleanField, ReferenceField, ListField
+from mongoengine import Document, StringField, EmailField, DateTimeField, BooleanField, ReferenceField, ListField, ValidationError, EmbeddedDocument, EmbeddedDocumentField
 from mongoengine.fields import LongField
+from yubico import yubico
 
 from brave.core.util.signal import update_modified_timestamp
 from brave.core.util.field import PasswordField, IPAddressField
 
 from web.core import config
+
+
+class OTP(EmbeddedDocument):
+    """Generic OTP class, for saving and managing the various types of OTPs users can add to their account."""
+    
+    meta = dict(
+        allow_inheritance=True,
+        indexes=['identifier']
+    )
+    
+    # The 'unique' part of the OTP. This could be an actual identifier (in the case of a yubico OTP) or the secret
+    # of the OTP setup.
+    identifier = StringField(db_field='i')
+    # Whether the OTP is required.
+    required = BooleanField(db_field='r', default=True)
+    
+    def validate(self, response):
+        """Validates the response to see if it matches our computed value."""
+        raise NotImplementedError
+    
+
+class YubicoOTP(OTP):
+    """OTP sub-class for handling Yubico OTPs registered to user accounts."""
+    
+    def __init__(self, identifier, *args, **kwargs):
+        """Check that the provided identifier is 12 or fewer characters. This was done to ensure that the identifier
+        field is a StringField across all sdubclasses, and as far as I know, it is not possible to add additional
+        restrictions to a field that is declared in a parent class."""
+        
+        if len(identifier) > 12:
+            raise ValidationError('The identifier for YubicoOTPs must be 12 or fewer characters.')
+            
+        super(YubicoOTP, self).__init__(identifier=identifier, *args, **kwargs)
+        
+    def validate(self, response):
+        client = yubico.Yubico(
+            config['yubico.client'],
+            config['yubico.key'],
+            boolean(config.get('yubico.secure', False))
+        )
+            
+        try:
+            status = client.verify(response, return_response=True)
+        except:
+            return False
+        
+        if not status:
+            return False
+            
+        return True
 
 
 @update_modified_timestamp.signal
@@ -30,9 +81,7 @@ class User(Document):
     confirmed = DateTimeField(db_field='c')
     admin = BooleanField(db_field='d', default=False)
     
-    # TODO: Extract into a sub-document and re-name the DB fields.
-    rotp = BooleanField(default=False)
-    otp = ListField(StringField(max_length=12), default=list)
+    otp = EmbeddedDocumentField(OTP, db_field='o')
     
     primary = ReferenceField('EVECharacter')  # "Default" character to use during authz.
 
@@ -84,23 +133,23 @@ class User(Document):
 
     @property
     def otp_required(self):
-        return self.rotp and len(self.otp)
+        return self.otp and self.otp.required
 
     # Functions to manage YubiKey OTP
 
     def addOTP(self, yid):
         yid = yid[:12]
-        if yid in self.otp:
+        if self.otp and yid == self.otp.identifier:
             return False
-        self.otp.append(yid)
+        self.otp = YubicoOTP(identifier=yid, required=True).save()
         self.save()
         return True
 
     def removeOTP(self, yid):
         yid = yid[:12]
-        if not yid in self.otp:
+        if not self.otp or yid == self.otp.identifier:
             return False
-        self.otp.remove(yid)
+        self.otp = None
         self.save()
         return True
     

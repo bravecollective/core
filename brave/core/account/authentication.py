@@ -13,9 +13,7 @@ from __future__ import unicode_literals
 from random import SystemRandom
 from time import time, sleep
 from datetime import datetime
-from yubico import yubico
-from marrow.util.convert import boolean
-from web.core import config, request
+from web.core import request
 from web.core.templating import render
 from web.core.locale import _
 
@@ -95,18 +93,7 @@ def authenticate(identifier, password):
     
     # Validate Yubikey OTP
     if 'otp' in query:
-        client = yubico.Yubico(
-                config['yubico.client'],
-                config['yubico.key'],
-                boolean(config.get('yubico.secure', False))
-            )
-        
-        try:
-            status = client.verify(identifier, return_response=True)
-        except:
-            return None
-        
-        if not status:
+        if not user.otp or not user.otp.validate(identifier):
             return None
     
     user.update(set__seen=datetime.utcnow())
