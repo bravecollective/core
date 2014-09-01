@@ -13,11 +13,11 @@ from __future__ import unicode_literals
 from random import SystemRandom
 from time import time, sleep
 from datetime import datetime
-from web.core import request
+from web.core import request, session
 from web.core.templating import render
 from web.core.locale import _
 
-from brave.core.account.model import User, LoginHistory, PasswordRecovery
+from brave.core.account.model import User, LoginHistory, PasswordRecovery, YubicoOTP
 
 import brave.core.util as util
 
@@ -60,9 +60,9 @@ def authentication_logger(fn):
         return result
 
 
-# @authentication_logger
-def authenticate(identifier, password):
-    """Given an e-mail address (or Yubikey OTP) and password, authenticate a user."""
+def verify_credentials(identifier, password):
+    """Given an e-mail address (or Yubikey OTP) and password, authenticate a user and return the User object. This does
+    not set up the user in WebCore; to do that you must call authenticate."""
     
     ts = time()  # Record the 
     query = dict(active=True)
@@ -82,7 +82,8 @@ def authenticate(identifier, password):
     
     user = User.objects(**query).first()
     
-    if not user or not User.password.check(user.password, password) or (user.otp_required and not 'otp' in query):
+    if not user or not User.password.check(user.password, password) or (user.otp_required and not 'otp' in query and 
+        isinstance(user.otp, YubicoOTP)):
         if user:
             LoginHistory(user, False, request.remote_addr).save()
         
@@ -95,6 +96,18 @@ def authenticate(identifier, password):
     if 'otp' in query:
         if not user.otp or not user.otp.validate(identifier):
             return None
+            
+    session['auth'] = datetime.now()
+    session['preauth_username'] = user.username
+    session.save()
+    
+    return user
+
+
+# @authentication_logger
+def authenticate(user, *args, **kwargs):
+    """This function does not do any verification of identitiy, that MUST be done prior to calling this. What it does
+    do is set up the user object in WebCore for use else where."""
     
     user.update(set__seen=datetime.utcnow())
     
@@ -111,6 +124,11 @@ def authenticate(identifier, password):
                 User.add_duplicate(user, u, IP=True)
 
     user.save()
+    
+    session['auth'] = None
+    session['preauth_username'] = None
+    session['redirect'] = None
+    session.save()
     
     return user.id, user
 

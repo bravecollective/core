@@ -27,6 +27,11 @@ authenticate = Form('authenticate', action='/account/authenticate', method='post
         BlankSubmit('submit'),
         HiddenField('redirect'),
     ])
+    
+tfa = Form('tfa', action='/account/tfa', method='post', children=[
+        TextField('OTP', autofocus=True, class_="span12", placeholder=L_("One Time Password")),
+        BlankSubmit('submit'),
+    ])
 
 register = Form('register', action='/account/register', method='post', children=[
         TextField('username', autofocus=True, autocapitalize="off", autocorrect="off", spellcheck="false", class_="span12", placeholder=L_("User Name"), required="true", pattern="[a-zA-Z0-9 _\-\.]+", datavalidate="/account/exists", datavalidatekey="username", datavalidatecheck="available"),

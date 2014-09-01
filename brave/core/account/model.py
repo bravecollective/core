@@ -51,7 +51,12 @@ class TimeOTP(OTP):
     def verify(self, response):
         """Checks response for validity, taking into account the current time."""
         
+        response = int(response)
+        
         return self.otp.verify(response)
+    
+    def now(self):
+        return self.otp.now()
     
     @property
     def uri(self):
@@ -63,7 +68,7 @@ class TimeOTP(OTP):
             log.warning("Apparently no one owns the OTP with identifier {0}".format(self.identifier))
             return None
             
-        return self.otp.provisioning_uri("Core Auth - " + self.owner.username) 
+        return self.otp.provisioning_uri("Core Auth - " + owner.username) 
             
         
     @property
@@ -187,6 +192,10 @@ class User(Document):
     @property
     def otp_required(self):
         return self.otp and self.otp.required
+        
+    @property
+    def tfa_required(self):
+        return self.otp and self.otp.required and not isinstance(self.otp, YubicoOTP)
 
     # Functions to manage OTPs
 

@@ -3,15 +3,16 @@
 from marrow.util.bunch import Bunch
 from marrow.mailer.validator import EmailValidator
 from web.auth import authenticate, deauthenticate, user
-from web.core import Controller, HTTPMethod, request, config
+from web.core import Controller, HTTPMethod, request, config, session
 from web.core.http import HTTPFound, HTTPSeeOther, HTTPForbidden, HTTPNotFound
 from web.core.locale import _
 from mongoengine import ValidationError, NotUniqueError
+from datetime import timedelta, datetime
 
 from brave.core.account.model import User, PasswordRecovery, TimeOTP, YubicoOTP
 from brave.core.account.form import authenticate as authenticate_form, register as register_form, \
-    recover as recover_form, reset_password as reset_password_form
-from brave.core.account.authentication import lookup_email, send_recover_email
+    recover as recover_form, reset_password as reset_password_form, tfa as tfa_form
+from brave.core.account.authentication import lookup_email, send_recover_email, verify_credentials
 from brave.core.util.predicate import is_administrator
 
 from yubico import yubico
@@ -43,6 +44,36 @@ def _check_password(passwd1, passwd2):
     return True, None
 
 
+class TFA(HTTPMethod):
+    def get(self):
+        form = tfa_form()
+        return 'brave.core.account.template.tfa', dict(form=form)
+
+    def post(self, OTP=None):
+        if not OTP:
+            return 'json:', dict(success=False, message=_("You must provide a One Time Password"))
+        
+        user = User.objects.get(username=session['preauth_username'])
+        
+        if datetime.now() - session['auth'] > timedelta(minutes=15):
+            session['auth'] = None
+            session['preauth_username'] = None
+            session['redirect'] = None
+            session.save()
+            return 'json:', dict(success=False, mmessage=_("Current Session has expired, please log in again"))
+        
+        if not user.otp.verify(OTP):
+            return 'json:', dict(success=False, message=_("Incorrect One Time Password"))
+        
+        authenticate(user)
+        session['auth'] = None
+        session['preauth_username'] = None
+        session['redirect'] = None
+        session.save()
+        
+        return 'json:', dict(success=True, location=session['redirect'] or '/')
+
+
 class Authenticate(HTTPMethod):
     def get(self, redirect=None):
         if redirect is None:
@@ -54,18 +85,28 @@ class Authenticate(HTTPMethod):
 
     def post(self, identity, password, remember=False, redirect=None):
         # First try with the original input
-        success = authenticate(identity, password)
+        user = verify_credentials(identity, password)
 
-        if not success:
+        if not user:
             # Try lowercase if it's an email or username, but not if it's an OTP
             if '@' in identity or len(identity) != 44:
-                success = authenticate(identity.lower(), password)
+                user = verify_credentials(identity.lower(), password)
 
-        if not success:
+        if not user:
             if request.is_xhr:
                 return 'json:', dict(success=False, message=_("Invalid user name or password."))
 
             return self.get(redirect)
+        
+        # User has a 2FA OTP type enabled.
+        if user.otp and user.otp.required and not isinstance(user.otp, YubicoOTP):
+            session['redirect'] = redirect
+            if request.is_xhr:
+                return 'json:', dict(success=True, location='/account/tfa')
+            
+            raise HTTPFound(location='/account/tfa')
+            
+        authenticate(user)
 
         if request.is_xhr:
             return 'json:', dict(success=True, location=redirect or '/')
@@ -441,6 +482,7 @@ class AccountController(Controller):
     register = Register()
     settings = Settings()
     recover = Recover()
+    tfa = TFA()
     
     def exists(self, **query):
         query.pop('ts', None)
