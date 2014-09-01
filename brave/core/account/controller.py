@@ -348,7 +348,7 @@ class Settings(HTTPMethod):
             if not User.password.check(user.password, data.password):
                 return 'json:', dict(success=False, message=_("Password incorrect."), data=data)
             
-            user.rotp = rotp
+            user.otp.required = rotp
             user.save()
             
         #Handle the user attempting to delete their account
