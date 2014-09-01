@@ -126,6 +126,8 @@ class EVECredential(Document):
         char.corporation, char.alliance = self.get_membership(info)
 
         char.name = info.name if 'name' in info else info.characterName
+        if not isinstance(char.name, basestring):
+            char.name = str(char.name)
         char.owner = self.owner
         if self not in char.credentials:
             char.credentials.append(self)
