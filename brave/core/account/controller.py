@@ -66,7 +66,7 @@ class TFA(HTTPMethod):
         
         if datetime.now() - session['auth'] > timedelta(minutes=15):
             self.clear_session()
-            return 'json:', dict(success=False, mmessage=_("Current Session has expired, please log in again"))
+            return 'json:', dict(success=False, message=_("Current Session has expired, please log in again"))
         
         # TODO: Give them 3 tries to fail the OTP before requiring username and pass again
         if not user.otp.verify(OTP):

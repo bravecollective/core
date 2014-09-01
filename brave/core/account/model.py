@@ -15,6 +15,9 @@ from pyotp import TOTP, random_base32
 from web.core import config
 
 
+log = __import__('logging').getLogger(__name__)
+
+
 class OTP(EmbeddedDocument):
     """Generic OTP class, for saving and managing the various types of OTPs users can add to their account."""
     
