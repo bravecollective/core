@@ -4,7 +4,7 @@ from marrow.util.bunch import Bunch
 from marrow.mailer.validator import EmailValidator
 from web.auth import authenticate, deauthenticate, user
 from web.core import Controller, HTTPMethod, request, config
-from web.core.http import HTTPFound, HTTPSeeOther, HTTPForbidden, HTTPNotFound
+from web.core.http import HTTPFound, HTTPSeeOther, HTTPForbidden, HTTPNotFound, HTTPBadRequest
 from web.core.locale import _
 from mongoengine import ValidationError, NotUniqueError
 
@@ -459,6 +459,8 @@ class AccountController(Controller):
         deauthenticate()
         raise HTTPSeeOther(location='/')
         
-    def __lookup__(self, user, *args, **kw):
+    def __lookup__(self, user=None, *args, **kw):
+        if not user:
+            raise HTTPBadRequest
         request.path_info_pop()  # We consume a single path element.
         return AccountInterface(user), args
