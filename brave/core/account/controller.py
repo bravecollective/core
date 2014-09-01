@@ -53,7 +53,7 @@ class TFA(HTTPMethod):
         session['preauth_username'] = None
         session['redirect'] = None
         session.save()
-        
+    
     def get(self):
         form = tfa_form()
         return 'brave.core.account.template.tfa', dict(form=form)

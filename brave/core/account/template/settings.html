@@ -60,6 +60,30 @@
                     $('#modal').remove();
                 }).modal();
             }
+            
+            function display(title, content)
+            {
+                var modal2 = $(
+                '<div id="modal" class="modal hide fade">' +
+                    '<div class="modal-header">' +
+                        '<button type="button" class="close" data-dismiss="modal2" aria-hidden="true">&times;</button>' +
+                        '<h3>' + title + '</h3>' +
+                    '</div>' +
+                    '<div class="modal-body">' + content + '</div>' +
+                '</div>').appendTo('body');
+
+                $('#modal .btn.success').on('click', function(e)
+                {
+
+                    e.preventDefault();
+                    $('#modal').modal('hide')
+                });
+
+                $('#modal').on('hidden', function()
+                {
+                    $('#modal').remove();
+                }).modal();
+            }
 
             $(document).on('click', '.delete', function()
             {
@@ -255,6 +279,21 @@
                 );
                 
             });
+            
+            % if web.user.otp:
+            
+            $('.viewotp').on('click', function()
+            {
+                display(
+                    "View OTP QR Code",
+                    '<p>' +
+                    'Scan the QR Code below to add the OTP.' +
+                    '</p>' +
+                    '<img src="https://chart.googleapis.com/chart?cht=qr&chs=200x200&chld=Q&chl=${web.user.otp.uri}">');
+                
+            });
+            
+            % endif
             
             $('.deleteacct').on('click', function()
             {
@@ -709,6 +748,8 @@
             % if not web.user.otp:
             <a class="btn addyubicootp"><i class="fa fa-cog"></i> Add Yubico OTP</a><br /><br />
             <a class="btn addtimeotp"><i class="fa fa-cog"></i> Add Time OTP</a><br /><br />
+            % else:
+            <a class="btn viewotp"><i class="fa fa-cog"></i> View OTP QR Code</a><br /><br />
             % endif
             <a class="btn mergeacct"><i class="fa fa-times"></i> Merge Account</a><br /><br />
             <a class="btn deleteacct"><i class="fa fa-times"></i> Delete Account</a><br /><br />
