@@ -74,7 +74,6 @@ class TFA(HTTPMethod):
             return 'json:', dict(success=False, message=_("Incorrect One Time Password"))
         
         authenticate(user)
-        self.clear_session()
         
         return 'json:', dict(success=True, location=session['redirect'] or '/')
 

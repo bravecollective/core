@@ -109,8 +109,6 @@ def authenticate(user, *args, **kwargs):
     """This function does not do any verification of identitiy, that MUST be done prior to calling this. What it does
     do is set up the user object in WebCore for use else where."""
     
-    from brave.core.account.controller import TFA
-    
     user.update(set__seen=datetime.utcnow())
     
     # Record the fact the user signed in.
@@ -126,8 +124,6 @@ def authenticate(user, *args, **kwargs):
                 User.add_duplicate(user, u, IP=True)
 
     user.save()
-    
-    TFA.clear_session()
     
     return user.id, user
 
