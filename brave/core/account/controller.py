@@ -45,6 +45,15 @@ def _check_password(passwd1, passwd2):
 
 
 class TFA(HTTPMethod):
+    
+    @staticmethod
+    def clear_session():
+        """This nullifies all TFA related session values for the current session."""
+        session['auth'] = None
+        session['preauth_username'] = None
+        session['redirect'] = None
+        session.save()
+        
     def get(self):
         form = tfa_form()
         return 'brave.core.account.template.tfa', dict(form=form)
@@ -56,20 +65,16 @@ class TFA(HTTPMethod):
         user = User.objects.get(username=session['preauth_username'])
         
         if datetime.now() - session['auth'] > timedelta(minutes=15):
-            session['auth'] = None
-            session['preauth_username'] = None
-            session['redirect'] = None
-            session.save()
+            self.clear_session()
             return 'json:', dict(success=False, mmessage=_("Current Session has expired, please log in again"))
         
+        # TODO: Give them 3 tries to fail the OTP before requiring username and pass again
         if not user.otp.verify(OTP):
+            self.clear_session()
             return 'json:', dict(success=False, message=_("Incorrect One Time Password"))
         
         authenticate(user)
-        session['auth'] = None
-        session['preauth_username'] = None
-        session['redirect'] = None
-        session.save()
+        self.clear_session()
         
         return 'json:', dict(success=True, location=session['redirect'] or '/')
 
