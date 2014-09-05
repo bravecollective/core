@@ -89,6 +89,11 @@ class Permission(Document):
                     perms = perms[size/2:]
                     break
                 
+                wild_perm = '.'.join(perm_segs[x] for x in range(0, i))
+                wild_perm += '.*'
+                if Permission.objects(id=wild_perm).first() and Permission.objects(id=wild_perm).first() in perms:
+                    return True
+                
                 if perm_segs[i] == segments[i] or perm_segs[i] == '*':
                     continue
                 elif perm_segs[i] < segments[i]:
