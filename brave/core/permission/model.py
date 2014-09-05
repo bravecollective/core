@@ -60,7 +60,7 @@ class Permission(Document):
         return(self.id == perm_string)
     
     @staticmethod
-    def set_grants_permission(perms, granted_perm):
+    def set_grants_permission(perms, permission):
         """Loops through a set of permissions and checks if any of them grants the desired permission."""
         
         if not perms:
@@ -83,11 +83,12 @@ class Permission(Document):
             
             perm_segs = current_perm.id.split('.')
             
-            if len(segments) > len(perm_segs) and perm_segs[len(perm_segs)-1] != '*':
-                perms = perms[size/2:]
-                continue
-            
             for i in range(0, len(segments)):
+                
+                if i >= len(perm_segs):
+                    perms = perms[size/2:]
+                    break
+                
                 if perm_segs[i] == segments[i] or perm_segs[i] == '*':
                     continue
                 elif perm_segs[i] < segments[i]:
