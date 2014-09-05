@@ -63,9 +63,39 @@ class Permission(Document):
     def set_grants_permission(perms, granted_perm):
         """Loops through a set of permissions and checks if any of them grants the desired permission."""
         
-        for p in perms:
-            if p.grants_permission(granted_perm):
+        if not perms:
+            return False
+        
+        sorted(perms)
+        
+        # Since * will always be at the top of the sorted iterable, we can check for it as a quick optimisation
+        if perms[0].id == '*':
+            return True
+        
+        segments = permission.split('.')
+        
+        while len(perms) > 1:
+            size = len(perms)
+            current_perm = perms[size/2]
+            
+            if current_perm.grants_permission(permission):
                 return True
+            
+            perm_segs = current_perm.id.split('.')
+            
+            if len(segments) > len(perm_segs) and perm_segs[len(perm_segs)-1] != '*':
+                perms = perms[size/2:]
+                continue
+            
+            for i in range(0, len(segments)):
+                if perm_segs[i] == segments[i] or perm_segs[i] == '*':
+                    continue
+                elif perm_segs[i] < segments[i]:
+                    perms = perms[size/2:]
+                    break
+                else:
+                    perms = perms[:size/2]
+                    break
         
         return False
     

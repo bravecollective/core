@@ -254,6 +254,8 @@ class EVECharacter(EVEEntity):
             
             permissions |= perm.get_permissions()
         
+        permissions = list(permissions)
+        permissions.sort()
         return permissions
         
     def permissions_tags(self, application=None):
