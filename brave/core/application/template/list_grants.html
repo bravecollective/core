@@ -99,7 +99,9 @@
                             <time class="relative" datetime="${record.id.generation_time |n,f.iso}">${record.id.generation_time |n,f.pretty}</time>
                         </td>
                         <td class="actions">
-                            <a class="btn btn-small" href="/application/${record.id}/" rel="modal" title="Edit application permissions." rel="tooltip" data-placement="left" data-trigger="genericform"><i class="fa fa-pencil"></i></a>
+                            % if not record.application.require_all_chars:
+                                <a class="btn btn-small" href="/application/${record.id}/" rel="modal" title="Edit application permissions." rel="tooltip" data-placement="left" data-trigger="genericform"><i class="fa fa-pencil"></i></a>
+                            % endif
                             <button class="btn btn-danger btn-small delete" title="Revoke application permissions." rel="tooltip" data-placement="left"><i class="fa fa-times"></i></button>
                         </td>
                     </tr>

@@ -55,7 +55,10 @@
 
                 // Submit XHR request.
                 var chars = $('button.active').map(function (i, val){ return $(val).data('id');}).get();
-                var data = {grant: true, 'characters': chars};
+                var all_chars = chars.indexOf('all');
+                chars[all_chars] = null;
+                all_chars = all_chars > -1;
+                var data = {grant: true, 'characters': chars, 'all_chars': all_chars};
                 var receipt = $.post(window.location, data);
                 receipt.fail(function(jqXHR, textStatus, errorThrown){
                     // Something went wrong.
@@ -128,48 +131,6 @@
 <div class="box">
     <div class="content-wrap authentication clearfix">
         <div class="auth row">
-            <div class="span9">
-                <h6>${_("Granting Authorization")}</h6>
-
-                <blockquote data-application="${ar.application.name | h}"></blockquote>
-
-                <p>This application wishes to know certain information about your character.  All applications are given access to the following information:</p>
-
-                <ul>
-                    <li><strong>Public Character Information</strong><span class="pull-right">Name, Corporation, Alliance</span></li>
-                </ul>
-
-                % if ar.application.mask.required:
-                    <p>Additionally, this application requires the following additional information:</p>
-            
-                    <ul>
-                <%
-                 from brave.core.util.eve import EVECharacterKeyMask
-                 k = EVECharacterKeyMask(ar.application.mask.required) 
-                %>
-                % for func in k.functionsAllowed():
-                    <li>${func.name[5:]}</li>
-                % endfor
-            </ul>
-            % endif
-                <div id="alerts">
-                </div>
-            </div>
-            <div class="span3">
-                <div class="btn-group btn-group-vertical" data-toggle="buttons-checkbox">
-                    % for record in characters:
-                    % if record == default:
-                    <button class="btn btn-checkbox active" data-id="${record.id}">
-                    % else:
-                    <button class="btn btn-checkbox" data-id="${record.id}">
-                    % endif
-                    <figure>
-                        <img src="//image.eveonline.com/Character/${record.identifier}_32.jpg">
-                        <figcaption><small>${record.name}</small><figcaption>
-                    </figure>
-                    </button>
-                    % endfor
-                    <button class="btn btn-success allow">Authorize</button>
         <div class="auth">
             <h6>${_("Granting Authorization")}</h6>
             
@@ -194,23 +155,38 @@
                 % endfor
             </ul>
             % endif
-            
-            <div style="text-align: right; margin-top: 30px;">
-                <div class="btn-group dropup">
-                    <a class="btn btn-success btn-large allow" style="padding-left: 50px;" href="#" data-id="${default.id}"><img src="//image.eveonline.com/Character/${default.identifier}_32.jpg" style="border-radius: 4px; position: absolute; left: 4px; top: 4px; border: 1px inset rgba(127,127,127,0.5); height: 32px;"> Authorize</a>
-                    <a class="btn btn-success btn-large dropdown-toggle" data-toggle="dropdown" href="#"><i class="fa fa-caret-up"></i></a>
-                    <ul class="dropdown-menu" style="width: 300px; left: auto; right: 0px;">
+            <div class="span6">
+                <div class="btn-group btn-group-vertical" data-toggle="buttons-checkbox">
+                    % if default == 'all':
+                        <button class="btn btn-checkbox active" data-id="all">
+                    % else:
+                        <button class="btn btn-checkbox" data-id="all">
+                    % endif
+                    <figure>
+                        <figcaption><small>${"All Characters"}</small><figcaption>
+                    </figure>
+                    
+                    % if default != 'all':
                         % for record in characters:
-                        <li><a tabindex="-1" href="#" data-id="${record.id}" class="allow"><span class="ellipsis">
-                            <img src="//image.eveonline.com/Character/${record.identifier}_32.jpg" style="vertical-align: -60%; margin-right: 5px; border-radius: 6px; width: 32px; height: 32px;">
-                            <strong>${record.name | h}</strong>
-                            % if default == record:
-                            <span class="label label-inverse" style="margin-left: 5px;">Default</span>
+                            % if record == default:
+                                <button class="btn btn-checkbox active" data-id="${record.id}">
+                            % else:
+                                <button class="btn btn-checkbox" data-id="${record.id}">
                             % endif
-                        </span></a></li>
+                            <figure>
+                                <img src="//image.eveonline.com/Character/${record.identifier}_32.jpg">
+                                <figcaption><small>${record.name}</small><figcaption>
+                            </figure>
+                            </button>
                         % endfor
-                    </ul>
+                    % endif
+                    <button class="btn btn-success allow">Authorize</button>
                 </div>
+            </div>
+            
+            <div class="span3">
+            <div style="text-align: right; margin-top: 30px;">
+            
                 <a class="btn btn-inverse pull-left" style="margin-top: 15px;">Deny Authorization</a>
             </div>
         </div>

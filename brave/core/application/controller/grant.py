@@ -59,6 +59,8 @@ class GrantInterface(HTTPMethod):
         for key, value in valid.items():
 
             if key == 'all':
+                if not value and grant.application.require_all_chars:
+                    continue
                 grant.all_chars = value
                 continue
             
