@@ -110,13 +110,21 @@ class ApplicationGrant(Document):
     # Deprecated
     character = ReferenceField('EVECharacter', db_field='c')
     
-    characters = ListField(ReferenceField('EVECharacter'), db_field='chars', required=True)
+    chars = ListField(ReferenceField('EVECharacter'), db_field='chars', required=True)
+    all_chars = BooleanField(db_field='b', default=False)
     _mask = IntField(db_field='m', default=0)
     
     immutable = BooleanField(db_field='i', default=False)  # Onboarding is excempt from removal by the user.
     expires = DateTimeField(db_field='x')  # Default grant is 30 days, some applications exempt.  (Onboarding, Jabber, TeamSpeak, etc.)
     
     # Python Magic Methods
+    
+    @property
+    def characters(self):
+        if self.all_chars:
+            return self.user.characters
+        
+        return self.chars
     
     @property
     def default_character(self):

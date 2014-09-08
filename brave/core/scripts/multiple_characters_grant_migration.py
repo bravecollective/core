@@ -9,7 +9,7 @@ def migrate_characters(dry_run=True):
         print '{g.application.name} - {g.character.name}'.format(g=grant)
         count += 1
         if not dry_run:
-            grant.characters = [grant.character]
+            grant.chars = [grant.character]
             grant.character = None
             grant.save()
 

@@ -37,10 +37,14 @@ class GrantInterface(HTTPMethod):
 
         grant = self.grant
         user = grant.user
+        
+        data = {str(c.identifier):(c in grant.characters) for c in user.characters}
+        data['all'] = grant.all_chars
+        
         return 'brave.core.template.form', dict(
                 kind = _('Application Grant'),
                 form = edit_grant(grant),
-                data = {str(c.identifier):(c in grant.characters) for c in user.characters},
+                data = data,
             )
 
     @authenticate
@@ -53,6 +57,14 @@ class GrantInterface(HTTPMethod):
 
         new_characters = []
         for key, value in valid.items():
+
+            if key == 'all':
+                grant.all_chars = value
+                continue
+            
+            if not value:
+                continue
+            
             try:
                 character = EVECharacter.objects.get(identifier=int(key))
             except EVECharacter.DoesNotExist:
@@ -60,7 +72,7 @@ class GrantInterface(HTTPMethod):
             new_characters.append(character)
 
         if new_characters:
-            grant.characters = new_characters
+            grant.chars = new_characters
             grant.save()
         else:
             grant.delete()

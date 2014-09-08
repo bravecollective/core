@@ -45,6 +45,7 @@ def manage_form(action='/application/manage/'):
 
 def edit_grant(grant):
     boxes = []
+    boxes.append(CheckboxField('all', 'All Characters', title=''))
     for character in grant.user.characters:
         boxes.append(CheckboxField(str(character.identifier), character.name, title=''))
     return Form('grant', action='/application/{}'.format(grant.id), method='post',
