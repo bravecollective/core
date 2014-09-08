@@ -184,15 +184,14 @@ class CoreAPI(SignedController):
         
         # Step 1: Get the appropriate grant.
         token = ApplicationGrant.objects.get(id=token, application=request.service)
-
+        
         # Step 2: Assemble the information for each character
         characters_info = []
-        tags = None
-        character = None
-        index = 0
-        while index < len(token.characters):
-            char = token.characters[index]
-
+        character = token.default_character
+        
+        tags = []
+        
+        for char in token.characters:
             # Ensure that this character still belongs to this user
             if char.owner != token.user:
                 token.remove_character(char)
@@ -200,8 +199,6 @@ class CoreAPI(SignedController):
                     token.reload()
                 except ApplicationGrant.DoesNotExist:
                     break
-            else:
-                index += 1
 
             # Fill in the character info
             character_info = {
@@ -226,26 +223,21 @@ class CoreAPI(SignedController):
             for group in Group.objects(id__in=request.service.groups):
                 if group.evaluate(token.user, char):
                     char_tags.append(group.id)
+                    if char == token.default_character:
+                        tags.append(group.id)
             character_info['tags'] = char_tags
-            if character_info['primary']:
-                character = char
-                tags = char_tags
+            character_info['perms'] = char.permissions_tags(token.application)
 
             characters_info.append(character_info)
-        else:
-            # Step 3: Backwards compatibility for apps using the old API
-            if character is None:
-                # There are multiple characters, and none of them are the primary character. Just picking one now.
-                character = token.characters[0]
-                tags = characters_info[0]['tags']
-
-            return dict(
-                    character = dict(id=character.identifier, name=character.name),
-                    corporation = dict(id=character.corporation.identifier, name=character.corporation.name),
-                    alliance = dict(id=character.alliance.identifier, name=character.alliance.name) if character.alliance else None,
-                    characters = characters_info,
-                    tags = tags,
-                    perms = character.permissions_tags(token.application),
-                    expires = None,
-                    mask = token.mask
-                )
+            
+        return dict(
+            character = dict(id=character.identifier, name=character.name),
+            corporation = dict(id=character.corporation.identifier, name=character.corporation.name),
+            alliance = dict(id=character.alliance.identifier, name=character.alliance.name) if character.alliance else None,
+            characters = characters_info,
+            tags = tags,
+            perms = character.permissions_tags(token.application),
+            expires = None,
+            mask = token.mask
+        )
+            

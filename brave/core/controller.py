@@ -92,7 +92,7 @@ class AuthorizeHandler(HTTPMethod):
                      
             return 'brave.core.template.authorize', dict(success=True, ar=ar, characters=chars, default=default)
 
-        ngrant = ApplicationGrant(user=u, application=ar.application, mask=grant.mask, expires=datetime.utcnow() + timedelta(days=ar.application.expireGrantDays), character=grant.character)
+        ngrant = ApplicationGrant(user=u, application=ar.application, mask=grant.mask, expires=datetime.utcnow() + timedelta(days=ar.application.expireGrantDays), characters=grant.characters)
         ngrant.save()
         
         ar.user = u

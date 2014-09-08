@@ -107,7 +107,9 @@ class ApplicationGrant(Document):
     user = ReferenceField('User', db_field='u')
     application = ReferenceField(Application, db_field='a')
     
+    # Deprecated
     character = ReferenceField('EVECharacter', db_field='c')
+    
     characters = ListField(ReferenceField('EVECharacter'), db_field='chars', required=True)
     _mask = IntField(db_field='m', default=0)
     
@@ -115,6 +117,18 @@ class ApplicationGrant(Document):
     expires = DateTimeField(db_field='x')  # Default grant is 30 days, some applications exempt.  (Onboarding, Jabber, TeamSpeak, etc.)
     
     # Python Magic Methods
+    
+    @property
+    def default_character(self):
+        """This is used for backwards compatability for old single character grants."""
+        if self.character:
+            return self.character
+        
+        for c in self.characters:
+            if c == c.owner.primary:
+                return c
+        
+        return self.characters[0]
     
     @property
     def mask(self):
