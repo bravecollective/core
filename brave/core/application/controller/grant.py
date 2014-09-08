@@ -12,7 +12,7 @@ from brave.core.application.controller.manage import ManagementController
 from brave.core.application.model import ApplicationGrant
 from brave.core.application.form import edit_grant
 from brave.core.character.model import EVECharacter
-from brave.core.util.predicate import authorize, authenticated
+from brave.core.util.predicate import authorize, authenticate
 
 
 log = __import__('logging').getLogger(__name__)
@@ -30,7 +30,7 @@ class GrantInterface(HTTPMethod):
         if self.grant.user.id != user.id:
             raise HTTPNotFound()
 
-    @authorize(authenticated)
+    @authenticate
     def get(self):
         if not request.is_xhr:
             raise HTTPNotFound()
@@ -43,7 +43,7 @@ class GrantInterface(HTTPMethod):
                 data = {str(c.identifier):(c in grant.characters) for c in user.characters},
             )
 
-    @authorize(authenticated)
+    @authenticate
     def post(self, **kwargs):
         if not request.is_xhr:
             raise HTTPNotFound()
@@ -67,7 +67,7 @@ class GrantInterface(HTTPMethod):
 
         return 'json:', {'success': True}
 
-    @authorize(authenticated)
+    @authenticate
     def delete(self):
         log.info("REVOKE %r %r", self.grant.user, self.grant.application)
         
@@ -90,7 +90,7 @@ class GrantInterface(HTTPMethod):
 
 
 class GrantList(HTTPMethod):
-    @authorize(authenticated)
+    @authenticate
     def get(self):
         records = ApplicationGrant.objects(
                 user = user._current_obj()

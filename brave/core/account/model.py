@@ -10,6 +10,11 @@ from mongoengine.fields import LongField
 from brave.core.util.signal import update_modified_timestamp
 from brave.core.util.field import PasswordField, IPAddressField
 
+from web.core import config
+
+
+log = __import__('logging').getLogger(__name__)
+
 
 @update_modified_timestamp.signal
 class User(Document):
@@ -42,6 +47,9 @@ class User(Document):
     # because IP address IDing can cause mis-IDs
     other_accs_char_key = ListField(ReferenceField('User'), db_field='otherAccountsCharKey')
     other_accs_IP = ListField(ReferenceField('User'), db_field='otherAccountsIP')
+    
+    # Permissions
+    VIEW_PERM = 'core.account.view.{account_id}'
     
     # Python Magic Methods
     
@@ -124,19 +132,66 @@ class User(Document):
         self.grants.delete()
         self.attempts.delete()
         self.recovery_keys.delete()
+        
+        dups = set(self.other_accs_char_key)
+        
+        for other in dups:
+            self.remove_duplicate(self, other)
+            
+        dups = set(self.other_accs_IP)
+        
+        for other in dups:
+            self.remove_duplicate(self, other, IP=True)
+        
         super(User, self).delete()
+    
+    @property
+    def permissions(self):
+        """Returns all permissions that any character this user owns has."""
+        
+        perms = set()
+        
+        for c in self.characters:
+            for p in c.permissions():
+                perms.add(p)
+                
+        return perms
+        
+    def has_permission(self, permission):
+        """Accepts both Permission objects and Strings. Returns the first character found with that permission,
+           preferring the user's primary character."""
+        
+        from brave.core.group.model import Permission
+        
+        if isinstance(permission, Permission):
+            permission = permission.id
+        
+        log.debug('Checking if user has permission {0}'.format(permission))
+        
+        # Check the primary character first, and if they have the permission return them.
+        if self.primary:
+            for p in self.primary.permissions():
+                if p.grants_permission(permission):
+                    return self.primary
+                
+        # Primary didn't have permission, check if the other characters do.
+        for c in self.characters:
+            for p in c.permissions():
+                if p.grants_permission(permission):
+                    return c
+                
+        return None
         
     @staticmethod
-    def add_duplicate(acc, other, **kw):
+    def add_duplicate(acc, other, IP=False):
         """Marks other as a duplicate account to this account.
-        And marks this account as duplicate to other.
+        And marks this account as duplicate to other."""
         
-        kw should include an argument IP, which defaults to False"""
         # If the 2 accounts supplied are the same, do nothing
         if acc.id == other.id:
             return
         
-        if not kw.get('IP'):
+        if not IP:
             if other not in acc.other_accs_char_key:
                 acc.other_accs_char_key.append(other)
             if acc not in other.other_accs_char_key:
@@ -149,6 +204,34 @@ class User(Document):
                 
         acc.save()
         other.save()
+        
+    @staticmethod
+    def remove_duplicate(acc, other, IP=False):
+        """Removes a duplicate account connection for both accounts."""
+        
+        # If the 2 accounts supplied are the same, do nothing
+        if acc.id == other.id:
+            return
+        
+        if not IP:
+            if other in acc.other_accs_char_key:
+                acc.other_accs_char_key.remove(other)
+            if acc in other.other_accs_char_key:
+                other.other_accs_char_key.remove(acc)
+        else:
+            if other in acc.other_accs_IP:
+                acc.other_accs_IP.remove(other)
+            if acc in other.other_accs_IP:
+                other.other_accs_IP.remove(acc)
+                
+        acc.save()
+        other.save()
+    
+    @property
+    def view_perm(self):
+        """Returns the permission required to view this user's account details."""
+        return self.VIEW_PERM.format(account_id=str(self.id))
+
 
 class LoginHistory(Document):
     meta = dict(
@@ -164,13 +247,14 @@ class LoginHistory(Document):
     user = ReferenceField(User)
     success = BooleanField(db_field='s', default=True)
     location = IPAddressField(db_field='l')
-    expires = DateTimeField(db_field='e', default=lambda: datetime.utcnow() + timedelta(days=30))
+    # Will throw an exception if the config has a non integer config value
+    expires = DateTimeField(db_field='e', default=lambda: datetime.utcnow() + timedelta(days=int(config['core.login_history_days'])))
     
     def __repr__(self):
         return 'LoginHistory({0}, {1}, {2}, {3})'.format(
                 self.id.generation_time.isoformat(),
                 'PASS' if self.success else 'FAIL',
-                self.user_id,
+                self.user.username,
                 self.location
             )
 
@@ -196,6 +280,6 @@ class PasswordRecovery(Document):
     def __repr__(self):
         return 'PasswordRecovery({0}, {1}, {2})'.format(
             self.id.generation_time.isoformat(),
-            self.user_id,
+            self.user.username,
             self.recovery_key
         )

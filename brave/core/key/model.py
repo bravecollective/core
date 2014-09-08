@@ -12,6 +12,7 @@ from brave.core.util import strip_tags
 from brave.core.util.signal import update_modified_timestamp, trigger_api_validation
 from brave.core.util.eve import api, EVECharacterKeyMask, EVECorporationKeyMask
 
+from web.core import config
 
 log = __import__('logging').getLogger(__name__)
 
@@ -30,7 +31,7 @@ class EVECredential(Document):
                 ],
         )
     
-    key = IntField(db_field='k')
+    key = IntField(db_field='k', unique=True)
     code = StringField(db_field='c')
     kind = StringField(db_field='t')
     _mask = IntField(db_field='a', default=0)
@@ -45,6 +46,10 @@ class EVECredential(Document):
     violation = StringField(db_field='s')
     
     modified = DateTimeField(db_field='m', default=datetime.utcnow)
+    
+    # Permissions
+    VIEW_PERM = 'core.key.view.{credential_key}'
+    LIST_PERM = 'core.key.list.all'
     
     def __repr__(self):
         return 'EVECredential({0}, {1}, {2}, {3!r})'.format(self.id, self.kind, self._mask, self.owner)
@@ -92,8 +97,10 @@ class EVECredential(Document):
         from brave.core.character.model import EVEAlliance, EVECorporation, EVECharacter
         try:
             char = EVECharacter(identifier=info.characterID).save()
+            new = True
         except NotUniqueError:
             char = EVECharacter.objects(identifier=info.characterID)[0]
+            new = False
             
             if char.owner and self.owner != char.owner:
                 log.warning("Security violation detected. Multiple accounts trying to register character %s, ID %d. "
@@ -107,10 +114,17 @@ class EVECredential(Document):
         
                 return
 
-        if self.mask.has_access(api.char.CharacterSheet.mask):
-            info = api.char.CharacterSheet(self, characterID=info.characterID)
-        elif self.mask.has_access(api.char.CharacterInfoPublic.mask):
-            info = api.char.CharacterInfoPublic(self, characterID=info.characterID)
+        try:
+            if self.mask.has_access(api.char.CharacterSheet.mask):
+                info = api.char.CharacterSheet(self, characterID=info.characterID)
+            elif self.mask.has_access(api.char.CharacterInfoPublic.mask):
+                info = api.char.CharacterInfoPublic(self, characterID=info.characterID)
+        except Exception:
+            log.warning("An error occured while querying data for key %s.", self.key)
+            if new:
+                char.delete()
+            
+            raise
 
         char.corporation, char.alliance = self.get_membership(info)
 
@@ -192,7 +206,17 @@ class EVECredential(Document):
         self.mask = int(result['accessMask'])
         self.kind = result['type']
         self.expires = datetime.strptime(result['expires'], '%Y-%m-%d %H:%M:%S') if result.get('expires', None) else None
-        self.verified = self._mask != 0
+        
+        try:
+            rec_mask = int(config['core.recommended_key_mask'])
+            kind_acceptable = self.kind == config['core.recommended_key_kind']
+            # Account keys are acceptable in place of Character keys
+            if not kind_acceptable and config['core.recommended_key_kind'] == 'Character' and self.kind == 'Account':
+                kind_acceptable = True
+            self.verified = self.mask.has_access(rec_mask) and kind_acceptable
+        except ValueError:
+            log.warn("core.recommended_key_mask MUST be an integer.")
+            self.verified = False
         
         if not result.characters.row:
             log.error("No characters returned for key %d?", self.key)
@@ -224,3 +248,7 @@ class EVECredential(Document):
         self.modified = datetime.utcnow()
         self.save()
         return self
+    
+    @property
+    def view_perm(self):
+        return self.VIEW_PERM.format(credential_key=str(self.key))

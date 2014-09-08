@@ -14,12 +14,60 @@ from marrow.util.convert import boolean
 from brave.core.api.model import AuthenticationBlacklist, AuthenticationRequest
 from brave.core.api.util import SignedController
 from brave.core.util.eve import EVECharacterKeyMask, api
+from brave.core.permission.model import create_permission
 
 
 log = __import__('logging').getLogger(__name__)
 
 
+class PermissionAPI(SignedController):
+    def register(self, permission, description):
+        """Allows applications to register new permissions that they use. This is intended so that applications can
+        have permissions they won't necessarily know about before intialization (run-time permissions), such as
+        the ability to write to a specific forum. Applications are restricted to registering applications within their
+        own scope (as enforced elsewhere in the permissions setup).
+        
+        permission: The permission id that the application wishes to register
+        description: The description for the permission being registered.
+        
+        returns:
+            status: Success of the call
+            code: Error code if the call fails
+            message: Verbose description of the issue, should not be used to identify issue.
+        """
+        
+        app = request.service
+        
+        if not permission.startswith(app.short + "."):
+            log.debug('{0} attempted to register {1} but was unable to due to having an incorrect short.'.format(
+                app.name,
+                permission))
+                
+            return dict(
+                status="error",
+                code="argument.permission.invalid",
+                message="The permission supplied does not start with the short allocated to your application."
+            )
+        
+        # create_permission returns False if there's an id conflict
+        if not create_permission(permission, description):
+            log.debug('{0} attempted to register {1} but was unable to due to {1} already existing.'.format(
+                app.name,
+                permission))
+                
+            return dict(
+                status="error",
+                code="argument.permission.conflict",
+                message="The permission supplied already exists."
+            )
+        
+        log.info('{0} successfully registered {1}.'.format(app.name, permission))
+        return dict(status="success")
+
+
 class CoreAPI(SignedController):
+    permission = PermissionAPI()
+    
     def authorize(self, success=None, failure=None):
         """Prepare a incoming session request.
         
@@ -137,19 +185,7 @@ class CoreAPI(SignedController):
         # Step 1: Get the appropriate grant.
         token = ApplicationGrant.objects.get(id=token, application=request.service)
 
-        # Step 2: Update info about the characters from the EVE API
-        for char in token.characters:
-            mask, key = char.credential_multi_for((api.char.CharacterSheet.mask,
-                                                        api.char.CharacterInfoPublic.mask, EVECharacterKeyMask.NULL))
-            if not key:
-                continue
-            key.pull()
-        try:
-            token.reload()
-        except ApplicationGrant.DoesNotExist:
-            return
-
-        # Step 3: Assemble the information for each character
+        # Step 2: Assemble the information for each character
         characters_info = []
         tags = None
         character = None
@@ -185,7 +221,7 @@ class CoreAPI(SignedController):
                     'name': char.alliance.name,
                 }
 
-            # Step 3.5: Match ACLs.
+            # Step 2.5: Match ACLs.
             char_tags = []
             for group in Group.objects(id__in=request.service.groups):
                 if group.evaluate(token.user, char):
@@ -197,7 +233,7 @@ class CoreAPI(SignedController):
 
             characters_info.append(character_info)
         else:
-            # Step 4: Backwards compatibility for apps using the old API
+            # Step 3: Backwards compatibility for apps using the old API
             if character is None:
                 # There are multiple characters, and none of them are the primary character. Just picking one now.
                 character = token.characters[0]
@@ -209,6 +245,7 @@ class CoreAPI(SignedController):
                     alliance = dict(id=character.alliance.identifier, name=character.alliance.name) if character.alliance else None,
                     characters = characters_info,
                     tags = tags,
+                    perms = character.permissions_tags(token.application),
                     expires = None,
                     mask = token.mask
                 )

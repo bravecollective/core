@@ -105,6 +105,7 @@ $(function(){
     $('[rel="popover"],[data-rel="popover"]').popover();
     
     // A little CSS helper.
+    // Note to other readers: we theorize this exists because the igb does not understand :first-child.
     $('tr:first-child').addClass('first');
     
     // Automatically destroy all modal dialogs.  Keep the DOM clean.
@@ -113,7 +114,10 @@ $(function(){
     // Hook CSRF token support into jQuery AJAX.
     $(document).ajaxSend(function(event, xhr, settings) {
         // Exit early if this is a foreign XHR request.
-        if ( /^http(s)?:.*/.test(settings.url) )
+        var parser = document.createElement('a');
+        parser.href = settings.url;
+        if ( parser.protocol != window.location.protocol ||
+             parser.host != window.location.host )
             return;
         
         var token = $.cookie('csrf');
@@ -207,68 +211,6 @@ $(function(){
         // $.post("url", {});
     }
     
-    // Generic field validation.
-    $.fn.validated = function(callback) {
-        this.each(function(){
-            var self = $(this),
-                group = self.parents('.control-group'),
-                original = self.val(),
-                settings = {
-                    required: self.prop('required'),
-                    regex: self.attr('pattern'),  // http://html5pattern.com
-                    url: self.attr('data-validate'),  // URL for validation.
-                    key: self.attr('data-validate-key'),  // Key to submit for validation to the URL.  Defaults to 'value'.
-                    check: self.attr('data-validate-check')  // Key in the result representing the boolean value.  True is success.
-                }
-
-            self.changeDelay(function(){
-                var value = self.val();
-                
-                // Clear old validation state.
-                group.removeClass('success error');
-                self.nextAll('.help-inline,.help').remove();
-                
-                function err(msg) {
-                    group.addClass('error');
-                    self.parent().append('<span class="help text-error">' + msg + '</span>');
-                }
-                
-                // Exit early if the value isn't actually different.
-                if ( value === original ) return;
-                
-                // Ensure a required field has data.
-                if ( settings.required && ( !value || value.length === 0 ) )
-                    return err("A value for this field is mandatory.")
-                
-                if ( settings.regex ) {
-                    var regex = new RegExp('^' + settings.regex + '$');
-                    if ( !regex.test(value) )
-                        return err("Input does not pass validation.");
-                }
-                
-                if ( callback ) {
-                    var result = callback(value);
-                    if ( result ) return err(result);
-                }
-                
-                if ( settings.url ) {
-                    var data = {};
-                    data[settings.key || 'value'] = value;
-                    
-                    $.getJSON(settings.url, data, function(data){
-                        if ( !data[settings.check || 'success'] )
-                            return err(data.message || "Input does not pass validation.");
-                        
-                        group.addClass('success');
-                    });
-                    
-                    return;
-                }
-                
-                group.addClass('success');
-            });
-        })
-    };
     
     // Handle generic modal AJAX-submitted forms.
     $(document).off('popup-genericform').on('popup-genericform', function(){

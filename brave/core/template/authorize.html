@@ -118,7 +118,7 @@
         <div class="auth">
             <h6>${_("Error")}</h6>
             
-            <p>${message}</p>
+            <p><center>${message}</center></p>
         </div>
     </div>
 </div>
@@ -139,14 +139,19 @@
                     <li><strong>Public Character Information</strong><span class="pull-right">Name, Corporation, Alliance</span></li>
                 </ul>
 
-                <!--
-                <p>Additionally, this application requires the following additional information:</p>
-
-                <ul>
-                <li>permission</li>
-                <li>permission</li>
-                </ul>
-                -->
+                % if ar.application.mask.required:
+                    <p>Additionally, this application requires the following additional information:</p>
+            
+                    <ul>
+                <%
+                 from brave.core.util.eve import EVECharacterKeyMask
+                 k = EVECharacterKeyMask(ar.application.mask.required) 
+                %>
+                % for func in k.functionsAllowed():
+                    <li>${func.name[5:]}</li>
+                % endfor
+            </ul>
+            % endif
                 <div id="alerts">
                 </div>
             </div>
@@ -165,6 +170,46 @@
                     </button>
                     % endfor
                     <button class="btn btn-success allow">Authorize</button>
+        <div class="auth">
+            <h6>${_("Granting Authorization")}</h6>
+            
+            <blockquote data-application="${ar.application.name | h}"></blockquote>
+            
+            <p>This application wishes to know certain information about your character.  All applications are given access to the following information:</p>
+            
+            <ul>
+                <li><strong>Public Character Information</strong><span class="pull-right">Name, Corporation, Alliance</span></li>
+            </ul>
+            
+            % if ar.application.mask.required:
+            <p>Additionally, this application requires the following additional information:</p>
+            
+            <ul>
+                <%
+                 from brave.core.util.eve import EVECharacterKeyMask
+                 k = EVECharacterKeyMask(ar.application.mask.required) 
+                %>
+                % for func in k.functionsAllowed():
+                    <li>${func.name[5:]}</li>
+                % endfor
+            </ul>
+            % endif
+            
+            <div style="text-align: right; margin-top: 30px;">
+                <div class="btn-group dropup">
+                    <a class="btn btn-success btn-large allow" style="padding-left: 50px;" href="#" data-id="${default.id}"><img src="//image.eveonline.com/Character/${default.identifier}_32.jpg" style="border-radius: 4px; position: absolute; left: 4px; top: 4px; border: 1px inset rgba(127,127,127,0.5); height: 32px;"> Authorize</a>
+                    <a class="btn btn-success btn-large dropdown-toggle" data-toggle="dropdown" href="#"><i class="fa fa-caret-up"></i></a>
+                    <ul class="dropdown-menu" style="width: 300px; left: auto; right: 0px;">
+                        % for record in characters:
+                        <li><a tabindex="-1" href="#" data-id="${record.id}" class="allow"><span class="ellipsis">
+                            <img src="//image.eveonline.com/Character/${record.identifier}_32.jpg" style="vertical-align: -60%; margin-right: 5px; border-radius: 6px; width: 32px; height: 32px;">
+                            <strong>${record.name | h}</strong>
+                            % if default == record:
+                            <span class="label label-inverse" style="margin-left: 5px;">Default</span>
+                            % endif
+                        </span></a></li>
+                        % endfor
+                    </ul>
                 </div>
                 <a class="btn btn-inverse pull-left" style="margin-top: 15px;">Deny Authorization</a>
             </div>

@@ -33,7 +33,7 @@
                     '</p>' +
                     '<p>' +
                         'You may use one of the following links to go to CCP&apos;s New API Key page with the correct permissions pre-selected:<br />' +
-                        '<a target="_blank" href="https://community.eveonline.com/support/api-key/CreatePredefined?accessMask=8921088">Create a standard API key</a> with minimum permissions.<br/>' +
+                        '<a target="_blank" href="https://community.eveonline.com/support/api-key/CreatePredefined?accessMask=${rec_mask}">Create a standard API key</a> with minimum permissions. A${"n" if rec_kind == "Account" else ""} <b>${rec_kind}</b> key is recommended.<br/>' +
                         '<a target="_blank" href="https://community.eveonline.com/support/api-key/CreatePredefined?accessMask=268435455">Create a full API key</a> with all permissions.  BRAVE Leadership should choose this, as should anyone who wishes to avoid adding more API keys for future Core apps.<br/>' +
                     '</p>' +
                     '<p>' +
@@ -66,45 +66,7 @@
                                 alert(data.message);
                                 return;
                             }
-                            violationText = "";
-                            if(data.violation == "Character") {
-                                violationText = "<text title=\"One or more characters associated with this key was found on another account. Join the 'Brave IT Team' channel in game for assistance.\"><font color=\"red\">Character Security Violation.</font></text>";
-                            } else {
-                                violationText = "<text title=\"All clear!\"><font color=\"green\">The BIA is always watching...</font></text>";
-                            }
-                            $(
-                                '<tr data-id="' + data.identifier + '">' +
-                                    '<td class="key-id">' +
-                                        '<i class="icon-fixed-width icon-remove"></i> ' + data.key +
-                                    '</td>' +
-                                    '<td class="security-violation">' +
-                                        violationText +
-                                    '</td>' +
-                                    '<td class="key-code" title="' + data.code + '">' +
-                                        '<span class="ellipsis">' + data.code.substr(0,10) + '...' + '</span>' +
-                                    '</td>' +
-                                    '<td class="characters hidden-tablet hidden-phone">' +
-                                        data.characters.map( function(element) {
-                                            return( '<img src="http://image.eveonline.com/Character/' + element.identifier + '_32.jpg" ' +
-                                                'style="vertical-align: middle; margin-right: 5px; border-radius: 3px; width: 24px; ' +
-                                                'height: 24px;" title="' + element.name + '">' );
-                                        }).join( '\n' ) +
-                                    '</td>' +
-                                    '<td class="key-date  hidden-phone">' +
-                                        '<time datetime="'+new Date().toISOString()+'">just now</time>' +
-                                    '</td>' +
-                                    '<td class="actions">' +
-                                        '<button class="btn btn-default btn-small refresh" title="" rel="tooltip" data-placement="bottom" data-original-title="Refresh API Key">' +
-                                        '<i class="fa fa-refresh"></i>' +
-                                        '</button>' +
-                                        '<button class="btn btn-danger btn-small delete" title="" rel="tooltip" data-placement="bottom" data-original-title="Remove API Key">' +
-                                        '<i class="fa fa-times"></i>' +
-                                        '</button>' +
-                                    '</td>' +
-                                '</tr>'
-                        ).appendTo('table.table tbody');
-                        console.log("ADDED TO TBODY");
-                            $('time').timeago();
+                            window.location.reload();
                         });
                     }
                 );
@@ -149,37 +111,8 @@
 </%block>
 
 
-<%def name="row(record)">
-    <tr data-id="${record.id}">
-        <td class="key-id"><i class="fa fa-fw fa-${'check' if record.verified else 'times'}"></i> ${record.key | h}</td>
-        % if record.violation == "Character":
-        <td class="security-violation" title="One or more characters associated with this key was found on another account. Join the 'Brave IT Team' channel in game for assistance.">><font color="red">Character Security Violation.</font></td>
-        % else:
-        <td class="security-violation" title="All clear!"><font color="green">The BIA is always watching...</font></td>
-        % endif
-        % if not admin:
-        <td class="key-code" title=${record.code}><span class="ellipsis">${"{0}...".format(record.code[:10])| h}</span></td>
-        % else:
-        <td class="key-code"><span class="ellipsis">Redacted.</span></td>
-        % endif
-        <td class="characters hidden-tablet hidden-phone">
-            % for char in record.characters:
-            <img src="http://image.eveonline.com/Character/${char.identifier}_32.jpg" style="vertical-align: middle; margin-right: 5px; border-radius: 3px; width: 24px; height: 24px;" title="${char.name | h}">
-            % endfor
-        </td>
-        <td class="key-date hidden-phone"><time datetime="${record.id.generation_time.isoformat().replace('+00:00', 'Z')}">${record.id.generation_time.isoformat(' ').replace('+00:00', '')}</time></td>
-        % if admin:
-        <td class="username">${record.owner | h}</td>
-        % endif
-        <td class="actions">
-            <button class="btn btn-danger btn-small delete" title="${_('Remove API Key')}" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i></button>
-        </td>
-    </tr>
-</%def>
-
-
 <div class="container-fluid">
-    % if web.user.admin:
+    % if web.user.has_permission('core.key.list.all'):
     <div id="tabs-wrapper">
         <div class="row-fluid">
             <a class="span3 tab${' active' if not admin else ''}" href="/key/">

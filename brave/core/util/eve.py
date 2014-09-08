@@ -245,6 +245,10 @@ class APICall(Document):
         if prefix.strip() != "<?xml version='1.0' encoding='UTF-8'?>":
             raise Exception("Data returned doesn't seem to be XML!")
         
+        # Encode in UTF-8 to prevent a bug when converting from CML to a dict.
+        if isinstance(data, unicode):
+            data = data.encode('UTF-8')
+        
         data = xml(data)['eveapi']
         result = bunchify(data['result'], 'result')
         data = Bunch(data)
@@ -385,8 +389,7 @@ class EVEKeyMask:
     def has_access(self, mask):
         if isinstance(mask, EVEKeyMask):
             mask = mask.mask
-        
-        if self.mask & mask:
+        if self.mask & mask == mask:
             return True
             
         return False
