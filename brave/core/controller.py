@@ -79,15 +79,15 @@ class AuthorizeHandler(HTTPMethod):
                 dict(success=False, message=_("This application requires an API key with a mask of <a href='/key/mask/{0}'>{0}</a> or better, please add an API key with that mask to your account.".format(ar.application.mask.required)),
                      ar=ar))
             
-            chars = [c for c in chars
-                     if (c.has_verified_key or
-                         config['core.require_recommended_key'].lower() == 'false')]
+            chars = [c for c in chars if c.has_sufficient_key]
+            c = u.primary if u.primary else u.characters[0]
+            k = c.credentials[0]
                     
             if chars:
                 default = u.primary if u.primary in chars else chars[0]
             else:
                 return ('brave.core.template.authorize',
-                dict(success=False, message=_("You do not have any API keys on your account which match the requirements for this service. Please add an {1} API key with a mask of <a href='/key/mask/{0}'>{0}</a> or better, please add an API key with that mask to your account.".format(config['core.recommended_key_mask'], config['core.recommended_key_kind'])),
+                dict(success=False, message=_("You do not have any API keys on your account which match the requirements for this service. Please add an {1} API key with a mask of <a href='/key/mask/{0}'>{0}</a> or better, please add an API key with that mask to your account.".format(k.recommended_mask, k.recommended_kind)),
                      ar=ar))
                      
             return 'brave.core.template.authorize', dict(success=True, ar=ar, characters=chars, default=default)
