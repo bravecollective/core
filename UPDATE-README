@@ -44,3 +44,6 @@ feature/configLoginHistory: The config value 'core.login_history_days' should be
     
 feature/requireKeys: The config value 'core.require_recommended_key' should be added to the config to indicate whether
     the recommended key settings are required to authorize any application.
+
+feature/multiple_rec_masks: The config value 'core.recommended_key_names' should be added to the config with
+    a list of the groups the admin wishes to have special key requirements. A minimum value of [] is required.
