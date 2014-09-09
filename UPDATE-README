@@ -39,7 +39,7 @@ feature/recommendedKeyMask: The config value 'core.recommended_key_mask' should 
 feature/accountKeys: The config value 'core.recommended_key_kind' should be added to the production config file with
     a value of the kind of key the admin wants users to add ("Character", "Account", or "Corporation")
 
-feature/configLoginHistory: The config value 'core.recommended_key_kind' should be added to the production config file 
+feature/configLoginHistory: The config value 'core.login_history_days' should be added to the production config file 
     with the number of days the admin wishes to retain login history (prior setting: 30)
     
 feature/requireKeys: The config value 'core.require_recommended_key' should be added to the config to indicate whether

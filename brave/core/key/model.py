@@ -38,11 +38,12 @@ class EVECredential(Document):
     verified = BooleanField(db_field='v', default=False)
     expires = DateTimeField(db_field='e')
     owner = ReferenceField('User', db_field='o', reverse_delete_rule='CASCADE')
-    #the violation field is used to indicate some sort of conflict for a key. 
-    #A value of 'Character' means that a key gives access to a character which 
-    #is already attached to a different account than the owner of the key.
-    #A value of None is used to indicate no problem
-    #TODO: Add Key violations
+    # the violation field is used to indicate some sort of conflict for a key. 
+    # A value of 'Character' means that a key gives access to a character which 
+    # is already attached to a different account than the owner of the key.
+    # A value of 'Kind' means the key does not meet the recommended key type
+    # A value of 'Mask' means the key does not meet the recommended key mask
+    # A value of None is used to indicate no problem
     violation = StringField(db_field='s')
     
     modified = DateTimeField(db_field='m', default=datetime.utcnow)
@@ -184,6 +185,32 @@ class EVECredential(Document):
         """Populate corporation details."""
         return self
     
+    def eval_violation(self):
+        """Sets the value of the field 'violation'. NOTE: Does not handle violations of type 'Character'"""
+        try:
+            rec_mask = int(config['core.recommended_key_mask'])
+            kind_acceptable = self.kind == config['core.recommended_key_kind']
+            # Account keys are acceptable in place of Character keys
+            if not kind_acceptable and config['core.recommended_key_kind'] == 'Character' and self.kind == 'Account':
+                kind_acceptable = True
+            
+            if self.violation == 'Character':
+                return
+            
+            if not kind_acceptable:
+                self.violation = 'Kind'
+                return self.save()
+            
+            if not self.mask.has_access(rec_mask):
+                self.violation = 'Mask'
+                return self.save()
+                
+            self.violation = None
+            return self.save()
+            
+        except ValueError:
+            log.warn("core.recommended_key_mask MUST be an integer.")
+    
     def pull(self):
         """Pull all details available for this key.
         
@@ -213,6 +240,7 @@ class EVECredential(Document):
             # Account keys are acceptable in place of Character keys
             if not kind_acceptable and config['core.recommended_key_kind'] == 'Character' and self.kind == 'Account':
                 kind_acceptable = True
+            
             self.verified = self.mask.has_access(rec_mask) and kind_acceptable
         except ValueError:
             log.warn("core.recommended_key_mask MUST be an integer.")
@@ -234,7 +262,9 @@ class EVECredential(Document):
         
         if allCharsOK and self.violation == "Character":
             self.violation = None
-
+        
+        self.eval_violation()
+        
         self.modified = datetime.utcnow()
         self.save()
         return self

@@ -186,19 +186,7 @@ class CoreAPI(SignedController):
         token = ApplicationGrant.objects.get(id=token, application=request.service)
         character = token.character
         
-        # Step 2: Update info about the character from the EVE API
-        mask, key = character.credential_multi_for((api.char.CharacterSheet.mask,
-                                                    api.char.CharacterInfoPublic.mask, EVECharacterKeyMask.NULL))
-        
-        # User has no keys registered.
-        if not key:
-            return None
-        
-        # Update key info, and if something goes wrong, abort the call.
-        if not key.pull():
-            return None
-        
-        # Step 3: Match ACLs.
+        # Step 2: Match ACLs.
         tags = []
         for group in Group.objects(id__in=request.service.groups):
             if group.evaluate(token.user, character):
