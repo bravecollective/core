@@ -1,6 +1,6 @@
 ## encoding: utf-8
 
-<%! from brave.core.account.controller import MINIMUM_PASSWORD_STRENGTH %>
+<%! from web.core import config %>
 
 <%inherit file="brave.core.template.light"/>
 
@@ -133,7 +133,7 @@
                 var zxcvbnResult = zxcvbn(self.val());
                 $(".password-verdict").text(ZXCVBN_RESULT_STRINGS[zxcvbnResult.score]);
                 $(".password-meter .bar").width( Math.min(100, zxcvbnResult.entropy + 20) + "%");
-                if( zxcvbnResult.score < ${MINIMUM_PASSWORD_STRENGTH} )
+                if( zxcvbnResult.score < ${config['core.required_pass_strength']} )
                 {
                     $(".progress .bar").removeClass("bar-success");
                     $(".progress .bar").addClass("bar-danger");
