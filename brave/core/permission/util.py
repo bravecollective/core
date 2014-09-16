@@ -11,36 +11,29 @@ import web.auth
 log = __import__('logging').getLogger(__name__)
 
 
-def prepare_runtime_permission(perm=None, **runkw):
+def prepare_runtime_permission(self, perm=None, runkw=None, args=None, kwargs=None):
     """This decorator handles the runtime permission aspects of the user permission checking decorators."""
-    
-    def decorator(function):
-        
-        def handle_runkw(self, *args, **kwargs):
-            permission = perm
+    permission = perm
             
-            if not permission:
-                log.debug('No permission provided.')
-                return function(self, permission, *args, **kwargs)
-            
-            for key, value in runkw.iteritems():
-                valSplit = value.split('.')
-                for attr in valSplit:
-                    if attr == 'self':
-                        value = self
-                        continue
-                    elif attr in kwargs:
-                        value = kwargs.get(attr)
-                        continue
-                    value = getattr(value, attr)
+    if not permission:
+        log.debug('No permission provided.')
+        return False
+
+    for key, value in runkw.iteritems():
+        valSplit = value.split('.')
+        for attr in valSplit:
+            if attr == "self":
+                value = self
+                continue
+            elif attr in kwargs:
+                value = kwargs.get(attr)
+                continue
+            value = getattr(value, attr)
                     
-                permission = permission.replace('{'+key+'}', value)
-            
-            return function(self, permission, *args, **kwargs)
-            
-        return handle_runkw
-    
-    return decorator
+        permission = permission.replace('{'+key+'}', value)
+
+    return permission
+
 
 def user_has_permission(perm=None, **runkw):
     """This decorator checks if a user has the permission 'perm'. This is intended as a convenient way to check for
@@ -53,11 +46,12 @@ def user_has_permission(perm=None, **runkw):
     def decorator(function):
         
         @authenticate
-        @prepare_runtime_permission(perm, **runkw)
-        def check_permission(self, permission, *args, **kwargs):
+        def check_permission(self, *args, **kwargs):
             user = web.auth.user
         
             user = user._current_obj()
+
+            permission = prepare_runtime_permission(self, perm, runkw, args, kwargs)
         
             # No user with that username was found.
             if not user:
@@ -90,12 +84,13 @@ def user_has_any_permission(perm=None, **runkw):
     def decorator(function):
         
         @authenticate
-        @prepare_runtime_permission(perm, **runkw)
-        def check_permission(self, permission, *args, **kwargs):
+        def check_permission(self, *args, **kwargs):
             user = web.auth.user
         
             user = user._current_obj()
-        
+
+            permission = prepare_runtime_permission(self, perm, runkw, args, kwargs)
+
             # No user with that username was found.
             if not user:
                 log.debug('User not found.')
@@ -111,6 +106,8 @@ def user_has_any_permission(perm=None, **runkw):
                 p = WildcardPermission(id=permission)
             for permID in user.permissions:
                 if p.grants_permission(permID.id):
+                    return function(self, *args, **kwargs)
+                if permID.grants_permission(p.id):
                     return function(self, *args, **kwargs)
             
             # User doesn't have this permission, so we raise HTTPForbidden

@@ -193,6 +193,8 @@ class User(Document):
         for permID in self.permissions:
             if p.grants_permission(permID.id):
                 return True
+            if permID.grants_permission(p.id):
+                return True
                 
         return False
         
