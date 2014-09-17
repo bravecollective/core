@@ -294,6 +294,16 @@ class EVECharacter(EVEEntity):
         for k in self.credentials:
             if k.verified:
                 return k
+
+    @property
+    def has_sufficient_key(self):
+        for k in self.credentials:
+            if not k.require_mask_and_kind:
+                return k
+            if k.verified:
+                return True
+
+        return False
     
     def credential_for(self, mask):
         """Return the least-permissive API key that can satisfy the given mask."""

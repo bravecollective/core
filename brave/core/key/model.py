@@ -184,32 +184,109 @@ class EVECredential(Document):
     def pull_corp(self):
         """Populate corporation details."""
         return self
-    
+
+
+    @property
+    def recommended_mask(self):
+        group_matched = False
+        highest_priority = -1
+        mask = 0
+
+        for c in self.characters:
+             for g in c.groups:
+                if g.id in config['core.recommended_key_names']:
+                    g_priority = int(config['core.key_priority.{0}'.format(g.id)])
+
+                    if not g_priority > highest_priority:
+                        continue
+
+                    highest_priority = g_priority
+
+                    mask = int(config['core.recommended_key_mask.{0}'.format(g.id)])
+
+                    group_matched = True
+
+        rec_mask = mask if group_matched else int(config['core.recommended_key_mask'])
+        return rec_mask
+
+    @property
+    def recommended_kind(self):
+        group_matched = False
+        highest_priority = -1
+        kind = "Account"
+
+        for c in self.characters:
+            for g in c.groups:
+                if g.id in config['core.recommended_key_names']:
+                    g_priority = int(config['core.key_priority.{0}'.format(g.id)])
+
+                    if not g_priority > highest_priority:
+                        continue
+
+                    highest_priority = g_priority
+
+                    kind = config['core.recommended_key_kind.{0}'.format(g.id)]
+
+                    group_matched = True
+
+        rec_kind = kind if group_matched else config['core.recommended_key_kind']
+        return rec_kind
+
+    @property
+    def require_mask_and_kind(self):
+        group_matched = False
+        highest_priority = -1
+        required = False
+
+        for c in self.characters:
+            for g in c.groups:
+                if g.id in config['core.recommended_key_names']:
+                    g_priority = int(config['core.key_priority.{0}'.format(g.id)])
+
+                    if not g_priority > highest_priority:
+                        continue
+
+                    highest_priority = g_priority
+
+                    required = config['core.require_recommended_key.{0}'.format(g.id)].lower() == 'true'
+
+                    group_matched = True
+
+        return required
+
     def eval_violation(self):
         """Sets the value of the field 'violation'. NOTE: Does not handle violations of type 'Character'"""
+
         try:
-            rec_mask = int(config['core.recommended_key_mask'])
-            kind_acceptable = self.kind == config['core.recommended_key_kind']
+            rec_kind = self.recommended_kind
+            rec_mask = self.recommended_mask
+
+            kind_acceptable = self.kind == rec_kind
             # Account keys are acceptable in place of Character keys
-            if not kind_acceptable and config['core.recommended_key_kind'] == 'Character' and self.kind == 'Account':
+            if not kind_acceptable and rec_kind == 'Character' and self.kind == 'Account':
                 kind_acceptable = True
-            
-            if self.violation == 'Character':
-                return
-            
+
             if not kind_acceptable:
                 self.violation = 'Kind'
+                self.verified = False
                 return self.save()
-            
+
             if not self.mask.has_access(rec_mask):
                 self.violation = 'Mask'
+                self.verified = False
                 return self.save()
-                
+
+            self.verified = self.mask.has_access(rec_mask) and kind_acceptable
+
+            if self.violation == 'Character':
+                return
+
             self.violation = None
             return self.save()
-            
+
         except ValueError:
             log.warn("core.recommended_key_mask MUST be an integer.")
+            self.verified = False
     
     def pull(self):
         """Pull all details available for this key.
@@ -233,38 +310,28 @@ class EVECredential(Document):
         self.mask = int(result['accessMask'])
         self.kind = result['type']
         self.expires = datetime.strptime(result['expires'], '%Y-%m-%d %H:%M:%S') if result.get('expires', None) else None
-        
-        try:
-            rec_mask = int(config['core.recommended_key_mask'])
-            kind_acceptable = self.kind == config['core.recommended_key_kind']
-            # Account keys are acceptable in place of Character keys
-            if not kind_acceptable and config['core.recommended_key_kind'] == 'Character' and self.kind == 'Account':
-                kind_acceptable = True
-            
-            self.verified = self.mask.has_access(rec_mask) and kind_acceptable
-        except ValueError:
-            log.warn("core.recommended_key_mask MUST be an integer.")
-            self.verified = False
-        
+
         if not result.characters.row:
             log.error("No characters returned for key %d?", self.key)
             return self
-        
+
         allCharsOK = True
 
         for char in result.characters.row:
             if 'corporationName' not in char:
                 log.error("corporationName missing for key %d", self.key)
                 continue
-            
+
             if not self.pull_character(char):
                 allCharsOK = False
         
         if allCharsOK and self.violation == "Character":
             self.violation = None
-        
+
         self.eval_violation()
-        
+
+
+
         self.modified = datetime.utcnow()
         self.save()
         return self
