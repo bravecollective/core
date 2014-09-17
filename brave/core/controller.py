@@ -163,6 +163,13 @@ class RootController(StartupMixIn, Controller):
     admin = util.load('admin')
 
     def __call__(self, req):
+
+        if session and ('host' not in session or session['host'] != request.remote_addr):
+            session.invalidate()
+
+        session['host'] = request.remote_addr
+        session.save()
+
         if req.method not in ('GET', 'HEAD'):
             self.check_csrf()
         if not request.cookies.get('csrf'):
