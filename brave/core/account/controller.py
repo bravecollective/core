@@ -3,7 +3,7 @@
 from marrow.util.bunch import Bunch
 from marrow.mailer.validator import EmailValidator
 from web.auth import authenticate, deauthenticate, user
-from web.core import Controller, HTTPMethod, request, config
+from web.core import Controller, HTTPMethod, request, config, session
 from web.core.http import HTTPFound, HTTPSeeOther, HTTPForbidden, HTTPNotFound
 from web.core.locale import _
 from mongoengine import ValidationError, NotUniqueError
@@ -66,6 +66,10 @@ class Authenticate(HTTPMethod):
                 return 'json:', dict(success=False, message=_("Invalid user name or password."))
 
             return self.get(redirect)
+
+        if redirect.lower().startswith("/authorize"):
+            session['ar'] = redirect.split('/')[2]
+            session.save()
 
         if request.is_xhr:
             return 'json:', dict(success=True, location=redirect or '/')

@@ -35,7 +35,7 @@ class DeveloperTools(Controller):
 
 class AuthorizeHandler(HTTPMethod):
     def ar(self, ar):
-        if not session.get('ar', None) == ar:
+        if session.get('ar', None) != ar:
             try:
                 ar = AuthenticationRequest.objects.get(id=ar, user=None, grant=None)
                 grants = user.grants if user else []
@@ -43,12 +43,9 @@ class AuthorizeHandler(HTTPMethod):
                     if a.application == ar.application:
                         return ar
 
-                # The 'ar' session variable is used to check if we've validated credentials for this application already
-                session['ar'] = ar.id
-                session.save()
                 raise HTTPFound(location='/account/authenticate?redirect=%2Fauthorize%2F{0}'.format(ar.id))
             except AuthenticationRequest.DoesNotExist:
-                raise HTTPNotFound()
+                raise HTTPFound(location='/account/authenticate?redirect=%2Fauthorize%2F{0}'.format(ar.id))
         
         try:
             return AuthenticationRequest.objects.get(id=ar, user=None, grant=None)
@@ -169,6 +166,13 @@ class RootController(StartupMixIn, Controller):
 
         session['host'] = request.remote_addr
         session.save()
+
+
+        if user:
+            authorized_apps = ', '.join([str(g.application.id) for g in user.grants])
+            if request.cookies.get('authorized_apps') != authorized_apps:
+                sso_domain = config['core.sso.domain'] if config['core.sso.domain'] != 'localhost' else None
+                response.set_cookie('authorized_apps', authorized_apps, domain=sso_domain, overwrite=True)
 
         if req.method not in ('GET', 'HEAD'):
             self.check_csrf()
