@@ -93,8 +93,14 @@ class AuthorizeHandler(HTTPMethod):
                      ar=ar))
                      
             return 'brave.core.template.authorize', dict(success=True, ar=ar, characters=chars, default=default)
-        
-        ngrant = ApplicationGrant(user=u, application=ar.application, mask=grant.mask, expires=datetime.utcnow() + timedelta(days=ar.application.expireGrantDays), character=grant.character)
+
+        # User had to log in for this authorization, so we extend the expiry.
+        if session.get('ar', None) == ar.id:
+            expiration = datetime.utcnow() + timedelta(days=ar.application.expireGrantDays)
+        else:
+            expiration = grant.expires
+
+        ngrant = ApplicationGrant(user=u, application=ar.application, mask=grant.mask, expires=expiration, character=grant.character)
         ngrant.save()
         
         ar.user = u
