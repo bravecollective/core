@@ -109,6 +109,16 @@ class ApplicationGrant(Document):
     def mask(self, value):
         """Sets the value of the Key Mask"""
         self._mask = value
+
+    @classmethod
+    def remove_grants_for_character(cls, character):
+        """Removes the character from all Application Grants, removing the ability for application to access
+        the character's data; and forcing the user to reauthorize that character to any applications they wish
+        to use it on. Expected use cases include when a character gets detached from a user, and when a character
+        no longer has a key with valid requirements to meet an already authorized application."""
+
+        for grant in cls.objects(character=character):
+            grant.delete()
     
     def __repr__(self):
         return 'Grant({0}, "{1}", "{2}", {3})'.format(self.id, self.user, self.application, self.mask).encode('ascii', 'backslashreplace')
