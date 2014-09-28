@@ -30,6 +30,9 @@ class OneGroupController(Controller):
             self.group = Group.objects.get(id=id)
         except Group.DoesNotExist:
             raise HTTPNotFound()
+
+        if not user.has_permission(self.group.view_perm):
+            raise HTTPNotFound()
     
     @post_only
     @user_has_permission(Group.EDIT_REQUESTS_PERM, group_id='self.group.id')
