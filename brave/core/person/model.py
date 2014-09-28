@@ -1,18 +1,20 @@
-from mongoengine import Document, StringField, EmailField, DateTimeField, BooleanField, ReferenceField, ListField
+from mongoengine import Document, EmbeddedDocument, EmbeddedDocumentField, StringField, EmailField, DateTimeField, BooleanField, ReferenceField, ListField
+from datetime import datetime
 
 from brave.core.character.model import EVECharacter
 from brave.core.account.model import User
 from brave.core.key.model import EVECredential
 from brave.core.util.field import IPAddressField
+from brave.core.person.util import get_type, object_repr
 
 log = __import__('logging').getLogger(__name__)
 
 
 class Person(Document):
     meta = dict(
-        collection = 'People',
-        allow_inheritance = False,
-        indexes = [''],
+        collection='People',
+        allow_inheritance=False,
+        indexes=['_users','_characters'],
     )
 
     # Fields holding the various components of the Person. NEVER modify these directly.
@@ -26,61 +28,114 @@ class Person(Document):
     def complexity(self):
         """A simple measure of the number of items that constitute the Person. This is used
         to determine which Person should be the base when merging 2 Persons into one."""
-        return len(self.history)
+        return len(self._history)
 
-    def add_component(self, type, reason, component):
+    def add_component(self, reason, component):
         """Abstract method for adding a component to this Person."""
-        field = getattr(self, "_" + type + "s")
-        log.info("ADDED {0} {1} to Person {2} due to {3}".format(type, self.component_repr(type, component), self.id, reason))
-        # TODO: Create PersonEvent here
+
+        comp_type = get_type(component)
+
+        field = getattr(self, "_" + comp_type + "s")
+        match, reason_string = reason
+        log.info("ADDED {0} {1} to Person {2} due to {3}".format(comp_type, object_repr(component), self.id, reason_string))
+
+        pe = PersonEvent(person=self.id, action='add', reason=reason_string)
+        pe.match = match
+        pe.target = component
+        pe.save()
+
+        self._history.append(pe)
         field.append(component)
         self.save()
 
-    def remove_component(self, type, reason, component):
+        return True
+
+    def remove_component(self, reason, component):
         """Abstract method for removing a component from this Person."""
-        field = getattr(self, "_" + type + "s")
+
+        comp_type = get_type(component)
+
+        field = getattr(self, "_" + comp_type + "s")
         if not component in field:
-            log.info("Attempt to remove {0} {1} from Person {2} failed: Not found".format(type, self.component_repr(type, component), self.id))
+            log.info("Attempt to remove {0} {1} from Person {2} failed: Not found".format(comp_type, object_repr(component), self.id))
             return False
-        log.info("REMOVED {0} {1} from Person {2} due to {3}".format(type, self.component_repr(type, component), self.id, reason))
-        # TODO: Create PersonEvent here
+        match, reason_string = reason
+        log.info("REMOVED {0} {1} from Person {2} due to {3}".format(comp_type, object_repr(component), self.id, reason_string))
+
+        pe = PersonEvent(person=self.id, action='remove', reason=reason_string)
+        pe.match = match
+        pe.target = component
+        pe.save()
+
+        self._history.append(pe)
         field.remove(component)
         self.save()
 
-    def add_character(self, reason, character):
-        self.add_component("character", reason, character)
+        return True
 
-    def add_user(self, reason, user):
-        self.add_component("user", reason, user)
 
-    def add_key(self, reason, key):
-        self.add_component("key", reason, key)
+class PersonEvent(Document):
+    meta = dict(
+        allow_inheritance=False,
+        indexes=['person']
+    )
 
-    def add_ip(self, reason, ip):
-        self.add_component("ip", reason, ip)
+    # Stores the ObjectID of the person this event happened to, We store it as a string rather
+    # than as a reference for when Person's are deleted during a merge.
+    person = StringField(db_field='p')
 
-    def remove_character(self, reason, character):
-        self.remove_component("character", reason, character)
+    # The type of the component that is being added or removed from the Person
+    target_type = StringField(db_field='t', choices=["character", "user", "ip", "key", "person"])
+    # The component that is being added or removed
+    target_ident = StringField(db_field='g')
+    # Whether to add or remove the target
+    action = StringField(db_field='a', choices=["add", "remove", "merge"])
+    time = DateTimeField(db_field='u', default=datetime.utcnow())
 
-    def remove_user(self, reason, user):
-        self.remove_component("user", reason, user)
+    # The identifier of the object that led to the creation of this event
+    match_ident = StringField(db_field='mn')
+    # The type of the object that led to the creation of this event
+    match_type = StringField(db_field='mt', choices=["character", "user", "ip", "key", "person"])
+    # The reason that the match led to this event
+    reason = StringField(db_field='mr', choices=["create", "component_match"])
 
-    def remove_key(self, reason, key):
-        self.remove_component("key", reason, key)
+    @property
+    def target(self):
+        if self.target_type == "character":
+            return EVECharacter.objects(name=self.target_ident).first()
+        elif self.target_type == "user":
+            return User.objects(username=self.target_ident).first()
+        elif self.target_type == "ip":
+            return self.target_ident
+        elif self.target_type == "key":
+            return EVECredential.objects(key=self.target_ident).first()
+        elif self.target_type == "person":
+            return Person.objects(id=self.target_ident).first()
 
-    def remove_ip(self, reason, ip):
-        self.remove_component("ip", reason, ip)
+        return None
 
-    @staticmethod
-    def component_repr(type, component):
-        """Returns the primary identification of the component."""
-        if type == "character":
-            return component.name
-        elif type == "user":
-            return component.username
-        elif type == "key":
-            return component.key
-        elif type == "ip":
-            return component
-        else:
-            return None
+    @target.setter
+    def target(self, target):
+        self.target_ident = object_repr(target)
+        self.target_type = get_type(target)
+
+    @property
+    def match(self):
+        if self.match_type == "character":
+            return EVECharacter.objects(name=self.match_ident).first()
+        elif self.match_type == "user":
+            return User.objects(username=self.match_ident).first()
+        elif self.match_type == "ip":
+            return self.match_ident
+        elif self.match_type == "key":
+            return EVECredential.objects(key=self.match_ident).first()
+        elif self.match_type == "person":
+            return Person.objects(id=self.match_ident).first()
+
+        return None
+
+    @match.setter
+    def match(self, match):
+        self.match_ident = object_repr(match)
+        self.match_type = get_type(match)
+
