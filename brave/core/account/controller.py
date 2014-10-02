@@ -13,6 +13,7 @@ from brave.core.account.form import authenticate as authenticate_form, register 
     recover as recover_form, reset_password as reset_password_form
 from brave.core.account.authentication import lookup_email, send_recover_email
 from brave.core.util.predicate import is_administrator
+from brave.core.person.model import Person
 
 from yubico import yubico
 from marrow.util.convert import boolean

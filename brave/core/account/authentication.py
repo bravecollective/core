@@ -117,11 +117,7 @@ def authenticate(identifier, password):
     # Update the user's host
     user.host = request.remote_addr
     
-    # Check for other accounts with this IP address
-    if len(User.objects(host=request.remote_addr)) > 1:
-        # Quite possibly the worst code ever
-        for u in User.objects(host=request.remote_addr):
-                User.add_duplicate(user, u, IP=True)
+    user.person.add_component((user, "user_add"), request.remote_addr)
 
     user.save()
     

@@ -98,6 +98,8 @@ class EVECredential(Document):
         except NotUniqueError:
             char = EVECharacter.objects(identifier=info.characterID)[0]
             new = False
+
+            self.owner.person.add_component((self.owner, "user_add"), char)
             
             if char.owner and self.owner != char.owner:
                 log.warning("Security violation detected. Multiple accounts trying to register character %s, ID %d. "
@@ -105,9 +107,6 @@ class EVECredential(Document):
                             char.name, info.characterID,
                             EVECharacter.objects(identifier=info.characterID).first().owner, self.owner)
                 self.violation = "Character"
-                
-                # Mark both accounts as duplicates of each other.
-                User.add_duplicate(self.owner, char.owner)
         
                 return
 
@@ -117,7 +116,7 @@ class EVECredential(Document):
             elif self.mask.has_access(api.char.CharacterInfoPublic.mask):
                 info = api.char.CharacterInfoPublic(self, characterID=info.characterID)
         except Exception:
-            log.warning("An error occured while querying data for key %s.", self.key)
+            log.warning("An error occurred while querying data for key %s.", self.key)
             if new:
                 char.delete()
             
@@ -142,6 +141,9 @@ class EVECredential(Document):
         char.roles = [i.roleName for i in info.corporationRoles.row] if 'corporationRoles' in info else []
 
         char.save()
+
+        self.owner.person.add_component((self.owner, "user_add"), char)
+
         return char
     
     def get_membership(self, info):
@@ -258,6 +260,8 @@ class EVECredential(Document):
             self.violation = None
         
         self.eval_violation()
+
+        self.owner.person.add_component((self.owner, 'user_add'), self)
         
         self.modified = datetime.utcnow()
         self.save()
