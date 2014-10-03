@@ -52,6 +52,10 @@ def user_has_permission(perm=None, **runkw):
             user = user._current_obj()
 
             permission = prepare_runtime_permission(self, perm, runkw, args, kwargs)
+
+            # No permission provided, so everyone has permission.
+            if not permission:
+                return function(self, *args, **kwargs)
         
             # No user with that username was found.
             if not user:
@@ -90,6 +94,10 @@ def user_has_any_permission(perm=None, **runkw):
             user = user._current_obj()
 
             permission = prepare_runtime_permission(self, perm, runkw, args, kwargs)
+
+            # No permission provided, so everyone has permission.
+            if not permission:
+                return function(self, *args, **kwargs)
 
             # No user with that username was found.
             if not user:
