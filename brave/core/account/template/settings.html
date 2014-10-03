@@ -280,7 +280,7 @@
                 
             });
             
-            % if web.user.otp:
+            % if web.user.otp and hasattr(web.user.otp, 'uri'):
             
             $('.viewotp').on('click', function()
             {

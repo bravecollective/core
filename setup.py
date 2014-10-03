@@ -43,7 +43,7 @@ setup(
                 'futures',
                 'zxcvbn',
                 'flake8',
-                'pyotp'
+                'pyotp',
             ],
         
     )

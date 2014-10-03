@@ -9,7 +9,7 @@ from web.core.locale import _
 from mongoengine import ValidationError, NotUniqueError
 from datetime import timedelta, datetime
 
-from brave.core.account.model import User, PasswordRecovery, TimeOTP, YubicoOTP
+from brave.core.account.model import User, PasswordRecovery, TimeOTP, YubicoOTP, OTPHistory
 from brave.core.account.form import authenticate as authenticate_form, register as register_form, \
     recover as recover_form, reset_password as reset_password_form, tfa as tfa_form
 from brave.core.account.authentication import lookup_email, send_recover_email, verify_credentials
@@ -62,18 +62,35 @@ class TFA(HTTPMethod):
         if not OTP:
             return 'json:', dict(success=False, message=_("You must provide a One Time Password"))
         
-        user = User.objects.get(username=session['preauth_username'])
+        try:
+            user = User.objects.get(username=session['preauth_username'])
+        except User.DoesNotExist:
+            self.clear_session()
+            return 'json:', dict(success=False, message=_("Current Session has expired, please log in again"))
         
         if datetime.now() - session['auth'] > timedelta(minutes=15):
             self.clear_session()
             return 'json:', dict(success=False, message=_("Current Session has expired, please log in again"))
-        
+
+        previously_used = OTPHistory.objects(otp=OTP).first()
+        if previously_used and previously_used.user.username == user.username:
+            self.clear_session()
+            return 'json:', dict(success=False, message=_("You have already used this One Time Password"))
+
         # TODO: Give them 3 tries to fail the OTP before requiring username and pass again
         if not user.otp.verify(OTP):
             self.clear_session()
             return 'json:', dict(success=False, message=_("Incorrect One Time Password"))
         
         authenticate(user)
+
+        otp_history = OTPHistory(otp=OTP, user=user)
+        otp_history.save()
+
+        # Prevent redirect loops from occurring when a user fails the TFA, gets redirected to authenticate,
+        #  then successfully completes the TFA
+        if session['redirect'].endswith('/account/tfa'):
+            session['redirect'] = None
         
         return 'json:', dict(success=True, location=session['redirect'] or '/')
 

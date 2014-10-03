@@ -106,7 +106,7 @@ def verify_credentials(identifier, password):
 
 # @authentication_logger
 def authenticate(user, *args, **kwargs):
-    """This function does not do any verification of identitiy, that MUST be done prior to calling this. What it does
+    """This function does not do any verification of identity, that MUST be done prior to calling this. What it does
     do is set up the user object in WebCore for use else where."""
     
     user.update(set__seen=datetime.utcnow())

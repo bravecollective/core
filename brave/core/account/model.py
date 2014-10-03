@@ -354,3 +354,18 @@ class PasswordRecovery(Document):
             self.user.username,
             self.recovery_key
         )
+
+
+class OTPHistory(Document):
+    meta = dict(
+        allow_inheritance=False,
+        indexes=['user', 'otp', dict(fields=['expires'], expireAfterSeconds=0)]
+    )
+
+    user = ReferenceField(User, required=True, db_field='u')
+    otp = StringField(db_field='o', required=True)
+    # Expire after 90 seconds, (support for at most a radius of 2 when checking OTP validity)
+    expires = DateTimeField(db_field='e', default=lambda: datetime.utcnow() + timedelta(seconds=90))
+
+    def __repr__(self):
+        return 'OTPHistory({0}, {1})'.format(self.otp, self.user.username)
