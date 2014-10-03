@@ -170,9 +170,7 @@ class User(Document):
         
         log.debug('Checking if user has permission {0}'.format(permission))
         
-        Permission.set_has_permission(self.permissions, permission)
-                
-        return None
+        return Permission.set_grants_permission(self.permissions, permission)
         
     def has_any_permission(self, permission):
         """Returns true if the character has a permission that would be granted by permission."""
