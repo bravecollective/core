@@ -4,7 +4,7 @@ from marrow.util.bunch import Bunch
 from marrow.mailer.validator import EmailValidator
 from web.auth import authenticate, deauthenticate, user
 from web.core import Controller, HTTPMethod, request, config, session
-from web.core.http import HTTPFound, HTTPSeeOther, HTTPForbidden, HTTPNotFound
+from web.core.http import HTTPFound, HTTPSeeOther, HTTPForbidden, HTTPNotFound, HTTPBadRequest
 from web.core.locale import _
 from mongoengine import ValidationError, NotUniqueError
 from datetime import timedelta, datetime
@@ -23,8 +23,6 @@ import re
 
 log = __import__('logging').getLogger(__name__)
 
-
-MINIMUM_PASSWORD_STRENGTH = 3
 
 def _check_password(passwd1, passwd2):
     """checks the passed passwords for equality and length
@@ -211,7 +209,7 @@ class Recover(HTTPMethod):
             return 'json:', dict(success=False, message=error_msg)
 
         #If the password isn't strong enough, reject it
-        if(zxcvbn.password_strength(data.password).get("score") < MINIMUM_PASSWORD_STRENGTH):
+        if(zxcvbn.password_strength(data.password).get("score") < int(config['core.required_pass_strength'])):
             return 'json:', dict(success=False, message=_("Password provided is too weak. please add more characters, or include lowercase, uppercase, and special characters."), data=data)
 
         #set new password
@@ -255,7 +253,7 @@ class Register(HTTPMethod):
             return 'json:', dict(success=False, message=_("Invalid email address provided."), data=data)
         
         #If the password isn't strong enough, reject it
-        if(zxcvbn.password_strength(data.password).get("score") < MINIMUM_PASSWORD_STRENGTH):
+        if(zxcvbn.password_strength(data.password).get("score") < int(config['core.required_pass_strength'])):
             return 'json:', dict(success=False, message=_("Password provided is too weak. please add more characters, or include lowercase, uppercase, and special characters."), data=data)
         
         #Ensures that the provided username and email are lowercase
@@ -308,7 +306,7 @@ class Settings(HTTPMethod):
                 return 'json:', dict(success=False, message=_("Old password incorrect."), data=data)
 
             #If the password isn't strong enough, reject it
-            if(zxcvbn.password_strength(data.passwd).get("score") < MINIMUM_PASSWORD_STRENGTH):
+            if(zxcvbn.password_strength(data.passwd).get("score") < int(config['core.required_pass_strength'])):
                 return 'json:', dict(success=False, message=_("Password provided is too weak. please add more characters, or include lowercase, uppercase, and special characters."), data=data)
 
             user.password = data.passwd
@@ -525,8 +523,8 @@ class AccountController(Controller):
         password = query.get("password")
         strong = False
         
-        # If the password has a score of greater than 2, allow it
-        if(zxcvbn.password_strength(password).get("score") > 2):
+        # If the password has a score of greater than core.required_pass_strength, allow it
+        if(zxcvbn.password_strength(password).get("score") >= int(config['core.required_pass_strength'])):
             strong = True
         
         return 'json:', dict(approved=strong, query={str(k): v for k, v in query.items()})
@@ -535,6 +533,8 @@ class AccountController(Controller):
         deauthenticate()
         raise HTTPSeeOther(location='/')
         
-    def __lookup__(self, user, *args, **kw):
+    def __lookup__(self, user=None, *args, **kw):
+        if not user:
+            raise HTTPBadRequest
         request.path_info_pop()  # We consume a single path element.
         return AccountInterface(user), args
