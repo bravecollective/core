@@ -39,8 +39,8 @@ feature/requireKeys: The config value 'core.require_recommended_key' should be a
     the recommended key settings are required to authorize any application.
     
 
-feature/otp: The 'otp' and 'rotp' fields in the 'Users' collection has been removed, so users who previously had OTP set
-    up on their accounts will no longer have it enabled. It is advised that admins run the script 'remove_otps' to
+feature/otp: The 'otp' and 'rotp' fields in the 'Users' collection has been changed, so users who previously had OTP set
+    up on their accounts will no longer have it enabled. It is required that admins run the script 'remove_otps' to
     remove these from User accounts.
     
     The package 'pyotp' is now required. Running 'python setup.py develop' again should set it up for you.
