@@ -160,6 +160,12 @@ class Group(Document):
                         creator=self.creator, modified=datetime.utcnow, _permissions=self._permissions)
 
         g = g.save()
+
+        for gc in GroupCategory.objects(members=self):
+            gc.members.remove(self)
+            gc.members.append(g)
+            gc.save()
+
         self.delete()
         return g
         
