@@ -186,6 +186,13 @@ class OneGroupController(Controller):
         self.group.title = title
         self.group.save()
 
+    @post_only
+    @user_has_permission(Group.EDIT_ID_PERM, group_id='self.group.id')
+    def set_id(self, new_id):
+        log.info("'{0}' changed the id for group '{1}' from '{2}' to '{3}'".format(user.username, self.group.id, self.group.id, new_id))
+
+        self.group = self.group.rename(new_id)
+
 
 class GroupList(HTTPMethod):
     def get(self):

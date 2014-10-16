@@ -188,6 +188,10 @@ def selected(bool):
     <div id="pad-wrapper">
         <div class="row-fluid header">
             <div class="pull-right">
+                <div class="input-append">
+                          <input class="id" id="set_id" type="text" placeholder="New Group ID" class="span2"/>
+                          <button class="btn btn-success setID" type="button">Edit ID</button>
+                 </div>
                  <div class="input-append">
                           <input class="title" id="set_title" type="text" placeholder="New Group Title" class="span2"/>
                           <button class="btn btn-success setTitle" type="button">Edit Title</button>
@@ -633,6 +637,19 @@ def selected(bool):
                 {
                     //Should probably add the permission here... WTB CSRF for normal POST requests
                     window.location="/group/${group.id}"
+                });
+
+            });
+
+            $(document).on('click', '.setID', function(e)
+            {
+                e.preventDefault();
+
+                $.post('/group/${group.id}/set_id', { new_id: $(".id").val() }).
+                done(function()
+                {
+                    //Should probably add the permission here... WTB CSRF for normal POST requests
+                    window.location="/group/"+$(".id").val();
                 });
 
             });
