@@ -179,6 +179,13 @@ class OneGroupController(Controller):
         self.group.delete()
         return 'json:', dict(success=True)
 
+    @post_only
+    @user_has_permission(Group.EDIT_TITLE_PERM, group_id='self.group.id')
+    def set_title(self, title):
+        log.info("'{0}' changed the title for group '{1}' from '{2}' to '{3}'".format(user.username, self.group.id, self.group.title, title))
+        self.group.title = title
+        self.group.save()
+
 
 class GroupList(HTTPMethod):
     def get(self):

@@ -54,8 +54,10 @@ class Group(Document):
     EDIT_PERMS_PERM = 'core.group.edit.perms.{group_id}'
     EDIT_MEMBERS_PERM = 'core.group.edit.members.{group_id}'
     EDIT_REQUESTS_PERM = 'core.group.edit.requests.{group_id}'
+    EDIT_TITLE_PERM = 'core.group.edit.title.{group_id}'
     DELETE_PERM = 'core.group.delete.{group_id}'
     CREATE_PERM = 'core.group.create'
+
     
     @property
     def permissions(self):
