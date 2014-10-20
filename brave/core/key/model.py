@@ -58,6 +58,8 @@ class EVECredential(Document):
             # Make sure not to include this key when checking if there are still keys for the character
             if len([c for c in char.credentials if c.id != self.id]) == 0:
                 char.detach()
+
+            char.credentials.remove(self)
                 
         super(EVECredential, self).delete()
     
