@@ -155,6 +155,8 @@ class User(Document):
             for p in c.permissions():
                 perms.add(p)
                 
+        perms = list(perms)
+        perms.sort(key=lambda p: p.id)
         return perms
         
     def has_permission(self, permission):
@@ -168,19 +170,7 @@ class User(Document):
         
         log.debug('Checking if user has permission {0}'.format(permission))
         
-        # Check the primary character first, and if they have the permission return them.
-        if self.primary:
-            for p in self.primary.permissions():
-                if p.grants_permission(permission):
-                    return self.primary
-                
-        # Primary didn't have permission, check if the other characters do.
-        for c in self.characters:
-            for p in c.permissions():
-                if p.grants_permission(permission):
-                    return c
-                
-        return None
+        return Permission.set_grants_permission(self.permissions, permission)
         
     def has_any_permission(self, permission):
         """Returns true if the character has a permission that would be granted by permission."""
