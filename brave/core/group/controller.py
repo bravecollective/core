@@ -14,7 +14,7 @@ from brave.core.character.model import EVECharacter
 from brave.core.group.model import Group, GroupCategory
 from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
 from brave.core.util import post_only
-from brave.core.permission.util import user_has_permission
+from brave.core.permission.util import user_has_permission, user_has_any_permission
 from brave.core.permission.model import Permission, WildcardPermission, GRANT_WILDCARD
 
 import json
@@ -261,7 +261,7 @@ class GroupList(HTTPMethod):
             return getattr(self, action)(group)
 
 class ManageGroupList(HTTPMethod):
-    @user_has_permission('core.group.view.*', accept_any_matching=True)
+    @user_has_any_permission('core.group.view.*')
     def get(self):
         groups = sorted(Group.objects(), key=lambda g: g.id)
         
@@ -317,7 +317,7 @@ class GroupController(Controller):
         request.path_info_pop()  # We consume a single path element.
         return OneGroupController(id), args
 
-    @user_has_permission('core.group.edit.*', accept_any_matching=True)
+    @user_has_any_permission('core.group.edit.*')
     def check_rule_reference_exists(self, kind, name):
         cls = ACLList.target_class(kind)
         return "json:", dict(exists=bool(cls.objects(name__iexact=name.strip())))

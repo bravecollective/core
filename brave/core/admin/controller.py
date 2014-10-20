@@ -10,7 +10,7 @@ from brave.core.character.model import EVECharacter, EVECorporation, EVEAlliance
 from brave.core.util.predicate import is_administrator
 from brave.core.key.model import EVECredential
 from brave.core.account.model import User
-from brave.core.permission.util import user_has_permission
+from brave.core.permission.util import user_has_permission, user_has_any_permission
 
 
 class SearchCharInterface(HTTPMethod):
@@ -149,6 +149,6 @@ class AdminController(Controller):
 
     search = SearchController()
     
-    @user_has_permission('core.admin.search.*', accept_any_matching=True)
+    @user_has_any_permission('core.admin.search.*')
     def index(self):
         return 'brave.core.admin.template.search', dict(area='admin')
