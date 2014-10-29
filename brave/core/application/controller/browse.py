@@ -9,6 +9,7 @@ from web.core.http import HTTPFound, HTTPNotFound
 
 from brave.core.application.model import Application
 from brave.core.util.predicate import authorize, authenticate
+from brave.core.permission.model import Permission
 
 
 log = __import__('logging').getLogger(__name__)
@@ -48,8 +49,21 @@ class ApplicationInterface(Controller):
 class BrowseController(Controller):
     @authenticate
     def index(self):
-        records = Application.objects(development__in=[False, None])  # TODO: This needs to be ACL-filtered!
-        devRecords = Application.objects(development=True)
+        records = list()
+        devRecords = list()
+        
+        # Cache the user's permissions
+        user_perms = user.permissions
+        
+        # Retrieve non-development applications that the user is able to authorize
+        for r in Application.objects(development__in=[False, None]):
+            if Permission.set_grants_permission(user_perms, r.authorize_perm):
+                records.append(r)
+        
+        # Retrieve development applications that the user is able to authorize
+        for r in Application.objects(development=True):
+            if Permission.set_grants_permission(user_perms, r.authorize_perm):
+                devRecords.append(r)
         
         return 'brave.core.application.template.list_apps', dict(
                 area = 'apps',

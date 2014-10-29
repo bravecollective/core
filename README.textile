@@ -48,7 +48,10 @@ Once you have successfully compiled the Core Service, copy `development.ini` to 
 
 <pre><code>paster shell local.ini # or don't mention an INI if you didn't customize
 from brave.core.util.eve import populate_calls
-populate_calls()</code></pre>
+populate_calls()
+
+from brave.core.permission.controller import init_perms
+init_perms()</code></pre>
 
 You can upgrade to the latest version at any time:
 
@@ -76,22 +79,28 @@ h2(#admin). %4.% Common admin tasks
 
 There will be UI for these, but in the meantime, here are some hints for doing admin tasks from the paster shell. Do apply common-sense checking along your way to make sure you're touching the right objects.
 
-h3(). %4.1% Adding a user to a group
+h3(). %4.1% Making yourself an admin
+
+You must have a character added to your account and selected as primary.
 
 <pre><code>from brave.core.account.model import User
-from brave.core.group.model import Group
+from brave.core.character.model import EVECharacter
+from brave.core.permission.model import Permission, WildcardPermission
 u = User.objects(username=USERNAME_HERE)[0]
-g = Group.objects(title=GROUP_TITLE_HERE)[0]
-g.rules[APPROPRIATE_INDEX].ids.append(u.primary.identifier)
-g.save()
+u.admin = True
+c = u.primary
+p1 = Permission.objects(id='core.*').first()
+c.personal_permissions.append(p1)
+c.save()
+u.save()
 </code></pre>
 
 
-h2(#license). %4.% License
+h2(#license). %5.% License
 
 Brave Collective Core Services has been released under the MIT Open Source license. 
 
-h3(#license-mit). %4.1.% The MIT License
+h3(#license-mit). %5.1.% The MIT License
 
 Copyright (C) 2013-2014 Alice Bevan-McGregor and contributors.
 

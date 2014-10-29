@@ -1,0 +1,19 @@
+core.account.view.*:Ability to view all user's account details
+core.admin.search.user:Ability to search for users
+core.admin.search.char:Ability to search for characters
+core.admin.search.key:Ability to search for keys
+core.application.edit.*:Ability to edit any application
+core.application.create:Ability to create new applications
+core.application.authorize.*:Ability to authorize any application
+core.character.view.*:Ability to view all character details
+core.character.list.all:Ability to see the list of all characters
+core.group.view.*:Ability to see all groups
+core.group.edit.acl.*:Ability to edit the ACL's for all groups
+core.group.edit.perms.*:Ability to edit the perms for all groups
+core.group.delete.*:Ability to delete all groups
+core.group.create:Ability to create a group (and edit/delete any groups that they make)
+core.key.view.*:Ability to view the details on any key
+core.key.list.all:Ability to see the list of all API keys
+core.permission.grant.*:Ability to grant any permission
+core.permission.revoke.*:Ability to revoke any permission
+core.*:Ability to do anything within Core

@@ -2,7 +2,7 @@
 
 from marrow.util.bunch import Bunch
 from marrow.mailer.validator import EmailValidator
-from web.auth import authenticate, deauthenticate, user
+from web.auth import authenticate as web_authenticate, deauthenticate, user
 from web.core import Controller, HTTPMethod, request, config
 from web.core.http import HTTPFound, HTTPSeeOther, HTTPForbidden, HTTPNotFound, HTTPBadRequest
 from web.core.locale import _
@@ -12,7 +12,7 @@ from brave.core.account.model import User, PasswordRecovery
 from brave.core.account.form import authenticate as authenticate_form, register as register_form, \
     recover as recover_form, reset_password as reset_password_form
 from brave.core.account.authentication import lookup_email, send_recover_email
-from brave.core.util.predicate import is_administrator
+from brave.core.util.predicate import is_administrator, authenticate
 
 from yubico import yubico
 from marrow.util.convert import boolean
@@ -52,12 +52,12 @@ class Authenticate(HTTPMethod):
 
     def post(self, identity, password, remember=False, redirect=None):
         # First try with the original input
-        success = authenticate(identity, password)
+        success = web_authenticate(identity, password)
 
         if not success:
             # Try lowercase if it's an email or username, but not if it's an OTP
             if '@' in identity or len(identity) != 44:
-                success = authenticate(identity.lower(), password)
+                success = web_authenticate(identity.lower(), password)
 
         if not success:
             if request.is_xhr:
@@ -158,7 +158,7 @@ class Recover(HTTPMethod):
         #remove recovery key
         recovery.delete()
 
-        authenticate(user.username, data.password)
+        web_authenticate(user.username, data.password)
 
         return 'json:', dict(success=True, message=_("Password changed, forwarding ..."), location="/")
 
@@ -205,7 +205,7 @@ class Register(HTTPMethod):
             return 'json:', dict(success=False, message=_("Either the username or email address provided is "
                                                           "already taken."), data=data)
         
-        authenticate(user.username, data.password)
+        web_authenticate(user.username, data.password)
         
         return 'json:', dict(success=True, location="/")
 
@@ -400,6 +400,7 @@ class Settings(HTTPMethod):
 class AccountInterface(HTTPMethod):
     """Handles the individual user pages."""
     
+    @authenticate
     def __init__(self, userID):
         super(AccountInterface, self).__init__()
         
@@ -411,9 +412,10 @@ class AccountInterface(HTTPMethod):
             # Handles improper objectIDs
             raise HTTPNotFound()
 
-        if self.user.id != user.id and not user.admin:
+        if self.user.id != user.id and not user.has_permission(self.user.view_perm):
             raise HTTPNotFound()
-            
+    
+    @authenticate
     def get(self):
         return 'brave.core.account.template.accountdetails', dict(
             area='admin' if user.admin else 'account',

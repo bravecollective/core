@@ -51,6 +51,9 @@ class Application(Document):
     site = URLField(db_field='s')
     contact = EmailField(db_field='c')
     
+    # This is the short name of the application, which is used for permissions. Must be lowercase.
+    short = StringField(db_field='p', unique=True, regex='[a-z]+', required=True)
+    
     key = EmbeddedDocumentField(ApplicationKeys, db_field='k', default=lambda: ApplicationKeys())
     
     mask = EmbeddedDocumentField(ApplicationMasks, db_field='m', default=lambda: ApplicationMasks())
@@ -60,6 +63,11 @@ class Application(Document):
     expireGrantDays = IntField(db_field='e', default=30)
     
     owner = ReferenceField('User', db_field='o')
+    
+    # Permissions
+    EDIT_PERM = 'core.application.edit.{app_short}'
+    CREATE_PERM = 'core.application.create.{app_short}'
+    AUTHORIZE_PERM = 'core.application.authorize.{app_short}'
     
     # Related Data
     
@@ -74,6 +82,17 @@ class Application(Document):
     
     def __unicode__(self):
         return self.name
+    
+    def get_perm(self, perm_type):
+        return getattr(self, perm_type+"_PERM").format(app_short=self.short)
+    
+    @property
+    def edit_perm(self):
+        return self.get_perm('EDIT')
+    
+    @property
+    def authorize_perm(self):
+        return self.get_perm('AUTHORIZE')
 
 
 class ApplicationGrant(Document):
