@@ -8,6 +8,7 @@ from mongoengine.errors import NotUniqueError
 from requests.exceptions import HTTPError
 
 from brave.core.account.model import User
+from brave.core.application.model import ApplicationGrant
 from brave.core.util import strip_tags
 from brave.core.util.signal import update_modified_timestamp, trigger_api_validation
 from brave.core.util.eve import api, EVECharacterKeyMask, EVECorporationKeyMask
@@ -61,6 +62,8 @@ class EVECredential(Document):
             # Make sure not to include this key when checking if there are still keys for the character
             if len([c for c in char.credentials if c.id != self.id]) == 0:
                 char.detach()
+
+            char.credentials.remove(self)
                 
         super(EVECredential, self).delete()
     
@@ -130,6 +133,8 @@ class EVECredential(Document):
         char.corporation, char.alliance = self.get_membership(info)
 
         char.name = info.name if 'name' in info else info.characterName
+        if not isinstance(char.name, basestring):
+            char.name = str(char.name)
         char.owner = self.owner
         if self not in char.credentials:
             char.credentials.append(self)
@@ -170,11 +175,7 @@ class EVECredential(Document):
         if corporation.name != corporationName:
             corporation.name = corporationName
         
-        if alliance and corporation.alliance != alliance:
-            corporation.alliance = alliance
-        
-        elif not alliance and corporation.alliance:
-            alliance = corporation.alliance
+        corporation.alliance = alliance
         
         if corporation._changed_fields:
             corporation = corporation.save()
@@ -267,6 +268,15 @@ class EVECredential(Document):
         
         self.modified = datetime.utcnow()
         self.save()
+
+        for c in self.characters:
+            char_has_verified_key = False
+            for k in c.credentials:
+                if k.verified:
+                    char_has_verified_key = True
+            if not char_has_verified_key:
+                ApplicationGrant.remove_grants_for_character(c)
+
         return self
     
     @property
