@@ -70,8 +70,8 @@ class TFA(HTTPMethod):
             self.clear_session()
             return 'json:', dict(success=False, message=_("Current Session has expired, please log in again"))
 
-        previously_used = OTPHistory.objects(otp=OTP).first()
-        if previously_used and previously_used.user.username == user.username:
+        previously_used = OTPHistory.objects(otp=OTP, user=user).first()
+        if previously_used:
             self.clear_session()
             return 'json:', dict(success=False, message=_("You have already used this One Time Password"))
 
