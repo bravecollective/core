@@ -54,8 +54,11 @@ class Group(Document):
     EDIT_PERMS_PERM = 'core.group.edit.perms.{group_id}'
     EDIT_MEMBERS_PERM = 'core.group.edit.members.{group_id}'
     EDIT_REQUESTS_PERM = 'core.group.edit.requests.{group_id}'
+    EDIT_TITLE_PERM = 'core.group.edit.title.{group_id}'
+    EDIT_ID_PERM = 'core.group.edit.id.{group_id}'
     DELETE_PERM = 'core.group.delete.{group_id}'
     CREATE_PERM = 'core.group.create'
+
     
     @property
     def permissions(self):
@@ -148,6 +151,22 @@ class Group(Document):
             requests=[],
         ).save()
 
+        return g
+
+    def rename(self, new_name):
+        """Can't modify the primary key in Mongoengine, so we have to recreate a new group then delete this one."""
+        g = Group(id=new_name, title=self.title, rules=self.rules, join_rules=self.join_rules, request_rules=self.request_rules,
+                        join_members=self.join_members, request_members=self.request_members, requests=self.requests,
+                        creator=self.creator, modified=datetime.utcnow, _permissions=self._permissions)
+
+        g = g.save()
+
+        for gc in GroupCategory.objects(members=self):
+            gc.members.remove(self)
+            gc.members.append(g)
+            gc.save()
+
+        self.delete()
         return g
         
     def get_perm(self, perm_type):
