@@ -71,10 +71,18 @@ class GrantInterface(HTTPMethod):
                 character = EVECharacter.objects.get(identifier=int(key))
             except EVECharacter.DoesNotExist:
                 continue
+
+            # Make sure the character is owned by the grant owner.
+            if character.owner != self.grant.user:
+                continue
+
             new_characters.append(character)
 
         if new_characters:
             grant.chars = new_characters
+            grant.save()
+        elif grant.all_chars:
+            grant.chars = user.characters
             grant.save()
         else:
             grant.delete()
