@@ -184,11 +184,10 @@ class CoreAPI(SignedController):
         
         # Step 1: Get the appropriate grant.
         token = ApplicationGrant.objects.get(id=token, application=request.service)
-        
+
         # Step 2: Assemble the information for each character
         characters_info = []
         character = token.default_character
-        
         tags = []
         
         for char in token.characters:
