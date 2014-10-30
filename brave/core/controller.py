@@ -130,6 +130,11 @@ class AuthorizeHandler(HTTPMethod):
             return 'json:', dict(success=True, location=str(target))
         
         characters = []
+
+        if all_chars.lower() == 'true':
+            all_chars = True
+        else:
+            all_chars = False
         
         if not all_chars and ar.application.require_all_chars:
             return 'json:', dict(success=False, message="This application requires access to all of your characters.")
@@ -149,9 +154,6 @@ class AuthorizeHandler(HTTPMethod):
             except:
                 log.exception("Error loading character.")
                 return 'json:', dict(success=False, message="Error loading character.")
-        
-        if all_chars.lower() == 'true':
-            all_chars = True
         
         # TODO: Add support for 'optional' masks
         mask = ar.application.mask.required
