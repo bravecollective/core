@@ -12,7 +12,7 @@ from web.core.http import HTTPNotFound
 
 from brave.core.character.model import EVECharacter
 from brave.core.group.model import Group, GroupCategory
-from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask, ACLVerySecure
+from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask, ACLVerySecure, ACLGroupMembership
 from brave.core.util import post_only
 from brave.core.permission.util import user_has_permission, user_has_any_permission
 from brave.core.permission.model import Permission, WildcardPermission, GRANT_WILDCARD
@@ -129,6 +129,12 @@ class OneGroupController(Controller):
                 rule_objects.append(ACLMask(grant=grant, inverse=inverse, mask=r['mask']))
             elif r['type'] == "verysecure":
                 rule_objects.append(ACLVerySecure(grant=grant, inverse=inverse))
+            elif r['type'] == "groupmembership":
+                g = Group.objects(id=r['group']).first()
+                if not g:
+                    # TODO: change dry-run to return a success/fail format so the UI here is better
+                    return 'json:', "ERROR: Couldn't find group {}!!".format(r['group'])
+                rule_objects.append(ACLGroupMembership(grant=grant, inverse=inverse, group=g))
 
         log.debug(rule_objects)
 
