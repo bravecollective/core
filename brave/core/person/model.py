@@ -30,7 +30,7 @@ class Person(Document):
         to determine which Person should be the base when merging 2 Persons into one."""
         return len(self._history)
 
-    def add_component(self, reason, component):
+    def add_component(self, reason, component, suppress_events=False):
         """Abstract method for adding a component to this Person."""
 
         comp_type = get_type(component)
@@ -45,12 +45,13 @@ class Person(Document):
 
         log.info("ADDED {0} {1} to Person {2} due to {3}".format(comp_type, object_repr(component), self.id, reason_string))
 
-        pe = PersonEvent(person=str(self.id), action='add', reason=reason_string)
-        pe.match = match
-        pe.target = component
-        pe.save()
+        if not suppress_events:
+            pe = PersonEvent(person=str(self.id), action='add', reason=reason_string)
+            pe.match = match
+            pe.target = component
+            pe.save()
 
-        self._history.append(pe)
+            self._history.append(pe)
         field.append(component)
         setattr(self, "_" + comp_type + "s", field)
         self.save()
@@ -59,7 +60,7 @@ class Person(Document):
 
         return True
 
-    def remove_component(self, reason, component):
+    def remove_component(self, reason, component, suppress_events=False):
         """Abstract method for removing a component from this Person."""
 
         comp_type = get_type(component)
@@ -72,12 +73,13 @@ class Person(Document):
         match, reason_string = reason
         log.info("REMOVED {0} {1} from Person {2} due to {3}".format(comp_type, object_repr(component), self.id, reason_string))
 
-        pe = PersonEvent(person=str(self.id), action='remove', reason=reason_string)
-        pe.match = match
-        pe.target = component
-        pe.save()
+        if not suppress_events:
+            pe = PersonEvent(person=str(self.id), action='remove', reason=reason_string)
+            pe.match = match
+            pe.target = component
+            pe.save()
 
-        self._history.append(pe)
+            self._history.append(pe)
         field.remove(component)
         setattr(self, "_" + comp_type + "s", field)
         self.save()
@@ -113,7 +115,7 @@ class Person(Document):
                 return
 
     @staticmethod
-    def merge(person1, person2, reason):
+    def merge(person1, person2, reason, suppress_events=False):
         """Merges person1 and person2 into one person."""
         match, reason_string = reason
         person = person1 if person1.complexity >= person2.complexity else person2
@@ -121,10 +123,11 @@ class Person(Document):
 
         log.info("MERGING {0} into {1} due to {2} of {3}".format(tbd_person, person, reason_string, object_repr(match)))
 
-        pe = PersonEvent(person=str(person.id), action='merge', reason=reason_string)
-        pe.match = match
-        pe.target = tbd_person
-        pe.save()
+        if not suppress_events:
+            pe = PersonEvent(person=str(person.id), action='merge', reason=reason_string)
+            pe.match = match
+            pe.target = tbd_person
+            pe.save()
 
         for c in tbd_person._characters:
             if c in person._characters:
@@ -146,7 +149,8 @@ class Person(Document):
                 continue
             person._ips.append(i)
 
-        person._history = PersonEvent.history_merge(person._history, tbd_person._history)
+        if not suppress_events:
+            person._history = PersonEvent.history_merge(person._history, tbd_person._history)
 
         person.save()
         tbd_person.delete()
@@ -159,7 +163,7 @@ class PersonEvent(Document):
     )
 
     # Stores the ObjectID of the person this event happened to, We store it as a string rather
-    # than as a reference for when Person's are deleted during a merge.
+    # than as a reference for when a Person are deleted during a merge.
     person = StringField(db_field='p', required=True)
 
     # The type of the component that is being added or removed from the Person
