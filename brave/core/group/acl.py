@@ -210,3 +210,25 @@ class ACLMask(ACLRule):
                 not_=' not' if self.inverse else '',
                 mask=self.mask,
         )
+
+
+class ACLVerySecure(ACLRule):
+    """Grant or deny access based on mandatory use of an OTP."""
+    
+    def evaluate(self, user, character):
+        if user.otp_required:
+            return None if self.inverse else self.grant
+        
+        return self.grant if self.inverse else None
+    
+    def __repr__(self):
+        return "ACLVerySecure({0})".format(self.human_readable_repr())
+    
+    def human_readable_repr(self):
+        # We usually call this __unicode__ in Python 2, __str__ in Python 3.  Then you can just
+        # unicode(aclruleobj) to get the text version, and ${aclruleobj} will naturally work in templates
+        # without extra function calls (since ${expr} automatically calls unicode(expr) anyway!)
+        return '{0} {1} OTP mandatory for user'.format(
+                'grant' if self.grant else 'deny',
+                'if not' if self.inverse else 'if'
+            )

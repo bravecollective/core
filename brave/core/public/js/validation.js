@@ -55,13 +55,13 @@ $.fn.validated = function(callback){
                 var data = {};
                 data[settings.key || 'value'] = value;
                 
-                $.getJSON(settings.url + '?ts=' + (+ new Date()), data, function(data){
+                $.post(settings.url, data, function(data){
                     if ( !data[settings.check || 'success'] )
                         return err(data.message || "Invalid validation.", "validation");
                     
                     self.addClass('success');
                     group.addClass('success');
-                });
+                }, "json");
                 
                 self.trigger('validation');
                 return;

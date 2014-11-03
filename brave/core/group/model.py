@@ -106,6 +106,10 @@ class Group(Document):
         return 'Group({0})'.format(self.id).encode('ascii', 'backslashreplace')
     
     def evaluate(self, user, character, rule_set=None):
+        # If the character has no owner (and therefore no API key), deny them access to every group.
+        if not character.owner:
+            return False
+
         if rule_set == "request":
             rules = self.request_rules
         elif rule_set == "join":
@@ -126,7 +130,7 @@ class Group(Document):
                     return True
             rules = self.rules
         
-        for rule in rules:
+        for rule in self.rules:
             result = rule.evaluate(user, character)
             if result is not None:
                 return result

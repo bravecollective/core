@@ -8,6 +8,7 @@ from mongoengine.errors import NotUniqueError
 from requests.exceptions import HTTPError
 
 from brave.core.account.model import User
+from brave.core.application.model import ApplicationGrant
 from brave.core.util import strip_tags
 from brave.core.util.signal import update_modified_timestamp, trigger_api_validation
 from brave.core.util.eve import api, EVECharacterKeyMask, EVECorporationKeyMask
@@ -38,11 +39,12 @@ class EVECredential(Document):
     verified = BooleanField(db_field='v', default=False)
     expires = DateTimeField(db_field='e')
     owner = ReferenceField('User', db_field='o', reverse_delete_rule='CASCADE')
-    #the violation field is used to indicate some sort of conflict for a key. 
-    #A value of 'Character' means that a key gives access to a character which 
-    #is already attached to a different account than the owner of the key.
-    #A value of None is used to indicate no problem
-    #TODO: Add Key violations
+    # the violation field is used to indicate some sort of conflict for a key. 
+    # A value of 'Character' means that a key gives access to a character which 
+    # is already attached to a different account than the owner of the key.
+    # A value of 'Kind' means the key does not meet the recommended key type
+    # A value of 'Mask' means the key does not meet the recommended key mask
+    # A value of None is used to indicate no problem
     violation = StringField(db_field='s')
     
     modified = DateTimeField(db_field='m', default=datetime.utcnow)
@@ -60,6 +62,8 @@ class EVECredential(Document):
             # Make sure not to include this key when checking if there are still keys for the character
             if len([c for c in char.credentials if c.id != self.id]) == 0:
                 char.detach()
+
+            char.credentials.remove(self)
                 
         super(EVECredential, self).delete()
     
@@ -129,6 +133,8 @@ class EVECredential(Document):
         char.corporation, char.alliance = self.get_membership(info)
 
         char.name = info.name if 'name' in info else info.characterName
+        if not isinstance(char.name, basestring):
+            char.name = str(char.name)
         char.owner = self.owner
         if self not in char.credentials:
             char.credentials.append(self)
@@ -169,11 +175,7 @@ class EVECredential(Document):
         if corporation.name != corporationName:
             corporation.name = corporationName
         
-        if alliance and corporation.alliance != alliance:
-            corporation.alliance = alliance
-        
-        elif not alliance and corporation.alliance:
-            alliance = corporation.alliance
+        corporation.alliance = alliance
         
         if corporation._changed_fields:
             corporation = corporation.save()
@@ -183,6 +185,32 @@ class EVECredential(Document):
     def pull_corp(self):
         """Populate corporation details."""
         return self
+    
+    def eval_violation(self):
+        """Sets the value of the field 'violation'. NOTE: Does not handle violations of type 'Character'"""
+        try:
+            rec_mask = int(config['core.recommended_key_mask'])
+            kind_acceptable = self.kind == config['core.recommended_key_kind']
+            # Account keys are acceptable in place of Character keys
+            if not kind_acceptable and config['core.recommended_key_kind'] == 'Character' and self.kind == 'Account':
+                kind_acceptable = True
+            
+            if self.violation == 'Character':
+                return
+            
+            if not kind_acceptable:
+                self.violation = 'Kind'
+                return self.save()
+            
+            if not self.mask.has_access(rec_mask):
+                self.violation = 'Mask'
+                return self.save()
+                
+            self.violation = None
+            return self.save()
+            
+        except ValueError:
+            log.warn("core.recommended_key_mask MUST be an integer.")
     
     def pull(self):
         """Pull all details available for this key.
@@ -213,6 +241,7 @@ class EVECredential(Document):
             # Account keys are acceptable in place of Character keys
             if not kind_acceptable and config['core.recommended_key_kind'] == 'Character' and self.kind == 'Account':
                 kind_acceptable = True
+            
             self.verified = self.mask.has_access(rec_mask) and kind_acceptable
         except ValueError:
             log.warn("core.recommended_key_mask MUST be an integer.")
@@ -234,9 +263,20 @@ class EVECredential(Document):
         
         if allCharsOK and self.violation == "Character":
             self.violation = None
-
+        
+        self.eval_violation()
+        
         self.modified = datetime.utcnow()
         self.save()
+
+        for c in self.characters:
+            char_has_verified_key = False
+            for k in c.credentials:
+                if k.verified:
+                    char_has_verified_key = True
+            if not char_has_verified_key:
+                ApplicationGrant.remove_grants_for_character(c)
+
         return self
     
     @property
