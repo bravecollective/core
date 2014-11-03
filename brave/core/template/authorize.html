@@ -71,13 +71,13 @@
                 return false;
             }
 
-            $('#character-toggles button').click(function() {
+            $('#character-select button').click(function() {
                 var old_state = $(this).hasClass("active");
                 $(this).toggleClass('btn-info', !old_state);
                 $(this).find('input[type=checkbox]').prop('checked', !old_state);
             });
 
-            $('#character-toggles').on('show.bs.collapsible', function() {
+            $('#character-select').on('show.bs.collapsible', function() {
                 $(this).siblings('.btn-group').hide();
                 $(this).siblings('#authorize-button-2').show();
             });
@@ -150,20 +150,35 @@
             
             <!-- TODO: all-characters-required -->
             <div style="text-align: right; margin-top: 30px;">
-                <div id="character-toggles" data-toggle="buttons-checkbox" class="collapse">
-                    % for record in characters:
-                        <button class="btn ${'active btn-info' if record == default else ''}" data-id="${record.id}" style="width: 100%; text-align: left;">
-                            <input type="checkbox" data-id="${record.id}" ${'checked' if record == default else ''} style="vertical-align: middle" />
-                            <img src="//image.eveonline.com/Character/${record.identifier}_32.jpg" style="vertical-align: -60%; margin-right: 5px; border-radius: 6px; width: 32px; height: 32px;">
-                            <strong>${record.name | h}</strong>
-                        </button>
-                    % endfor
+                <div id="character-select" data-toggle="buttons-checkbox" ${'class="collapse"' if default != 'all' else ''}>
+                    <button
+                        class="btn ${'active btn-info' if 'all' == default else ''}"
+                        ${'disabled' if 'all' == default else ''}
+                        data-id="all"
+                        style="width: 100%; text-align: left;"
+                        data-toggle="collapse"
+                        data-target="#character-toggles"
+                        >
+                        <input type="checkbox" data-id="all" ${'checked' if 'all' == default else ''} style="vertical-align: middle" />
+                        <strong>All Characters</strong>
+                    </button>
+                    <div id="character-toggles" class="${'collapse.in in' if default != 'all' else ''} collapse">
+                        % for record in characters:
+                            <button class="btn ${'active btn-info' if record == default else ''}" data-id="${record.id}" style="width: 100%; text-align: left;">
+                                <input type="checkbox" data-id="${record.id}" ${'checked' if record == default else ''} style="vertical-align: middle" />
+                                <img src="//image.eveonline.com/Character/${record.identifier}_32.jpg" style="vertical-align: -60%; margin-right: 5px; border-radius: 6px; width: 32px; height: 32px;">
+                                <strong>${record.name | h}</strong>
+                            </button>
+                        % endfor
+                    </div>
                 </div>
+                % if default != 'all':
                 <div class="btn-group">
-                    <a class="btn btn-success btn-large allow" style="padding-left: 50px;" href="#" data-id="${default.id}"><img src="//image.eveonline.com/Character/${default.identifier}_32.jpg" style="border-radius: 4px; position: absolute; left: 4px; top: 4px; border: 1px inset rgba(127,127,127,0.5);"> Authorize</a>
-                    <a class="btn btn-success btn-large dropdown-toggle" data-toggle="collapse" data-target="#character-toggles"><i class="fa fa-caret-up"></i></a>
+                    <a class="btn btn-success btn-large allow" style="padding-left: 50px;" href="#" data-id="${default.id}"><img src="//image.eveonline.com/Character/${default.identifier}_32.jpg" style="border-radius: 4px; position: absolute; left: 4px; top: 4px; border: 1px inset rgba(127,127,127,0.5); width: 32px; height: 32px;"> Authorize</a>
+                    <a class="btn btn-success btn-large dropdown-toggle" data-toggle="collapse" data-target="#character-select"><i class="fa fa-caret-up"></i></a>
                 </div>
-                <a id="authorize-button-2" class="btn btn-success btn-large allow" href="#" style="display: none">Authorize</a>
+                % endif
+                <a id="authorize-button-2" class="btn btn-success btn-large allow" href="#" ${'style="display: none"' if default != 'all' else ''}>Authorize</a>
                 <a class="btn btn-inverse pull-left" style="margin-top: 15px;">Deny Authorization</a>
             </div>
         </div>
