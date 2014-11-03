@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 
 from datetime import datetime
 from collections import OrderedDict
+from contextlib import contextmanager
 from mongoengine import Document, EmbeddedDocument, EmbeddedDocumentField, StringField, EmailField, URLField, DateTimeField, BooleanField, ReferenceField, ListField, IntField
 
 from brave.core.util.signal import update_modified_timestamp
@@ -203,3 +204,40 @@ class ACLVerySecure(ACLRule):
                 'grant' if self.grant else 'deny',
                 'if not' if self.inverse else 'if'
             )
+
+
+class RecursiveGroupReference(Exception):
+    pass
+
+# global!!
+groups_referenced = []
+
+class ACLGroupMembership(ACLRule):
+    """Grant or deny access based on membership in a group."""
+
+    group = ReferenceField('Group')
+
+    def evaluate(self, user, character):
+        global groups_referenced
+        if self.group.id in groups_referenced:
+            raise RecursiveGroupReference(str(groups_referenced))
+        groups_referenced.append(self.group.id)
+
+        try:
+            return self.group.evaluate(user, character)
+        finally:
+            id = groups_referenced.pop()
+            assert id == self.group.id
+
+    def __repr__(self):
+        return "ACLGroupMembership({0} {1} {2!r})".format(
+            'grant' if self.grant else 'deny',
+            'if not' if self.inverse else 'if',
+            self.group)
+
+    def human_readable_repr(self):
+        return '{0} if user/character {1} in group {2}'.format(
+            'grant' if self.grant else 'deny',
+            'is not' if self.inverse else 'if',
+            self.group.id,
+        )
