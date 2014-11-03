@@ -155,6 +155,9 @@ class Person(Document):
         person.save()
         tbd_person.delete()
 
+    def __repr__(self):
+        return "Person({e.id}, users={e._users}, characters={e._characters}, keys={e._characters}, ips={e._ips})".format(e=self)
+
 
 class PersonEvent(Document):
     meta = dict(
@@ -257,6 +260,9 @@ class PersonEvent(Document):
                 continue
 
         return merged_list
+
+    def __repr__(self):
+        return "PersonEvent({e.id}, action={e.action}, person={e.person}".format(e=self)
 
 
 
