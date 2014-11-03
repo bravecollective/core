@@ -24,7 +24,30 @@
         $(function(){
             $('time').timeago();
         });
+
+        $(document).on('click', '.submitPerm', function()
+        {
+            $.post('/character/${char.id}/add_perm', { permission: $(".permission").val() }).
+            done(function()
+            {
+                //Should probably add the permission here... WTB CSRF for normal POST requests
+                window.location="/character/${char.id}"
+            });
+        });
+
+
+        $(document).on('click', '.deletePerm', function()
+        {
+            var row = $(this).parents('li');
+            $.post('/character/${char.id}/delete_perm', { permission: row.attr("id") }).
+            done(function()
+            {
+                //Should probably add the permission here... WTB CSRF for normal POST requests
+                window.location="/character/${char.id}"
+            });
+        });
     </script>
+    
 </%block>
 
 <div class="container-fluid">
@@ -57,6 +80,24 @@
                     <h4>${_("EVE Online API Keys")}</h4>
                     <%include file="brave.core.key.template.keyTable" args="records=char.credentials, admin=True"/>
                 </div>
+            
+                <div class="permission-box" style ="padding-right: 25px;">
+                <h4>${_("Personal Permissions")}</h4>
+                % if can_grant_some_permission:
+                    <div>
+                        Add permission:
+                        <input class="permission" id="permission" type="text" placeholder="Permission Name" class="span2"/>
+                        <button class="submitPerm">submit</button>
+                    </div>
+                    <ul>
+                % endif
+                % if char.personal_permissions:
+                    % for p in char.personal_permissions:
+                        <li id="${p.id}">${p.id} <button class="btn btn-danger btn-small deletePerm"><i class="fa fa-times"></i></button></li>
+                    % endfor
+                    </ul>
+                % endif
+                </div>
             </div>
     
             <!-- side address column -->
@@ -66,6 +107,12 @@
                     % for id, group in char.tags.iteritems():
                     <li>${group.title | h}</li>
                         % endfor
+                </ul>
+                <h4>Permissions</h4>
+                <ul>
+                    % for permission in char.permissions():
+                    <li>${permission.id}</li>
+                    % endfor
                 </ul>
             </div>
         </div>

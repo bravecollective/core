@@ -8,6 +8,7 @@ from mongoengine.errors import NotUniqueError
 from requests.exceptions import HTTPError
 
 from brave.core.account.model import User
+from brave.core.application.model import ApplicationGrant
 from brave.core.util import strip_tags
 from brave.core.util.signal import update_modified_timestamp, trigger_api_validation
 from brave.core.util.eve import api, EVECharacterKeyMask, EVECorporationKeyMask
@@ -48,6 +49,10 @@ class EVECredential(Document):
     
     modified = DateTimeField(db_field='m', default=datetime.utcnow)
     
+    # Permissions
+    VIEW_PERM = 'core.key.view.{credential_key}'
+    LIST_PERM = 'core.key.list.all'
+    
     def __repr__(self):
         return 'EVECredential({0}, {1}, {2}, {3!r})'.format(self.id, self.kind, self._mask, self.owner)
     
@@ -57,6 +62,8 @@ class EVECredential(Document):
             # Make sure not to include this key when checking if there are still keys for the character
             if len([c for c in char.credentials if c.id != self.id]) == 0:
                 char.detach()
+
+            char.credentials.remove(self)
                 
         super(EVECredential, self).delete()
     
@@ -265,4 +272,17 @@ class EVECredential(Document):
         
         self.modified = datetime.utcnow()
         self.save()
+
+        for c in self.characters:
+            char_has_verified_key = False
+            for k in c.credentials:
+                if k.verified:
+                    char_has_verified_key = True
+            if not char_has_verified_key:
+                ApplicationGrant.remove_grants_for_character(c)
+
         return self
+    
+    @property
+    def view_perm(self):
+        return self.VIEW_PERM.format(credential_key=str(self.key))
