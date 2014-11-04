@@ -1,7 +1,7 @@
 ## encoding: utf-8
 
 <%!
-from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
+from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask, ACLVerySecure
 
 def selected(bool):
     return "selected" if bool else ""
@@ -22,6 +22,8 @@ def selected(bool):
         ${aclrole(rule)}
     % elif isinstance(rule, ACLMask):
         ${aclmask(rule)}
+    % elif isinstance(rule, ACLVerySecure):
+        ${aclverysecure(rule)}
     % else:
         ERROR THIS WON'T WORK: ${rule.human_readable_repr()}
     % endif
@@ -116,6 +118,19 @@ def selected(bool):
         <div style="margin: 7px 3px 2px 3px;">
             <input type="text" name="mask" value="${rule.mask}" />
         </div>
+    </div>
+</%def>
+
+<%def name="aclverysecure(rule)">
+    <div class="aclverysecure acl_def">
+        <input type="hidden" name="type" value="verysecure" />
+        ${select_grant(rule)}
+        if this user can
+        <select name="inverse">
+            <option value="false" ${selected(not rule.inverse)}>can only log in with</option>
+            <option value="true" ${selected(rule.inverse)}>can log in without</option>
+        </select>
+        OTP.
     </div>
 </%def>
 
@@ -217,6 +232,7 @@ def selected(bool):
                     <li><a href="#" class="addrule" data-rule="role">By Corporate Role</a></li>
                     <li><a href="#" class="addrule" data-rule="key">By Key Type</a></li>
                     <li><a href="#" class="addrule" data-rule="mask">By Key Mask</a></li>
+                    <li><a href="#" class="addrule" data-rule="verysecure">By OTP Setting</a></li>
                   </ul>
                 </div>
 
@@ -359,6 +375,7 @@ def selected(bool):
     ${aclrule(ACLTitle(grant=True, titles=[]), None)}
     ${aclrule(ACLRole(grant=True, roles=[]), None)}
     ${aclrule(ACLMask(grant=True, mask=0), None)}
+    ${aclrule(ACLVerySecure(grant=True), None)}
 </div>
 
 <%block name="pre">
