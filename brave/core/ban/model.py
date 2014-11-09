@@ -1,6 +1,6 @@
-from mongoengine import Document, StringField, EmailField, DateTimeField, BooleanField, ReferenceField, ListField
+from mongoengine import EmbeddedDocument, EmbeddedDocumentField, Document, StringField, DateTimeField, BooleanField, ReferenceField, ListField
 from brave.core.person.model import Person, PersonEvent
-from brave.core.character.model import EVECharacter
+from brave.core.account.model import User
 from datetime import datetime, timedelta
 
 log = __import__('logging').getLogger(__name__)
@@ -10,10 +10,10 @@ class Ban(Document):
     meta = dict(
         collection = 'Bans',
         allow_inheritance = True,
-        indexes = ['person'],
+        indexes = [],
     )
 
-    banner = ReferenceField(EVECharacter, db_field='b')
+    banner = ReferenceField(User, db_field='b')
     created = DateTimeField(default=datetime.utcnow(), db_field='c', required=True)
     # Note: We don't use Mongoengine expireasafterseconds because we want to retain copies of bans after they expire.
     # A duration of None means that the ban is permanent.
@@ -32,13 +32,70 @@ class Ban(Document):
     secret_reason = StringField(db_field='sr')
 
     # Allows for the banner (and others) to comment on the ban with additional details.
-    comments = ListField(StringField, db_field='c')
+    history = ListField(EmbeddedDocumentField(BanHistory), db_field='c')
 
-    # Allows for admins to lock the Ban, making it unmodifiable. Comments can still be added while locked.
+    # Allows for admins to lock the Ban, making it unmodifiable to non-Admins. Comments can still be added while locked.
     locked = BooleanField(db_field='l', default=False)
 
     # Used to disable bans prior to their expiration.
     _enabled = BooleanField(db_field='e', default=True)
+
+    def enable(self, user):
+        if not self._enabled:
+            self._enabled = True
+            self.history.append(EnableBanHistory(user=user))
+            log.info("{0} enabled ban {1}".format(user.username, self.id))
+            self.save()
+            return True
+
+        return False
+
+    def disable(self, user):
+        if self._enabled:
+            self._enabled = False
+            self.history.append(DisableBanHistory(user=user))
+            log.info("{0} disabled ban {1}".format(user.username, self.id))
+            self.save()
+            return True
+
+        return False
+
+    def comment(self, user, comment):
+        self.history.append(CommentHistory(user=user, comment=comment))
+        log.info("{0} commented {1} on ban {2}".format(user.username, comment, self.id))
+        return True
+
+    def lock(self, user):
+        if not self.locked:
+            self.locked = True
+            self.history.append(LockBanHistory(user=user))
+            log.info("{0} locked ban {1}".format(user.username, self.id))
+            self.save()
+            return True
+
+        return False
+
+    def unlock(self, user):
+        if self.locked:
+            self.locked = False
+            self.history.append(UnlockBanHistory(user=user))
+            log.info("{0} unlocked ban {1}".format(user.username, self.id))
+            self.save()
+            return True
+
+        return False
+
+    def modify_reason(self, user, reason):
+        self.history.append(ModifyReasonHistory(user=user, prev_reason=self.reason, new_reason=reason))
+        self.reason = reason
+        self.save()
+        return True
+
+    def modify_secret_reason(self, user, reason):
+        self.history.append(ModifySecretReasonHistory(user=user, prev_reason=self.reason, new_reason=reason))
+        self.secret_reason = reason
+        self.save()
+        return True
 
     @property
     def permanent(self):
@@ -73,3 +130,50 @@ class PersonBan(Ban):
 
         person_merge = PersonEvent.objects(target_ident=self.orig_person).first()
         return person_merge.current_person
+
+class BanHistory(EmbeddedDocument):
+    user = ReferenceField(User)
+    time = DateTimeField(default=datetime.utcnow())
+
+    def display(self):
+        return None
+
+    def __repr__(self):
+        return "{0}({1})".format(type(self), self.display)
+
+class CreateBanHistory(BanHistory):
+    def display(self):
+        return "Created Ban"
+
+class DisableBanHistory(BanHistory):
+    def display(self):
+        return "Disabled Ban"
+
+class EnableBanHistory(BanHistory):
+    def display(self):
+        return "Enabled Ban"
+
+class CommentHistory(BanHistory):
+    comment =  StringField(required=True)
+    def display(self):
+        return self.comment
+
+class LockBanHistory(BanHistory):
+    def display(self):
+        return "Locked Ban"
+
+class UnlockBanHistory(BanHistory):
+    def display(self):
+        return "Unlocked Ban"
+
+class ModifyReasonHistory(BanHistory):
+    prev_reason = StringField()
+    new_reason = StringField()
+    def display(self):
+        return "Changed reason from {0} to {1}".format(self.prev_reason, self.new_reason)
+
+class ModifySecretReasonHistory(BanHistory):
+    prev_reason = StringField()
+    new_reason = StringField()
+    def display(self):
+        return "Changed secret reason from {0} to {1}".format(self.prev_reason, self.new_reason)
