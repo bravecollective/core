@@ -1,6 +1,7 @@
 from mongoengine import EmbeddedDocument, EmbeddedDocumentField, Document, StringField, DateTimeField, BooleanField, ReferenceField, ListField
 from brave.core.person.model import Person, PersonEvent
 from brave.core.account.model import User
+from brave.core.application.model import Application
 from datetime import datetime, timedelta
 
 log = __import__('logging').getLogger(__name__)
@@ -23,8 +24,11 @@ class Ban(Document):
     # Subapp bans are for banning from individual areas of an app, such as a chat room in Jabber
     ban_type = StringField(db_field='bt', choices=["global", "service", "app", "subapp"])
 
-    # Determines the areas that a user is banned from for subapp bans. Unused otherwise.
-    subareas = StringField(db_field='a')
+    # Stores the app for app and subapp bans.
+    app = ReferenceField(Application, db_field='a')
+
+    # Determines the area that a user is banned from for subapp bans. Unused otherwise.
+    subarea = StringField(db_field='a')
 
     # The reason for the ban. This will be publicly available.
     reason = StringField(db_field='r', required=True)
@@ -39,6 +43,97 @@ class Ban(Document):
 
     # Used to disable bans prior to their expiration.
     _enabled = BooleanField(db_field='e', default=True)
+
+    # Permissions
+    CREATE_GLOBAL_PERM = 'core.ban.create.global'
+    CREATE_SERVICE_PERM = 'core.ban.create.service'
+    CREATE_APP_PERM = 'core.ban.create.app.{app_short}'
+    CREATE_SUBAPP_PERM = 'core.ban.create.subapp.{app_short}.{subapp_id}'
+    LOCK_GLOBAL_PERM = 'core.ban.lock.global'
+    LOCK_SERVICE_PERM = 'core.ban.lock.service'
+    LOCK_APP_PERM = 'core.ban.lock.app.{app_short}'
+    LOCK_SUBAPP_PERM = 'core.ban.lock.subapp.{app_short}.{subapp_id}'
+    UNLOCK_GLOBAL_PERM = 'core.ban.unlock.global'
+    UNLOCK_SERVICE_PERM = 'core.ban.unlock.service'
+    UNLOCK_APP_PERM = 'core.ban.unlock.app.{app_short}'
+    UNLOCK_SUBAPP_PERM = 'core.ban.unlock.app.{app_short}.{subapp_id}'
+    ENABLE_GLOBAL_PERM = 'core.ban.enable.global'
+    ENABLE_SERVICE_PERM = 'core.ban.enable.service'
+    ENABLE_APP_PERM = 'core.ban.enable.app.{app_short}'
+    ENABLE_SUBAPP_PERM = 'core.ban.enable.subapp.{app_short}.{subapp_id}'
+    DISABLE_GLOBAL_PERM = 'core.ban.disable.global'
+    DISABLE_SERVICE_PERM = 'core.ban.disable.service'
+    DISABLE_APP_PERM = 'core.ban.disable.app.{app_short}'
+    DISABLE_SUBAPP_PERM = 'core.ban.disable.subapp.{app_short}.{subapp_id}'
+    COMMENT_GLOBAL_PERM = 'core.ban.comment.global'
+    COMMENT_SERVICE_PERM = 'core.ban.comment.service'
+    COMMENT_APP_PERM = 'core.ban.comment.app.{app_short}'
+    COMMENT_SUBAPP_PERM = 'core.ban.comment.subapp.{app_short}.{subapp_id}'
+    MODIFY_REASON_GLOBAL_PERM = 'core.ban.modify_reason.global'
+    MODIFY_REASON_SERVICE_PERM = 'core.ban.modify_reason.service'
+    MODIFY_REASON_APP_PERM = 'core.ban.modify_reason.app.{app_short}'
+    MODIFY_REASON_SUBAPP_PERM = 'core.ban.modify_reason.subapp.{app_short}.{subapp_id}'
+    VIEW_SECRET_REASON_GLOBAL_PERM = 'core.ban.view_secret_reason.global'
+    VIEW_SECRET_REASON_SERVICE_PERM = 'core.ban.view_secret_reason.service'
+    VIEW_SECRET_REASON_APP_PERM = 'core.ban.view_secret_reason.app.{app_short}'
+    VIEW_SECRET_REASON_SUBAPP_PERM = 'core.ban.view_secret_reason.subapp.{app_short}.{subapp_id}'
+    MODIFY_SECRET_REASON_GLOBAL_PERM = 'core.ban.modify_secret_reason.global'
+    MODIFY_SECRET_REASON_SERVICE_PERM = 'core.ban.modify_secret_reason.service'
+    MODIFY_SECRET_REASON_APP_PERM = 'core.ban.modify_secret_reason.app.{app_short}'
+    MODIFY_SECRET_REASON_SUBAPP_PERM = 'core.ban.modify_secret_reason.subapp.{app_short}.{subapp_id}'
+    MODIFY_LOCKED_GLOBAL_PERM = 'core.ban.modify_locked.global'
+    MODIFY_LOCKED_SERVICE_PERM = 'core.ban.modify_locked.service'
+    MODIFY_LOCKED_APP_PERM = 'core.ban.modify_locked.app.{app_short}'
+    MODIFY_LOCKED_SUBAPP_PERM = 'core.ban.modify_locked.subapp.{app_short}.{subapp_id}'
+
+    @property
+    def create_perm(self):
+        return self.get_perm("CREATE")
+
+    @property
+    def lock_perm(self):
+        return self.get_perm("LOCK")
+
+    @property
+    def unlock_perm(self):
+        return self.get_perm("UNLOCK")
+
+    @property
+    def enable_perm(self):
+        return self.get_perm("ENABLE")
+
+    @property
+    def disable_perm(self):
+        return self.get_perm("DISABLE")
+
+    @property
+    def comment_perm(self):
+        return self.get_perm("COMMENT")
+
+    @property
+    def modify_reason_perm(self):
+        return self.get_perm("MODIFY_REASON")
+
+    @property
+    def view_secret_reason_perm(self):
+        return self.get_perm("VIEW_SECRET_REASON")
+
+    @property
+    def modify_secret_reason_perm(self):
+        return self.get_perm("MODIFY_SECRET_REASON")
+
+    @property
+    def modify_locked_perm(self):
+        return self.get_perm("MODIFY_LOCKED")
+
+    def get_perm(self, action):
+        perm = getattr(self, action + "_" + self.ban_type.upper() + "_BAN")
+        if self.ban_type == "app" or self.ban_type == "subapp":
+            perm = perm.format(app_short=self.app.short)
+        if self.ban_type == "subapp":
+            perm = perm.format(subapp_id=self.subarea)
+
+        return perm
 
     def enable(self, user):
         if not self._enabled:
