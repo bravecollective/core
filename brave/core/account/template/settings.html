@@ -535,6 +535,11 @@
                                 +
                             '<input id="password" name="password" type="password" class="input-block-level" placeholder="Current Password" maxlength="100" autocomplete="off" required>' 
                                 +
+                            <% from brave.core.account.model import TimeOTP %>
+                            % if web.user.otp and isinstance(web.user.otp, TimeOTP):
+                            '<input id="otp_code" name="otp_code" type="text" class="input-block-level" placeholder="One Time Password" maxlength="6" autocomplete="off" required>'
+                                +
+                            % endif
                             '<label><input type="checkbox" id="rotp" name="rotp"'
                                 %if web.user.otp and web.user.otp.required:
                                 +

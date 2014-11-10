@@ -352,7 +352,7 @@ class Settings(HTTPMethod):
             identifier = data.otp
 
             if not user.remove_otp():
-                return 'json:', dict(success=False, message=_("User has no OTP set up on their account."), data=data)
+                return 'json:', dict(success=False, message=_("User has no OTP set up on their account or it's still required."), data=data)
 
         elif data.form == "configureotp":
             if isinstance(data.password, unicode):
@@ -361,6 +361,9 @@ class Settings(HTTPMethod):
 
             if not User.password.check(user.password, data.password):
                 return 'json:', dict(success=False, message=_("Password incorrect."), data=data)
+
+            if isinstance(user.otp, TimeOTP) and  not user.otp.verify(data.otp_code):
+                return 'json:', dict(success=False, message=_("OTP incorrect."), data=data)
             
             user.otp.required = rotp
             user.save()

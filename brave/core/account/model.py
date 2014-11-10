@@ -84,7 +84,7 @@ class TimeOTP(OTP):
     @classmethod
     def create(cls):
         """Creates and returns a new TimeOTP object."""
-        otp = cls(identifier=random_base32(), required=True)
+        otp = cls(identifier=random_base32(), required=False)
         return otp
 
 
@@ -215,7 +215,11 @@ class User(Document):
         return True
 
     def remove_otp(self):
-        """Removes the user's OTP, even if it's already been disabled."""
+        """Removes the user's OTP iff it's been disabled."""
+
+        if self.otp and self.otp.required:
+            return False
+
         self.otp = None
         self.save()
         return True
