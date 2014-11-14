@@ -1,0 +1,136 @@
+## encoding: utf-8
+
+<%inherit file="brave.core.template.master"/>
+
+<%block name="title">Groups</%block>
+
+<%block name="post">
+    ${parent.post()}
+
+    <script type="text/javascript" charset="utf-8">
+        $(function() {
+            $('#new-group-create').click(function() {
+                var form = $(this).parents(".modal-content").find("form");
+                var id = form.find('input[name=id]').val();
+                var title = form.find('input[name=title]').val();
+                $.post('/group/manage', {
+                        id: id,
+                        title: title,
+                    }, function(data) {
+                        if (data.success) {
+                            window.location = "/group/" + data.id;
+                        } else {
+                            alert(data.message);
+                        }
+                    }
+                );
+            });
+        });
+    </script>
+
+    <script type="text/javascript" charset="utf-8">
+        $(function()
+        {
+
+            $(document).on('click', '.delete', function()
+            {
+                var row = $(this).parents('tr');
+
+                confirm(
+                    "Are you really, <em>really</em> sure?",
+                    "By deleting this group you may be removing something that applications depend on.<br />" +
+                        "It may even make octopuses cry. Please, think of the friendly deep-sea octopuses.",
+                    {
+                        label: "Remove Group",
+                        kind: 'btn-danger'
+                    },
+                    function()
+                    {
+                        $.post('/group/' + row.attr('data-id') + '/delete').
+                        done(function()
+                        {
+                            row.remove();
+                        });
+                    }
+                );
+            });
+        });
+    </script>
+</%block>
+
+<div class="modal fade" id="new-group">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Create group</h4>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <table class="table">
+                        <tr>
+                            <td>ID</td>
+                            <td><input name="id" type="text" pattern="^[a-zA-Z0-9]+$" required /></td>
+                            <td>A brief, unique string. No spaces or special characters.</td>
+                        </tr>
+                        <tr>
+                            <td>Title</td>
+                            <td><input name="title" type="text"jrequired /></td>
+                            <td>A human-readable description.</td>
+                        </tr>
+                    </table>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="new-group-create">Create group</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<div class="container-fluid">
+    <div id="tabs-wrapper">
+        <div class="row-fluid">
+            <a class="span3 tab" href="/group/">
+                ${_("Join")}
+            </a>
+            <a class="span3 tab active" href="/group/manage">
+                ${_("Manage")}
+            </a>
+        </div>
+    </div>
+
+    <div id="pad-wrapper">
+         % if web.user.has_permission('core.group.create'):
+            <div class="row-fluid header">
+                <a class="btn btn-success pull-right add" data-toggle="modal" data-target="#new-group"><i class="fa fa-plus"></i> Create Group</a>
+                <h3>Groups</h3>
+            </div>
+        % endif
+        <div class="row-fluid table">
+            % if not len(groups):
+                <p class="subtext" style="text-transform: uppercase;"><strong>There seem to be no groups.</strong></p>
+            % else:
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>id</th>
+                            <th>title</th>
+                            <th>delete?</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        % for group in groups:
+                            <tr data-id="${group.id | h}">
+                                <td><a href="/group/${group.id | u}">${group.id | h}</a></td>
+                                <td>${group.title | h}</td>
+                                <td><button class="btn btn-danger btn-small delete"><i class="fa fa-times"></i></button></td>
+                            </tr>
+                        % endfor
+                    </tbody>
+                </table>
+            % endif
+        </div>
+    </div>
+</div>
