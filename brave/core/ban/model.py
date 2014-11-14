@@ -14,7 +14,7 @@ class Ban(Document):
         indexes = [],
     )
 
-    banner = ReferenceField(User, db_field='b')
+    banner = ReferenceField(User, db_field='b', required=True)
     created = DateTimeField(default=datetime.utcnow(), db_field='c', required=True)
     # Note: We don't use Mongoengine expireasafterseconds because we want to retain copies of bans after they expire.
     # A duration of None means that the ban is permanent.
@@ -22,13 +22,13 @@ class Ban(Document):
 
     # Determines what the ban prevents the banned from doing.
     # Subapp bans are for banning from individual areas of an app, such as a chat room in Jabber
-    ban_type = StringField(db_field='bt', choices=["global", "service", "app", "subapp"])
+    ban_type = StringField(db_field='bt', choices=["global", "service", "app", "subapp"], required=True)
 
     # Stores the app for app and subapp bans.
     app = ReferenceField(Application, db_field='a')
 
     # Determines the area that a user is banned from for subapp bans. Unused otherwise.
-    subarea = StringField(db_field='a')
+    subarea = StringField(db_field='s')
 
     # The reason for the ban. This will be publicly available.
     reason = StringField(db_field='r', required=True)
@@ -36,7 +36,7 @@ class Ban(Document):
     secret_reason = StringField(db_field='sr')
 
     # Allows for the banner (and others) to comment on the ban with additional details.
-    history = ListField(EmbeddedDocumentField(BanHistory), db_field='c')
+    history = ListField(EmbeddedDocumentField('BanHistory'), db_field='h')
 
     # Allows for admins to lock the Ban, making it unmodifiable to non-Admins. Comments can still be added while locked.
     locked = BooleanField(db_field='l', default=False)
@@ -197,8 +197,12 @@ class Ban(Document):
         return False if self.duration else True
 
     @property
+    def expires(self):
+        return None if not self.duration else self.created + timedelta(self.duration)
+
+    @property
     def enabled(self):
-        if self._enabled and not self.created or (self.created + timedelta(self.duration) > datetime.utcnow()):
+        if self._enabled and not self.duration or (self.created + timedelta(self.duration) > datetime.utcnow()):
             return True
 
         return False
@@ -227,6 +231,10 @@ class PersonBan(Ban):
         return person_merge.current_person
 
 class BanHistory(EmbeddedDocument):
+    meta = dict(
+        allow_inheritance = True,
+    )
+
     user = ReferenceField(User)
     time = DateTimeField(default=datetime.utcnow())
 

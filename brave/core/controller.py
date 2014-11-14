@@ -156,6 +156,7 @@ class RootController(StartupMixIn, Controller):
     api = util.load('api')
     group = util.load('group')
     admin = util.load('admin')
+    ban = util.load('ban')
 
     def __call__(self, req):
         if req.method not in ('GET', 'HEAD'):
