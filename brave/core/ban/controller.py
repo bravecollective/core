@@ -7,74 +7,85 @@ from web.core.http import HTTPFound, HTTPNotFound
 from marrow.util.bunch import Bunch
 
 from brave.core.character.model import EVECharacter
+from brave.core.ban.model import Ban
 from brave.core.account.model import User
+from brave.core.application.model import Application
 from brave.core.util.predicate import authenticate
 from brave.core.util import post_only
 from brave.core.permission.util import user_has_permission
 from brave.core.permission.model import Permission, WildcardPermission, GRANT_WILDCARD
 
 
-class CharacterInterface(HTTPMethod):
+class BanInterface(HTTPMethod):
     
     @authenticate
-    def __init__(self, char):
-        super(CharacterInterface, self).__init__()
+    def __init__(self, ban):
+        super(BanInterface, self).__init__()
 
         try:
-            self.char = EVECharacter.objects.get(id=char)
-        except EVECharacter.DoesNotExist:
+            self.ban = Ban.objects.get(id=ban)
+        except Ban.DoesNotExist:
             raise HTTPNotFound()
 
-        if (not self.char.owner or self.char.owner.id != user.id) and not user.has_permission(self.char.view_perm):
+        if not self.ban.view_perm:
             raise HTTPNotFound()
-
-    @authenticate
-    def put(self):
-        if not self.char.owner or self.char.owner.id != user.id:
-            raise HTTPNotFound()
-        
-        u = user._current_obj()
-        u.primary = self.char
-        u.save()
-
-        if request.is_xhr:
-            return 'json:', dict(success=True)
-
-        raise HTTPFound(location='/character/')
         
     @authenticate
     def get(self):
-        if (not self.char.owner or self.char.owner.id != user.id) and not user.has_permission(self.char.view_perm):
-            raise HTTPNotFound()
-        
-        return 'brave.core.character.template.charDetails', dict(
-            char=self.char,
-            area='admin' if user.admin else 'chars',
-            can_grant_some_permission=any(p.id.startswith('core.permission.grant')
-                                          for p in user.permissions),
+        return 'brave.core.ban.template.banDetails', dict(
+            ban=self.ban,
+            area='ban',
         )
-    
+
+    # Call _current_obj() on user because the mongoengine reference fields don't like the stackedproxy.
+
     @post_only
-    @user_has_permission(Permission.GRANT_PERM, permission_id='permission')
-    def add_perm(self, permission=None):
-        p = Permission.objects(id=permission)
-        if len(p):
-            p = p.first()
-        else:
-            if GRANT_WILDCARD in permission:
-                p = WildcardPermission(permission)
-            else:
-                p = Permission(permission)
-            p.save()
-        self.char.personal_permissions.append(p)
-        self.char.save()
-    
+    @user_has_permission("{temp}", temp="self.ban.disable_perm")
+    def disable(self):
+        return 'json:', dict(success=self.ban.disable(user._current_obj()))
+
     @post_only
-    @user_has_permission(Permission.REVOKE_PERM, permission_id='permission')
-    def delete_perm(self, permission=None):
-        p = Permission.objects(id=permission).first()
-        self.char.personal_permissions.remove(p)
-        self.char.save()
+    @user_has_permission("{temp}", temp="self.ban.enable_perm")
+    def enable(self):
+        return 'json:', dict(success=self.ban.enable(user._current_obj()))
+
+    @post_only
+    @user_has_permission("{temp}", temp="self.ban.comment_perm")
+    def comment(self, comment):
+        return 'json:', dict(success=self.ban.comment(user._current_obj(), comment))
+
+    @post_only
+    @user_has_permission("{temp}", temp="self.ban.lock_perm")
+    def lock(self):
+        return 'json:', dict(success=self.ban.lock(user._current_obj()))
+
+    @post_only
+    @user_has_permission("{temp}", temp="self.ban.unlock_perm")
+    def unlock(self):
+        return 'json:', dict(success=self.ban.unlock(user._current_obj()))
+
+    @post_only
+    @user_has_permission("{temp}", temp="self.ban.modify_reason_perm")
+    def modify_reason(self, reason):
+        return 'json:', dict(success=self.ban.modify_reason(user._current_obj(), reason))
+
+    @post_only
+    @user_has_permission("{temp}", temp="self.ban.modify_secret_reason_perm")
+    def modify_secret_reason(self, reason):
+        return 'json:', dict(success=self.ban.modify_secret_reason(user._current_obj(), reason))
+
+    @post_only
+    @user_has_permission("{temp}", temp="self.ban.disable_perm")
+    def modify_type(self, type, app=None, subarea=None):
+        print type
+        if type == "app" and app:
+            if not user.has_permission(Ban.CREATE_APP_PERM.format(app_short=app)):
+                return 'json:', dict(success=False, message="You're not allowed to do this.")
+        elif type == "subapp" and subarea:
+            if not user.has_permission(Ban.CREATE_SUBAPP_PERM.format(app_short=app, subapp_id=subarea)):
+                return 'json:', dict(success=False, message="You're not allowed to do this.")
+
+        return 'json:', dict(success=self.ban.modify_type(user._current_obj(), type, app, subarea))
 
 
 class BanSearch(HTTPMethod):

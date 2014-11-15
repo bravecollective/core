@@ -57,6 +57,10 @@ class Ban(Document):
     UNLOCK_SERVICE_PERM = 'core.ban.unlock.service'
     UNLOCK_APP_PERM = 'core.ban.unlock.app.{app_short}'
     UNLOCK_SUBAPP_PERM = 'core.ban.unlock.app.{app_short}.{subapp_id}'
+    VIEW_GLOBAL_PERM = 'core.ban.view.global'
+    VIEW_SERVICE_PERM = 'core.ban.view.service'
+    VIEW_APP_PERM = 'core.ban.view.app.{app_short}'
+    VIEW_SUBAPP_PERM = 'core.ban.view.app.{app_short}.{subapp_id}'
     ENABLE_GLOBAL_PERM = 'core.ban.enable.global'
     ENABLE_SERVICE_PERM = 'core.ban.enable.service'
     ENABLE_APP_PERM = 'core.ban.enable.app.{app_short}'
@@ -126,12 +130,16 @@ class Ban(Document):
     def modify_locked_perm(self):
         return self.get_perm("MODIFY_LOCKED")
 
+    @property
+    def view_perm(self):
+        return self.get_perm("VIEW")
+
     def get_perm(self, action):
-        perm = getattr(self, action + "_" + self.ban_type.upper() + "_BAN")
-        if self.ban_type == "app" or self.ban_type == "subapp":
+        perm = getattr(self, action + "_" + self.ban_type.upper() + "_PERM")
+        if self.ban_type == "app":
             perm = perm.format(app_short=self.app.short)
         if self.ban_type == "subapp":
-            perm = perm.format(subapp_id=self.subarea)
+            perm = perm.format(app_short=self.app.short, subapp_id=self.subarea)
 
         return perm
 
@@ -157,6 +165,7 @@ class Ban(Document):
 
     def comment(self, user, comment):
         self.history.append(CommentHistory(user=user, comment=comment))
+        self.save()
         log.info("{0} commented {1} on ban {2}".format(user.username, comment, self.id))
         return True
 
@@ -182,13 +191,47 @@ class Ban(Document):
 
     def modify_reason(self, user, reason):
         self.history.append(ModifyReasonHistory(user=user, prev_reason=self.reason, new_reason=reason))
+        log.info("{0} changed reason from '{1}' to '{2}'".format(user.username, self.reason, reason))
         self.reason = reason
         self.save()
         return True
 
     def modify_secret_reason(self, user, reason):
         self.history.append(ModifySecretReasonHistory(user=user, prev_reason=self.reason, new_reason=reason))
+        log.info("{0} changed secret reason from '{1}' to '{2}'".format(user.username, self.secret_reason, reason))
         self.secret_reason = reason
+        self.save()
+        return True
+
+    def modify_type(self, user, type, app=None, subarea=None):
+
+        if type == "app" and not app:
+            print "YOLO"
+            return False
+
+        if type == "subapp" and (not app or not subarea):
+            print "NOLO"
+            return False
+
+        if type == "app" or type == "subapp":
+            app = Application.objects(short=app).first()
+            if not app:
+                print "FUCK"
+                return False
+
+        prev_app = self.app.short if self.ban_type == "app" or self.ban_type == "subapp" else None
+        prev_subarea = self.subarea if self.ban_type == "subarea" else None
+        new_app = app.short if type == "app" or type == "subapp" else None
+        new_subarea = subarea if type == "subapp" else None
+
+        self.history.append(ModifyTypeBanHistory(user=user, prev_type=self.ban_type, new_type=type,
+                                                 prev_app=prev_app, prev_subarea=prev_subarea, new_app=new_app,
+                                                 new_subarea=new_subarea))
+        log.info("{0} changed type from '{1}' to '{2}'".format(user.username, self.ban_type, type))
+
+        self.app = Application.objects(short=new_app).first()
+        self.subarea = new_subarea
+        self.ban_type = type
         self.save()
         return True
 
@@ -202,7 +245,7 @@ class Ban(Document):
 
     @property
     def enabled(self):
-        if self._enabled and not self.duration or (self.created + timedelta(self.duration) > datetime.utcnow()):
+        if self._enabled and (not self.duration or (self.created + timedelta(self.duration) > datetime.utcnow())):
             return True
 
         return False
@@ -242,7 +285,7 @@ class BanHistory(EmbeddedDocument):
         return None
 
     def __repr__(self):
-        return "{0}({1})".format(type(self), self.display)
+        return str(type(self)) + "(" + self.display() + ")"
 
 class CreateBanHistory(BanHistory):
     def display(self):
@@ -273,10 +316,30 @@ class ModifyReasonHistory(BanHistory):
     prev_reason = StringField()
     new_reason = StringField()
     def display(self):
-        return "Changed reason from {0} to {1}".format(self.prev_reason, self.new_reason)
+        return "Changed reason from '{0}' to '{1}'".format(self.prev_reason, self.new_reason)
 
 class ModifySecretReasonHistory(BanHistory):
     prev_reason = StringField()
     new_reason = StringField()
     def display(self):
-        return "Changed secret reason from {0} to {1}".format(self.prev_reason, self.new_reason)
+        return "Changed secret reason from '{0}' to '{1}'".format(self.prev_reason, self.new_reason)
+
+class ModifyTypeBanHistory(BanHistory):
+    prev_type = StringField()
+    new_type = StringField()
+    prev_app = StringField()
+    prev_subarea = StringField()
+    new_app = StringField()
+    new_subarea = StringField()
+    def display(self):
+        prev = self.prev_type.upper()
+        if prev == "APP" or prev == "SUBAPP":
+            prev += ": {0}".format(self.prev_app)
+        if prev.startswith("SUBAPP"):
+            prev += "({0})".format(self.prev_subarea)
+        new = self.new_type.upper()
+        if new == "APP" or new == "SUBAPP":
+            new += ": {0}".format(self.new_app)
+        if new.startswith("SUBAPP"):
+            new += "({0})".format(self.new_subarea)
+        return "Changed type from {0} to {1}".format(prev, new)
