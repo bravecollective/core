@@ -17,8 +17,8 @@ class Ban(Document):
     banner = ReferenceField(User, db_field='b', required=True)
     created = DateTimeField(default=datetime.utcnow(), db_field='c', required=True)
     # Note: We don't use Mongoengine expireasafterseconds because we want to retain copies of bans after they expire.
-    # A duration of None means that the ban is permanent.
-    duration = DateTimeField(db_field='d')
+    # An expiration of None means that the ban is permanent.
+    expires = DateTimeField(db_field='d')
 
     # Determines what the ban prevents the banned from doing.
     # Subapp bans are for banning from individual areas of an app, such as a chat room in Jabber
@@ -237,12 +237,12 @@ class Ban(Document):
         return False if self.duration else True
 
     @property
-    def expires(self):
-        return None if not self.duration else self.created + timedelta(self.duration)
+    def duration(self):
+        return None if not self.expires else self.expires.replace(tzinfo=None) - self.created.replace(tzinfo=None)
 
     @property
     def enabled(self):
-        if self._enabled and (not self.duration or (self.created + timedelta(self.duration) > datetime.utcnow())):
+        if self._enabled and (not self.expires or self.expires.replace(tzinfo=None) > datetime.utcnow()):
             return True
 
         return False
@@ -258,6 +258,14 @@ class PersonBan(Ban):
     # Records the actual banned entity
     banned_type = StringField(db_field='t', choices=["character", "user", "ip", "key", "person"])
     banned_ident = StringField(db_field='i')
+
+    @staticmethod
+    def create(banner, duration, ban_type, reason, banned_ident, person, app=None, subarea=None, secret_reason=None, banned_type="character"):
+        ban = PersonBan(banner=banner, ban_type=ban_type, reason=reason,
+                        orig_person=str(person.id), app=app, subarea=subarea,secret_reason=secret_reason, banned_type=banned_type, banned_ident=banned_ident)
+        ban.expires = ban.created + duration
+        ban.history.append(CreateBanHistory(user=banner))
+        return ban.save()
 
     @property
     def person(self):

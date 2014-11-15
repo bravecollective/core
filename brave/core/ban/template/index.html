@@ -4,8 +4,108 @@
 
 <%block name="title">Search Bans</%block>
 
+<%block name="post">
+    ${parent.post()}
+
+    <script type="text/javascript" charset="utf-8">
+        $(function()
+        {
+            $(document).on('click', '.ban-confirm', function() {
+                var form = $(this).parents(".modal-content").find("form");
+                var char = form.find('input[name=char]').val();
+                var duration = form.find('input[name=duration]').val();
+                var reason = form.find('input[name=reason]').val();
+                var secret_reason = form.find('input[name=secret_reason]').val();
+                var type = form.find('input[name=type]:checked').val();
+                var app = form.find('input[name=app]').val();
+                var subarea = form.find('input[name=subarea]').val();
+                $.post('/ban/create', {
+                        char: char,
+                        duration: duration,
+                        reason: reason,
+                        secret_reason: secret_reason,
+                        ban_type: type,
+                        app: app,
+                        subarea: subarea,
+                    }, function(data) {
+                        if (data.success) {
+                            window.location = "/ban/" + data.id;
+                        } else {
+                            alert(data.message);
+                        }
+                    }
+                );
+            });
+        });
+    </script>
+</%block>
+
+<div class="modal fade" id="create-ban">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Create Ban</h4>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <table class="table">
+                        <tr>
+                            <td>Character Name</td>
+                            <td><input name="char" type="text" required /></td>
+                        </tr>
+                        <tr>
+                            <td>Duration</td>
+                            <td><input name="duration" type="text" required/></td>
+                            <td>How long the ban lasts in hours. 0 is a permanent ban.</td>
+                        </tr>
+                        <tr>
+                            <td>Reason</td>
+                            <td><input name="reason" type="text" required/></td>
+                            <td>Note, this is public information.</td>
+                        </tr>
+                        <tr>
+                            <td>Secret Reason</td>
+                            <td><input name="secret_reason" type="text" required/></td>
+                            <td>For when you want to keep the reason for the ban a secret!</td>
+                        </tr>
+                        <tr>
+                            <td>Ban Type</td>
+                            <td>
+                                <input name="type" type="radio" value="global" required /> Global<br/>
+                                <input name="type" type="radio" value="service" required /> Service<br/>
+                                <input name="type" type="radio" value="app" required /> App<br/>
+                                <input name="type" type="radio" value="subapp" required /> Subapp
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>App Short</td>
+                            <td><input name="app" type="text"></td>
+                            <td>Only used for app and subapp bans</td>
+                        </tr>
+                        <tr>
+                            <td>SubApp Area</td>
+                            <td><input name="subarea" type="text"></td>
+                            <td>Only used for subapp bans</td>
+                        </tr>
+                    </table>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary ban-confirm" id="ban-confirm">Create Ban</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
 <div class="container-fluid">
     <div id="pad-wrapper">
+        <div class="area">
+            <span class="actions">
+                <a class="btn btn-danger pull-right create-ban-button" id="create-ban-button" data-toggle="modal" data-target="#create-ban"><i class="fa fa-times"></i> Create Ban</a>
+            </span>
+        </div>
         <div class="row-fluid header">
             <h3>Ban Search</h3>
         </div>
