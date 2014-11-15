@@ -197,7 +197,7 @@ class Ban(Document):
         return True
 
     def modify_secret_reason(self, user, reason):
-        self.history.append(ModifySecretReasonHistory(user=user, prev_reason=self.reason, new_reason=reason))
+        self.history.append(ModifySecretReasonHistory(user=user, prev_reason=self.secret_reason, new_reason=reason))
         log.info("{0} changed secret reason from '{1}' to '{2}'".format(user.username, self.secret_reason, reason))
         self.secret_reason = reason
         self.save()
@@ -206,17 +206,14 @@ class Ban(Document):
     def modify_type(self, user, type, app=None, subarea=None):
 
         if type == "app" and not app:
-            print "YOLO"
             return False
 
         if type == "subapp" and (not app or not subarea):
-            print "NOLO"
             return False
 
         if type == "app" or type == "subapp":
             app = Application.objects(short=app).first()
             if not app:
-                print "FUCK"
                 return False
 
         prev_app = self.app.short if self.ban_type == "app" or self.ban_type == "subapp" else None
