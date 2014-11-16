@@ -64,11 +64,13 @@
                             <td><input name="reason" type="text" required/></td>
                             <td>Note, this is public information.</td>
                         </tr>
+                        % if web.user.has_any_permission("core.ban.modify_secret_reason.*"):
                         <tr>
                             <td>Secret Reason</td>
                             <td><input name="secret_reason" type="text" required/></td>
                             <td>For when you want to keep the reason for the ban a secret!</td>
                         </tr>
+                        % endif
                         <tr>
                             <td>Ban Type</td>
                             <td>
@@ -122,9 +124,6 @@
             <form method="GET" action="/ban" id="search" class="form-inline">
                 <div class="span2">
                     <input name="character" type="text" placeholder="Character Name" class="span2"/>
-                </div>
-                <div class="span2">
-                    <input name="ip" type="text" placeholder="IP Address" class="span2"/>
                 </div>
                 <br>
                 <br>

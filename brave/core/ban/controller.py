@@ -8,13 +8,11 @@ from marrow.util.bunch import Bunch
 
 from brave.core.character.model import EVECharacter
 from brave.core.ban.model import Ban, PersonBan
-from brave.core.account.model import User
 from brave.core.application.model import Application
 from brave.core.util.predicate import authenticate
 from brave.core.util import post_only
 from brave.core.permission.util import user_has_permission
-from brave.core.permission.model import Permission, WildcardPermission, GRANT_WILDCARD
-from datetime import timedelta, datetime
+from datetime import timedelta
 
 
 class BanInterface(HTTPMethod):
@@ -43,16 +41,25 @@ class BanInterface(HTTPMethod):
     @post_only
     @user_has_permission("{temp}", temp="self.ban.disable_perm")
     def disable(self):
+        if self.ban.locked and not user.has_permission(self.ban.unlock_perm):
+            return 'json:', dict(success=False, message="Sorry, this ban is locked, and therefore immutable.")
+
         return 'json:', dict(success=self.ban.disable(user._current_obj()))
 
     @post_only
     @user_has_permission("{temp}", temp="self.ban.enable_perm")
     def enable(self):
+        if self.ban.locked and not user.has_permission(self.ban.unlock_perm):
+            return 'json:', dict(success=False, message="Sorry, this ban is locked, and therefore immutable.")
+
         return 'json:', dict(success=self.ban.enable(user._current_obj()))
 
     @post_only
     @user_has_permission("{temp}", temp="self.ban.comment_perm")
     def comment(self, comment):
+        if self.ban.locked and not user.has_permission(self.ban.unlock_perm):
+            return 'json:', dict(success=False, message="Sorry, this ban is locked, and therefore immutable.")
+
         return 'json:', dict(success=self.ban.comment(user._current_obj(), comment))
 
     @post_only
@@ -68,17 +75,25 @@ class BanInterface(HTTPMethod):
     @post_only
     @user_has_permission("{temp}", temp="self.ban.modify_reason_perm")
     def modify_reason(self, reason):
+        if self.ban.locked and not user.has_permission(self.ban.unlock_perm):
+            return 'json:', dict(success=False, message="Sorry, this ban is locked, and therefore immutable.")
+
         return 'json:', dict(success=self.ban.modify_reason(user._current_obj(), reason))
 
     @post_only
     @user_has_permission("{temp}", temp="self.ban.modify_secret_reason_perm")
     def modify_secret_reason(self, reason):
+        if self.ban.locked and not user.has_permission(self.ban.unlock_perm):
+            return 'json:', dict(success=False, message="Sorry, this ban is locked, and therefore immutable.")
+
         return 'json:', dict(success=self.ban.modify_secret_reason(user._current_obj(), reason))
 
     @post_only
     @user_has_permission("{temp}", temp="self.ban.disable_perm")
     def modify_type(self, type, app=None, subarea=None):
-        print type
+        if self.ban.locked and not user.has_permission(self.ban.unlock_perm):
+            return 'json:', dict(success=False, message="Sorry, this ban is locked, and therefore immutable.")
+
         if type == "app" and app:
             if not user.has_permission(Ban.CREATE_APP_PERM.format(app_short=app)):
                 return 'json:', dict(success=False, message="You're not allowed to do this.")
@@ -91,9 +106,9 @@ class BanInterface(HTTPMethod):
 
 class BanSearch(HTTPMethod):
     @authenticate
-    def get(self, character=None, ip=None, submit=None):
+    def get(self, character=None, submit=None):
 
-        if not character and not ip:
+        if not character:
 
             return 'brave.core.ban.template.index', dict(
                     area='bans',
@@ -110,27 +125,20 @@ class BanSearch(HTTPMethod):
                     area='bans',
                 )
 
-            return 'brave.core.ban.template.index', dict(
-                    success = True,
-                    search_param = temp,
-                    results=character.owner.person.bans,
-                    area='bans',
-                )
-        if ip:
-            temp = ip
-            ip = User.objects(host=ip).first()
+            bans = []
+            # We only show enabled bans in the search window to users wihtout permission
+            for b in character.owner.person.bans:
+                if b.enabled:
+                    bans.append(b)
+                    continue
 
-            if not ip:
-                return 'brave.core.ban.template.index', dict(
-                    success = False,
-                    search_param = temp,
-                    area='bans',
-                )
+                if user.has_permission(b.view_perm):
+                    bans.append(b)
 
             return 'brave.core.ban.template.index', dict(
                     success = True,
                     search_param = temp,
-                    results=ip.person.bans,
+                    results=bans,
                     area='bans',
                 )
 
@@ -142,6 +150,7 @@ class BanSearch(HTTPMethod):
 
             app = None
             subarea = None
+
         elif ban_type == "service":
             if not user.has_permission(Ban.CREATE_SERVICE_PERM):
                 return 'json:', dict(success=False, message="You don't have permission to do this.")
