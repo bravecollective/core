@@ -23,6 +23,11 @@ def authenticate(function):
         if not user or not user._current_obj():
             log.debug('user not a valid object')
             raise HTTPUnauthorized()
+
+        if user.person.banned():
+            log.debug("User is global banned")
+            web.auth.deauthenticate()
+            raise HTTPUnauthorized()
         
         return function(self, *args, **kwargs)
             

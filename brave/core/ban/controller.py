@@ -115,6 +115,12 @@ class BanSearch(HTTPMethod):
                 )
 
         if character:
+            # Allow for people to check if someone is banned, but not to obtain the ban list
+            if len(character) < 5:
+                return 'brave.core.ban.template.index', dict(
+                    area='bans',
+                )
+
             temp = character
             character = EVECharacter.objects(name__istartswith=character).first()
 
@@ -129,7 +135,7 @@ class BanSearch(HTTPMethod):
             bans = []
             # We only show enabled bans in the search window to users without permission
             for b in character.owner.person.bans:
-                if b.enabled:
+                if b.enabled and b.banned_ident == character.name:
                     bans.append(b)
                     continue
 
