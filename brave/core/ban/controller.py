@@ -139,9 +139,15 @@ class BanSearch(HTTPMethod):
         if ban_type == "global":
             if not user.has_permission(Ban.CREATE_GLOBAL_PERM):
                 return 'json:', dict(success=False, message="You don't have permission to do this.")
+
+            app = None
+            subarea = None
         elif ban_type == "service":
             if not user.has_permission(Ban.CREATE_SERVICE_PERM):
                 return 'json:', dict(success=False, message="You don't have permission to do this.")
+
+            app = None
+            subarea = None
         elif ban_type == "app":
             if not app:
                 return 'json:', dict(success=False, message="You must supply an application for application bans.")
@@ -152,6 +158,8 @@ class BanSearch(HTTPMethod):
 
             if not user.has_permission(Ban.CREATE_APP_PERM.format(app_short=app)):
                 return 'json:', dict(success=False, message="You don't have permission to do this.")
+
+            subarea = None
         elif ban_type == "subapp":
             if not app:
                 return 'json:', dict(success=False, message="You must supply an application for subapp bans.")
@@ -175,14 +183,7 @@ class BanSearch(HTTPMethod):
         if not reason:
             return 'json:', dict(success=False, message="You must provide a reason for the ban.")
 
-        # The JS from the client will send empty strings, which mongoengine will interpret as actual values,
-        # breaking everything. (Particularly the fact that an empty string is not a valid Application)
-
-        if not app:
-            app = None
-
-        if not subarea:
-            subarea = None
+        # The JS from the client will send empty strings, which mongoengine will interpret as actual values
 
         if not secret_reason:
             secret_reason = None

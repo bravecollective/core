@@ -1,4 +1,4 @@
-from mongoengine import EmbeddedDocument, EmbeddedDocumentField, Document, StringField, DateTimeField, BooleanField, ReferenceField, ListField
+from mongoengine import EmbeddedDocument, EmbeddedDocumentField, Document, StringField, DateTimeField, BooleanField, ReferenceField, ListField, ValidationError
 from brave.core.person.model import Person, PersonEvent
 from brave.core.account.model import User
 from brave.core.application.model import Application
@@ -231,6 +231,24 @@ class Ban(Document):
         self.ban_type = type
         self.save()
         return True
+
+    def clean(self):
+        """Mongoengine pre-save validation \o/
+        We opt to throw an error for extraneous information here instead of just purging it because the history files
+        will be created with the (incorrect) extraneous information even if we purge it from the ban itself on save."""
+        if self.ban_type == "global" or self.ban_type == "service":
+            if self.app or self.subarea:
+                raise ValidationError("Global and Service bans don't have apps or subareas.")
+
+        if self.ban_type == "app":
+            if not self.app:
+                raise ValidationError("App bans require that an app be specified")
+            if self.subarea:
+                raise ValidationError("App bans don't have subareas")
+
+        if self.ban_type == "subapp":
+            if not self.app or not self.subarea:
+                raise ValidationError("Subapp bans require that an app and subarea be specified")
 
     @property
     def permanent(self):
