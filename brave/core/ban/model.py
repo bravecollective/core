@@ -281,7 +281,7 @@ class PersonBan(Ban):
     def create(banner, duration, ban_type, reason, banned_ident, person, app=None, subarea=None, secret_reason=None, banned_type="character"):
         ban = PersonBan(banner=banner, ban_type=ban_type, reason=reason,
                         orig_person=str(person.id), app=app, subarea=subarea,secret_reason=secret_reason, banned_type=banned_type, banned_ident=banned_ident)
-        ban.expires = ban.created + duration
+        ban.expires = ban.created + duration if duration else None
         ban.history.append(CreateBanHistory(user=banner))
         return ban.save()
 
@@ -302,10 +302,15 @@ class BanHistory(EmbeddedDocument):
     )
 
     user = ReferenceField(User)
-    time = DateTimeField(default=datetime.utcnow())
+    time = DateTimeField()
 
     def display(self):
         return None
+
+    def clean(self):
+        """For some reason using default=datetime.utcnow() for time was not working as intended..."""
+        if not self.time:
+            self.time = datetime.utcnow()
 
     def __repr__(self):
         return str(type(self)) + "(" + self.display() + ")"

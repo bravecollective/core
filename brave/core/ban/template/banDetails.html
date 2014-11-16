@@ -217,10 +217,19 @@
                         <tr>
                             <td>Ban Type</td>
                             <td>
+                                <% from brave.core.ban.model import Ban %>
+                                % if web.user.has_permission(Ban.CREATE_GLOBAL_PERM):
                                 <input name="type" type="radio" value="global" required /> Global<br/>
+                                % endif
+                                % if web.user.has_permission(Ban.CREATE_SERVICE_PERM):
                                 <input name="type" type="radio" value="service" required /> Service<br/>
+                                % endif
+                                % if web.user.has_any_permission(Ban.CREATE_APP_PERM.format(app_short="*")):
                                 <input name="type" type="radio" value="app" required /> App<br/>
+                                % endif
+                                % if web.user.has_any_permission(Ban.CREATE_SUBAPP_PERM.format(app_short="*", subapp_id="*")):
                                 <input name="type" type="radio" value="subapp" required /> Subapp
+                                % endif
                             </td>
                         </tr>
                         <tr>
@@ -321,7 +330,7 @@
                         %>
                         <tr data-id="${ban.id}" bgcolor=${"009999" if h.__class__.__name__.replace("Ban", "").replace("History", "") == "Comment" else "FFFFFF"}>
                             <td class="action">${h.__class__.__name__.replace("Ban", "").replace("History", "")}</td>
-                            <td class="time">${h.time}</td>
+                            <td class="time">${h.time.strftime("%Y-%m-%d %H:%M:%S")}</td>
                             <td class="user">${h.user.primary if h.user.primary else h.user}</td>
                             <td class="display">${h.display()}</td>
                         </tr>

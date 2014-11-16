@@ -72,10 +72,19 @@
                         <tr>
                             <td>Ban Type</td>
                             <td>
+                                <% from brave.core.ban.model import Ban %>
+                                % if web.user.has_permission(Ban.CREATE_GLOBAL_PERM):
                                 <input name="type" type="radio" value="global" required /> Global<br/>
+                                % endif
+                                % if web.user.has_permission(Ban.CREATE_SERVICE_PERM):
                                 <input name="type" type="radio" value="service" required /> Service<br/>
+                                % endif
+                                % if web.user.has_any_permission(Ban.CREATE_APP_PERM.format(app_short="*")):
                                 <input name="type" type="radio" value="app" required /> App<br/>
+                                % endif
+                                % if web.user.has_any_permission(Ban.CREATE_SUBAPP_PERM.format(app_short="*", subapp_id="*")):
                                 <input name="type" type="radio" value="subapp" required /> Subapp
+                                % endif
                             </td>
                         </tr>
                         <tr>
@@ -129,8 +138,9 @@
                 <thead>
                     <tr>
                         <th class="span2 sortable ban-id"><span class="line"></span>${_("Ban ID")}</th>
+                        <th class="span1 sortable ban-char"><span class="line"></span>${_("Character")}</th>
                         <th class="span1 sortable ban-enabled"><span class="line"></span>${_("Enabled")}</th>
-                        <th class="span2 sortable type"><span class="line"></span>${_("Ban Type")}</th>
+                        <th class="span1 sortable type"><span class="line"></span>${_("Ban Type")}</th>
                         <th class="span1 sortable type"><span class="line"></span>${_("Application")}</th>
                         <th class="span1 sortable type"><span class="line"></span>${_("Sub-Area")}</th>
                         <th class="span1 sortable type"><span class="line"></span>${_("Expires")}</th>
@@ -142,11 +152,12 @@
                     % for record in results:
                         <tr data-id="${record.id}">
                             <td class="ban-id"><a href="/ban/${record.id}">${record.id | h}</a></td>
+                            <td class="ban-char">${record.banned_ident | h}</td>
                             <td class="ban-enabled">${record.enabled}</td>
                             <td class="ban-type">${record.ban_type}</td>
                             <td class="ban-application">${"N/A" if not record.app else record.app.short}</td>
                             <td class="ban-subarea">${"N/A" if not record.subarea else record.subarea}</td>
-                            <td class="ban-expires">${"Never" if not record.expires else record.expires}</td>
+                            <td class="ban-expires">${"Never" if not record.expires else record.expires.strftime("%Y-%m-%d %H:%M:%S")}</td>
                             <td class="ban-created"><time datetime="${record.id.generation_time.isoformat().replace('+00:00', 'Z')}">${record.id.generation_time.isoformat(' ').replace('+00:00', '')}</time></td>
                             <td class="ban-reason">${record.reason}</td>
                         </tr>
