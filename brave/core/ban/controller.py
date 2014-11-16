@@ -190,6 +190,10 @@ class BanSearch(HTTPMethod):
         if not char:
             return 'json:', dict(success=False, message="Character provided was not found.")
 
+        for u in char.owner.person._users:
+            if u.has_permission(Ban.UNBANNABLE_PERM):
+                return 'json:', dict(success=False, message="You can't ban this character. Sorry.")
+
         if not reason:
             return 'json:', dict(success=False, message="You must provide a reason for the ban.")
 

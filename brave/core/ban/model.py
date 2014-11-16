@@ -89,6 +89,7 @@ class Ban(Document):
     MODIFY_LOCKED_SERVICE_PERM = 'core.ban.modify_locked.service'
     MODIFY_LOCKED_APP_PERM = 'core.ban.modify_locked.app.{app_short}'
     MODIFY_LOCKED_SUBAPP_PERM = 'core.ban.modify_locked.subapp.{app_short}.{subapp_id}'
+    UNBANNABLE_PERM = 'core.ban.unbannable'
 
     @property
     def create_perm(self):
