@@ -122,11 +122,12 @@ class BanSearch(HTTPMethod):
                 return 'brave.core.ban.template.index', dict(
                     success = False,
                     search_param = temp,
+                    results = [],
                     area='bans',
                 )
 
             bans = []
-            # We only show enabled bans in the search window to users wihtout permission
+            # We only show enabled bans in the search window to users without permission
             for b in character.owner.person.bans:
                 if b.enabled:
                     bans.append(b)

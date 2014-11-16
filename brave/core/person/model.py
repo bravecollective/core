@@ -170,19 +170,22 @@ class Person(Document):
     def banned(self, app=None, subarea=None):
         bans = self.bans
         for b in bans:
+            if not b.enabled:
+                continue
+
             if b.ban_type == "global":
-                return True
+                return b
 
             if app:
                 if b.ban_type == "service":
-                    return True
+                    return b
 
                 if b.ban_type == "app" and b.app.short == app:
-                    return True
+                    return b
 
                 if subarea:
                     if b.ban_type == "subapp" and b.app.short == app and b.subarea == subarea:
-                        return True
+                        return b
 
         return False
 

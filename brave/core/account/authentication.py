@@ -29,12 +29,12 @@ log = __import__('logging').getLogger(__name__)
 
 def lookup(identifier):
     """Thaw current user data based on session-stored user ID."""
-    
+
     user = User.objects(id=identifier).first()
     
     if user:
         user.update(set__seen=datetime.utcnow())  # , set__host=request.remote_addr -- chicken-egg problem
-    
+
     return user
 
 

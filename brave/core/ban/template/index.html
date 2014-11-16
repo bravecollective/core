@@ -112,6 +112,10 @@
 
 <div class="container-fluid">
     <div id="pad-wrapper">
+        % if banned:
+            <h6>${_("You have been banned.")}</h6>
+            <h4><font color="white">Good work. You went and got yourself banned. Details of the ban are below:</font></h4>
+        % else:
         <div class="area">
             <span class="actions">
                 <a class="btn btn-danger pull-right create-ban-button" id="create-ban-button" data-toggle="modal" data-target="#create-ban"><i class="fa fa-times"></i> Create Ban</a>
@@ -131,6 +135,7 @@
                 <input type="submit" name="submit" class="btn btn-default" value="Search" />
             </form>
         </div>
+        % endif
         % if search_param:
             <div class="row-fluid table">
             <table class="table table-hover">

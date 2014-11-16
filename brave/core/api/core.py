@@ -185,12 +185,33 @@ class CoreAPI(SignedController):
         # Step 1: Get the appropraite grant.
         token = ApplicationGrant.objects.get(id=token, application=request.service)
         character = token.character
+
+        if token.user.person.banned(app=token.application.short):
+            return dict(
+                success=False,
+                message="This user has been banned from accessing this application."
+            )
         
         # Step 2: Match ACLs.
         tags = []
         for group in Group.objects(id__in=request.service.groups):
             if group.evaluate(token.user, character):
                 tags.append(group.id)
+
+        subbans = []
+
+        for b in token.user.person.bans:
+
+            if not b.enabled:
+                continue
+
+            if b.ban_type != "subapp":
+                continue
+
+            if b.app != token.application:
+                continue
+
+            subbans.append(b.subarea)
         
         return dict(
                 character = dict(id=character.identifier, name=character.name),
@@ -199,5 +220,6 @@ class CoreAPI(SignedController):
                 tags = tags,
                 perms = character.permissions_tags(token.application),
                 expires = None,
-                mask = token.mask.mask if token.mask else 0
+                mask = token.mask.mask if token.mask else 0,
+                subbans=subbans
             )

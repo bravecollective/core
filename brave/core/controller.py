@@ -57,7 +57,12 @@ class AuthorizeHandler(HTTPMethod):
         
         if not grant:
             # TODO: We need a 'just logged in' flag in the request.
-            
+
+            if u.person.banned(ar.application.short):
+                return ('brave.core.template.authorize',
+                dict(success=False, message=_("You have been banned from using this application. Please see the ban " +
+                                                "search page for more details."), ar=ar))
+
             characters = list(u.characters.order_by('name').all())
             if not len(characters):
                 return ('brave.core.template.authorize',
@@ -92,6 +97,12 @@ class AuthorizeHandler(HTTPMethod):
                      
             return 'brave.core.template.authorize', dict(success=True, ar=ar, characters=chars, default=default)
 
+        if u.person.banned(ar.application.short):
+            return ('brave.core.template.authorize',
+                dict(success=False, message=_("You have been banned from using this application. Please see the ban " +
+                                                "search page for more details."), ar=ar))
+
+
         ngrant = ApplicationGrant(user=u, application=ar.application, mask=grant.mask, expires=datetime.utcnow() + timedelta(days=ar.application.expireGrantDays), character=grant.character)
         ngrant.save()
         
@@ -112,6 +123,11 @@ class AuthorizeHandler(HTTPMethod):
         
         ar = self.ar(ar)
         u = user._current_obj()
+
+        if u.person.banned(ar.application.short):
+            return ('brave.core.template.authorize',
+                dict(success=False, message=_("You have been banned from using this application. Please see the ban " +
+                                                "search page for more details."), ar=ar))
         
         if not grant:
             # Deny access.
