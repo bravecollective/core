@@ -70,16 +70,19 @@ class OneGroupController(Controller):
     @post_only
     @user_has_permission(Group.EDIT_MEMBERS_PERM, group_id='self.group.id')
     def kick_member(self, name, method):
+        char_list = {
+            "join": self.group.join_members,
+            "request": self.group.request_members,
+        }[method]
         c = EVECharacter.objects(name__iexact=name.strip()).first()
         if not c:
             return 'json:', dict(success=False, message=_("Character with that name not found."))
             
-        if not c in getattr(self.group, method+"_members"):
+        if not c in char_list:
             return 'json:', dict(success=False, message=_("Character with that name is not a member via that method."))
             
-        glist = getattr(self.group, method+"_members")
         log.info("Removing {0} from group {1} (admitted via {2}) via KICK_MEMBER by {3}".format(c.name, self.group.id, method, user.primary))
-        glist.remove(c)
+        char_list.remove(c)
         self.group.save()
         
         return 'json:', dict(success=True)
@@ -274,7 +277,12 @@ class GroupList(HTTPMethod):
             if not group:
                 return 'json:', dict(success=False, message=_("Group not found"))
             
-            return getattr(self, action)(group)
+            return {
+                "leave": self.leave,
+                "join": self.join,
+                "request": self.request,
+                "widthdraw": self.withdraw,
+            }[action](group)
 
 class ManageGroupList(HTTPMethod):
     @user_has_any_permission('core.group.view.*')
