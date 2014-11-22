@@ -130,7 +130,7 @@ class Group(Document):
                     return True
             rules = self.rules
         
-        for rule in self.rules:
+        for rule in rules:
             result = rule.evaluate(user, character)
             if result is not None:
                 return result
