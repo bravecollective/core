@@ -30,6 +30,7 @@ class BanInterface(HTTPMethod):
             raise HTTPNotFound()
         
     @authenticate
+    @user_has_permission("{temp}", temp="self.ban.view_perm")
     def get(self):
         return 'brave.core.ban.template.banDetails', dict(
             ban=self.ban,
