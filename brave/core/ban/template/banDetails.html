@@ -217,17 +217,22 @@
                         <tr>
                             <td>Ban Type</td>
                             <td>
-                                <% from brave.core.ban.model import Ban %>
-                                % if web.user.has_permission(Ban.CREATE_GLOBAL_PERM):
+                                <%
+                                from brave.core.ban.model import Ban
+                                from brave.core.permission.model import Permission
+
+                                user_perms = web.user.permissions
+                                %>
+                                % if Permission.set_grants_permission(user_perms, Ban.CREATE_GLOBAL_PERM):
                                 <input name="type" type="radio" value="global" required /> Global<br/>
                                 % endif
-                                % if web.user.has_permission(Ban.CREATE_SERVICE_PERM):
+                                % if Permission.set_grants_permission(user_perms, Ban.CREATE_SERVICE_PERM):
                                 <input name="type" type="radio" value="service" required /> Service<br/>
                                 % endif
-                                % if web.user.has_any_permission(Ban.CREATE_APP_PERM.format(app_short="*")):
+                                % if Permission.set_grants_permission(user_perms, Ban.CREATE_APP_PERM.format(app_short="*")):
                                 <input name="type" type="radio" value="app" required /> App<br/>
                                 % endif
-                                % if web.user.has_any_permission(Ban.CREATE_SUBAPP_PERM.format(app_short="*", subapp_id="*")):
+                                % if Permission.set_grants_permission(user_perms, Ban.CREATE_SUBAPP_PERM.format(app_short="*", subapp_id="*")):
                                 <input name="type" type="radio" value="subapp" required /> Subapp
                                 % endif
                             </td>
@@ -281,33 +286,33 @@
 
         <b>Actions:</b>
         % if ban._enabled:
-            % if web.user.has_permission(ban.disable_perm):
+            % if Permission.set_grants_permission(user_perms, ban.disable_perm):
             <button class="btn btn-danger btn-small disable ${'disabled' if ban.locked and not web.user.has_permission(ban.unlock_perm) else ''}" title="Disable Ban" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i> Disable Ban</button>
             % endif
         % else:
-            % if web.user.has_permission(ban.enable_perm):
+            % if Permission.set_grants_permission(user_perms, ban.enable_perm):
             <button class="btn btn-danger btn-small enable ${'disabled' if ban.locked and not web.user.has_permission(ban.unlock_perm) else ''}" title="Enable Ban" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i> Enable Ban</button>
             % endif
         % endif
         % if ban.locked:
-            % if web.user.has_permission(ban.unlock_perm):
+            % if Permission.set_grants_permission(user_perms, ban.unlock_perm):
             <button class="btn btn-danger btn-small unlock" title="Unlock Ban" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i> Unlock Ban</button>
             % endif
         % else:
-            % if web.user.has_permission(ban.lock_perm):
+            % if Permission.set_grants_permission(user_perms, ban.lock_perm):
             <button class="btn btn-danger btn-small lock" title="Lock Ban" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i> Lock Ban</button>
             % endif
         % endif
-        % if web.user.has_permission(ban.comment_perm):
+        % if Permission.set_grants_permission(user_perms, ban.comment_perm):
         <button class="btn btn-success btn-small comment ${'disabled' if ban.locked and not web.user.has_permission(ban.unlock_perm) else ''}" title="Comment" rel="tooltip" data-placement="bottom" data-toggle="modal" data-target="#comment"><i class="fa fa-plus"></i> Comment</button>
         % endif
-        % if web.user.has_permission(ban.modify_reason_perm):
+        % if Permission.set_grants_permission(user_perms, ban.modify_reason_perm):
         <button class="btn btn-warning btn-small modify-reason ${'disabled' if ban.locked and not web.user.has_permission(ban.unlock_perm) else ''}" title="Modify Reason" rel="tooltip" data-placement="bottom" data-toggle="modal" data-target="#modify-reason"><i class="fa fa-circle"></i> Modify Reason</button>
         % endif
-        % if web.user.has_permission(ban.modify_secret_reason_perm):
+        % if Permission.set_grants_permission(user_perms, ban.modify_secret_reason_perm):
         <button class="btn btn-warning btn-small modify-secret-reason ${'disabled' if ban.locked and not web.user.has_permission(ban.unlock_perm) else ''}" title="Modify Secret Reason" rel="tooltip" data-placement="bottom" data-toggle="modal" data-target="#modify-secret-reason"><i class="fa fa-circle"></i> Modify Secret Reason</button>
         % endif
-        % if web.user.has_permission(ban.disable_perm):
+        % if Permission.set_grants_permission(user_perms, ban.disable_perm):
         <button class="btn btn-warning btn-small modify-ban-type ${'disabled' if ban.locked and not web.user.has_permission(ban.unlock_perm) else ''}" title="Modify Ban Type" rel="tooltip" data-placement="bottom" data-toggle="modal" data-target="#modify-ban-type"><i class="fa fa-circle"></i> Modify Ban Type</button>
         % endif
         <br/>
@@ -325,7 +330,7 @@
                 </thead>
                 <tbody>
                     % for h in ban.history:
-                        <% if h.__class__.__name__ == "ModifySecretReasonHistory" and not web.user.has_permission(ban.view_secret_reason_perm):
+                        <% if h.__class__.__name__ == "ModifySecretReasonHistory" and not Permission.set_grants_permission(user_perms, ban.view_secret_reason_perm):
                             continue
                         %>
                         <tr data-id="${ban.id}" bgcolor=${"009999" if h.__class__.__name__.replace("Ban", "").replace("History", "") == "Comment" else "FFFFFF"}>
