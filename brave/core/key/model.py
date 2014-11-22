@@ -150,8 +150,9 @@ class EVECredential(Document):
 
         char.save()
         return char
-    
-    def get_membership(self, info):
+
+    @staticmethod
+    def get_membership(info):
         from brave.core.character.model import EVEAlliance, EVECorporation, EVECharacter
         
         # This is a stupid edge-case to cover inconsistency between API calls.
