@@ -134,7 +134,7 @@ class BanSearch(HTTPMethod):
 
             bans = []
             # We only show enabled bans in the search window to users without permission
-            for b in character.owner.person.bans:
+            for b in character.person.bans:
                 if b.enabled and b.banned_ident == character.name:
                     bans.append(b)
                     continue
@@ -196,7 +196,7 @@ class BanSearch(HTTPMethod):
         if not char:
             return 'json:', dict(success=False, message="Character provided was not found.")
 
-        for u in char.owner.person._users:
+        for u in char.person._users:
             if u.has_permission(Ban.UNBANNABLE_PERM):
                 return 'json:', dict(success=False, message="You can't ban this character. Sorry.")
 
@@ -211,7 +211,7 @@ class BanSearch(HTTPMethod):
         duration = timedelta(hours=int(duration)) if duration != 0 else None
 
         ban = PersonBan.create(banner=user._current_obj(), duration=duration,
-                               ban_type=ban_type, reason=reason, person=char.owner.person, banned_ident=char.name,
+                               ban_type=ban_type, reason=reason, person=char.person, banned_ident=char.name,
                                app=app, subarea=subarea, secret_reason=secret_reason, banned_type="character")
         ban.save()
         return 'json:', dict(success=True, id=str(ban.id))
