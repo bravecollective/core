@@ -186,57 +186,35 @@ class CoreAPI(SignedController):
         token = ApplicationGrant.objects.get(id=token, application=request.service)
 
         # Step 2: Assemble the information for each character
-        characters_info = []
-        character = token.default_character
-        tags = []
-        
-        for char in token.characters:
-            # Ensure that this character still belongs to this user
+        def char_info(char):
+            # Ensure that this character still belongs to this user. 
             if char.owner != token.user:
                 token.remove_character(char)
-                try:
-                    token.reload()
-                except ApplicationGrant.DoesNotExist:
-                    break
+                token.reload()
+                return None
 
-            # Fill in the character info
-            character_info = {
-                'character': {
-                    'id': char.identifier,
-                    'name': char.name,
-                },
-                'corporation': {
-                    'id': char.corporation.identifier,
-                    'name': char.corporation.name,
-                },
-                'primary': token.user.primary == char,
-            }
-            if char.alliance:
-                character_info['alliance'] = {
-                    'id': char.alliance.identifier,
-                    'name': char.alliance.name,
-                }
-
-            # Step 2.5: Match ACLs.
-            char_tags = []
+            # Match ACLs.
+            tags = []
             for group in Group.objects(id__in=request.service.groups):
                 if group.evaluate(token.user, char):
-                    char_tags.append(group.id)
-                    if char == token.default_character:
-                        tags.append(group.id)
-            character_info['tags'] = char_tags
-            character_info['perms'] = char.permissions_tags(token.application)
+                    tags.append(group.id)
 
-            characters_info.append(character_info)
-            
-        return dict(
-            character = dict(id=character.identifier, name=character.name),
-            corporation = dict(id=character.corporation.identifier, name=character.corporation.name),
-            alliance = dict(id=character.alliance.identifier, name=character.alliance.name) if character.alliance else None,
-            characters = characters_info,
-            tags = tags,
-            perms = character.permissions_tags(token.application),
-            expires = None,
-            mask = token.mask
-        )
-            
+            return dict(
+                character = dict(id=char.identifier, name=char.name),
+                corporation = dict(id=char.corporation.identifier, name=char.corporation.name),
+                alliance = (dict(id=char.alliance.identifier, name=char.alliance.name)
+                            if char.alliance
+                            else None),
+                tags = tags,
+                perms = char.permissions_tags(token.application),
+                expires = None,
+                mask = token.mask,
+            )
+
+        characters_info = filter(None, map(char_info, token.characters))
+        if not characters_info:
+            return gtjk
+
+        info = char_info(token.default_character)
+        info['characters'] = characters_info
+        return info
