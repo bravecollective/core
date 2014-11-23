@@ -41,17 +41,17 @@ def selected(bool):
         <input type="hidden" name="type" value="list" />
         <input type="hidden" name="kind" value="${rule.kind}" />
         ${select_grant(rule)}
-        If Character
+        if character
         <select name="inverse">
-            <option value="false" ${selected(not rule.inverse)}>Is</option>
-            <option value="true" ${selected(rule.inverse)}>Is Not</option>
+            <option value="false" ${selected(not rule.inverse)}>is</option>
+            <option value="true" ${selected(rule.inverse)}>is not</option>
         </select>
         % if rule.kind == "c":
-            One Of These Characters:
+            one of these characters:
         % elif rule.kind == "o":
-            In One Of These Corporations:
+            in one of these corporations:
         % else:
-            In One Of These Alliances:
+            in one of these alliances:
         % endif
 
         ${stringlistinput("names", list(sorted(rule.target_objects(), key=lambda x: x.name.lower())), rule.kind, group)}
@@ -62,18 +62,18 @@ def selected(bool):
     <div class="aclkey acl_def">
         <input type="hidden" name="type" value="key" />
         ${select_grant(rule)}
-        If We
+        if we
         <select name="inverse">
-            <option value="false" ${selected(not rule.inverse)}>Have</option>
-            <option value="true" ${selected(rule.inverse)}>Don't Have</option>
+            <option value="false" ${selected(not rule.inverse)}>have</option>
+            <option value="true" ${selected(rule.inverse)}>don't have</option>
         </select>
         a(n)
         <select name="kind">
-            <option value="Account" ${selected(rule.kind == "Account")}>Account</option>
-            <option value="Character" ${selected(rule.kind == "Character")}>Character</option>
-            <option value="Corporation" ${selected(rule.kind == "Corporation (wtf?)")}>Corporation</option>
+            <option value="Account" ${selected(rule.kind == "Account")}>account</option>
+            <option value="Character" ${selected(rule.kind == "Character")}>character</option>
+            <option value="Corporation" ${selected(rule.kind == "Corporation")}>corporation (wtf?)</option>
         </select>
-        Key For This Character
+        key for this character
     </div>
 </%def>
 
@@ -81,12 +81,12 @@ def selected(bool):
     <div class="acltitle acl_def">
         <input type="hidden" name="type" value="title" />
         ${select_grant(rule)}
-        If Character
+        if character
         <select name="inverse">
-            <option value="false" ${selected(not rule.inverse)}>Has Any</option>
-            <option value="true" ${selected(rule.inverse)}>Has None</option>
+            <option value="false" ${selected(not rule.inverse)}>has any</option>
+            <option value="true" ${selected(rule.inverse)}>has none</option>
         </select>
-        Of These Titles:
+        of these titles:
         ${stringlistinput("titles", rule.titles, None, None)}
     </div>
 </%def>
@@ -95,12 +95,12 @@ def selected(bool):
     <div class="aclrole acl_def">
         <input type="hidden" name="type" value="role" />
         ${select_grant(rule)}
-        If Character
+        if character
         <select name="inverse">
-            <option value="false" ${selected(not rule.inverse)}>Has Any</option>
-            <option value="true" ${selected(rule.inverse)}>Has None</option>
+            <option value="false" ${selected(not rule.inverse)}>has any</option>
+            <option value="true" ${selected(rule.inverse)}>has none</option>
         </select>
-        Of These Roles:
+        of these roles:
         ${stringlistinput("roles", rule.roles, None, None)}
     </div>
 </%def>
@@ -109,12 +109,12 @@ def selected(bool):
     <div class="aclmask acl_def">
         <input type="hidden" name="type" value="mask" />
         ${select_grant(rule)}
-        If We
+        if we
         <select name="inverse">
-            <option value="false" ${selected(not rule.inverse)}>Have</option>
-            <option value="true" ${selected(rule.inverse)}>Don't Have</option>
+            <option value="false" ${selected(not rule.inverse)}>have</option>
+            <option value="true" ${selected(rule.inverse)}>don't have</option>
         </select>
-        A Key For This Character Supporting Permissions:
+        a key for this character supporting permissions:
         <div style="margin: 7px 3px 2px 3px;">
             <input type="text" name="mask" value="${rule.mask}" />
         </div>
