@@ -77,11 +77,11 @@ class Permission(Document):
         return(self.id == perm_string)
     
     @staticmethod
-    def set_grants_permission(perms, granted_perm):
+    def set_grants_permission(perms, permission):
         """Loops through a set of permissions and checks if any of them grants the desired permission."""
         
         for p in perms:
-            if p.grants_permission(granted_perm):
+            if p.grants_permission(permission):
                 return True
         
         return False

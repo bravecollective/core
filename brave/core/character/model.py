@@ -243,14 +243,9 @@ class EVECharacter(EVEEntity):
             # If an app is specified, return only Core permissions and permissions for that app.
             if perm.id.startswith('core') or perm.id.startswith(app):
                 permissions.add(perm)
-                
-        # Evaluate all of the User's wildcard permissions.
-        for perm in permissions.copy():
-            if not isinstance(perm, WildcardPermission):
-                continue
-            
-            permissions |= perm.get_permissions()
         
+        permissions = list(permissions)
+        permissions.sort()
         return permissions
         
     def permissions_tags(self, application=None):
@@ -288,6 +283,19 @@ class EVECharacter(EVEEntity):
             permission = permission.first()
         
         return(permission in self.permissions())
+        
+    def has_any_permission(self, permission):
+        """Returns true if the character has a permission that would be granted by permission."""
+        p = WildcardPermission.objects(id=permission)
+        if len(p):
+            p = p.first()
+        else:
+            p = WildcardPermission(id=permission)
+        for permID in self.permissions():
+            if p.grants_permission(permID.id):
+                return True
+                
+        return False
     
     @property
     def has_verified_key(self):
