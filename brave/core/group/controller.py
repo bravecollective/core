@@ -55,7 +55,7 @@ class OneGroupController(Controller):
             inverse = r['inverse'] == "true"
             if r['type'] == "list":
                 listify(r, 'names')
-                cls = ACLList.target_class(r['kind'])
+                cls = ACLList.KIND_CLS[r['kind']]
                 ids = [cls.objects(name=name).first().identifier for name in r['names']]
                 rule_objects.append(ACLList(grant=grant, inverse=inverse, kind=r['kind'], ids=ids))
             elif r['type'] == "key":
@@ -73,7 +73,7 @@ class OneGroupController(Controller):
 
         if not really:
             log.debug("not really")
-            return "json:", "\n".join([r.human_readable_repr() for r in rule_objects])
+            return "json:", "\n".join([unicode(r) for r in rule_objects])
 
         log.debug("really!")
         self.group.rules = rule_objects
@@ -165,5 +165,5 @@ class GroupController(Controller):
 
     @user_has_permission('core.group.edit.*', accept_any_matching=True)
     def check_rule_reference_exists(self, kind, name):
-        cls = ACLList.target_class(kind)
+        cls = ACLList.KIND_CLS[kind]
         return "json:", dict(exists=bool(cls.objects(name=name)))

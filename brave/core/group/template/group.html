@@ -216,7 +216,7 @@ def selected(bool):
     % elif isinstance(rule, ACLMask):
         ${aclmask(rule)}
     % else:
-        ERROR THIS WON'T WORK: ${rule.human_readable_repr()}
+        ERROR THIS WON'T WORK: ${rule}
     % endif
 </%def>
 
