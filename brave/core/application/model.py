@@ -64,6 +64,7 @@ class Application(Document):
     
     # This field indicates whether the application requires access to every character on the authorizing user's account.
     require_all_chars = BooleanField(db_field='a', default=False)
+    auth_only_one_char = BooleanField(db_field='one', default=False)
     
     owner = ReferenceField('User', db_field='o')
     
