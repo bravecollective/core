@@ -87,8 +87,8 @@ class AuthorizeHandler(HTTPMethod):
                 default = u.primary if u.primary in chars else chars[0]
             else:
                 return ('brave.core.template.authorize',
-                    dict(success=False, message=_
-                        ("You do not have any API keys on your account which match the requirements for this service. "
+                    dict(success=False, message=_(
+                        "You do not have any API keys on your account which match the requirements for this service. "
                         "Please add an {1} API key with a mask of <a href='/key/mask/{0}'>{0}</a> or better to your account."
                         .format(config['core.recommended_key_mask'], config['core.recommended_key_kind'])),
                         ar=ar))
