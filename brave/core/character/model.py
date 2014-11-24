@@ -264,25 +264,10 @@ class EVECharacter(EVEEntity):
         
         from brave.core.group.model import Permission
         
-        if isinstance(permission, str) or isinstance(permission, unicode):
-            perm_id = permission
-            permission = Permission.objects(id=perm_id)
-            
-            if not permission:
-                log.info("Permission %s not found.", perm_id)
-                
-                # The permission specified was not found in the database, so we loop through the character's
-                # permissions and see if they would grant this permission. Might be worth optimizing in the future
-                # by adding a new EVECharacter function that returns only that character's wildcard permissions.
-                for p in self.permissions():
-                    if p.grants_permission(perm_id):
-                        return True
-                
-                return False
-            
-            permission = permission.first()
+        if isinstance(permission, Permission):
+            permission = permission.id
         
-        return(permission in self.permissions())
+        return Permission.set_grants_permission(self.permissions(), permission)
         
     def has_any_permission(self, permission):
         """Returns true if the character has a permission that would be granted by permission."""
