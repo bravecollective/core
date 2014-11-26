@@ -96,7 +96,13 @@ class AuthorizeHandler(HTTPMethod):
             if ar.application.require_all_chars:
                 default = 'all'
                      
-            return 'brave.core.template.authorize', dict(success=True, ar=ar, characters=chars, default=default)
+            return 'brave.core.template.authorize', dict(
+                success=True,
+                ar=ar,
+                characters=chars,
+                default=default,
+                only_one_char=ar.application.auth_only_one_char,
+            )
 
         ngrant = ApplicationGrant(user=u, application=ar.application, mask=grant.mask, expires=datetime.utcnow() + timedelta(days=ar.application.expireGrantDays), chars=grant.characters, all_chars=grant.all_chars)
         ngrant.save()

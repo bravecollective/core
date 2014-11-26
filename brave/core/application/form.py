@@ -31,6 +31,7 @@ def manage_form(action='/application/manage/'):
                     TextField('required', L_("Required Mask"), placeholder='0', class_="input-small"),
                     TextField('optional', L_("Optional Mask"), placeholder='0', class_="input-small"),
                     CheckboxField('all_chars', L_("Require All Characters"), title="", class_='input-block-level'),
+                    CheckboxField('only_one_char', L_("Single Character"), title="", class_='input-block-level'),
                     TextField('short', L_("App Short Name"), class_="input-block-level"),
                     TextArea('perms', L_("Permissions"), rows = 7, class_="input-block-level"),
                     TextArea('groups', L_("Group Identifiers"), transform=TagsTransform(), placeholder="E.g.: fc diplo myapp myapp.special", rows=3, class_="input-block-level")

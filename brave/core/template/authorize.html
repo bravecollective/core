@@ -83,8 +83,17 @@
 
             $('#character-select button').click(function() {
                 var old_state = $(this).hasClass("active");
-                $(this).toggleClass('btn-info', !old_state);
-                $(this).find('input[type=checkbox]').prop('checked', !old_state);
+                if (${1 if only_one_char else 0}) {
+                    if (!old_state){
+                        $(this).siblings().toggleClass('btn-info', false);
+                        $(this).siblings().toggleClass('active', false);
+                        $(this).toggleClass('btn-info', true);
+                        $(this).find('input[type=radio]').prop('checked', true);
+                    }
+                } else {
+                    $(this).toggleClass('btn-info', !old_state);
+                    $(this).find('input[type=checkbox]').prop('checked', !old_state);
+                }
             });
 
             $('#character-select').on('show.bs.collapsible', function() {
@@ -161,22 +170,27 @@
             <!-- TODO: all-characters-required -->
             <div style="text-align: right; margin-top: 30px;">
                 <div id="character-select" data-toggle="buttons-checkbox" ${'class="collapse"' if default != 'all' else ''}>
-                    <button
-                        class="btn ${'active btn-info' if 'all' == default else ''}"
-                        ${'disabled' if 'all' == default else ''}
-                        data-id="all"
-                        data-toggle="collapse"
-                        data-target="#character-toggles"
-                        >
-                        <input type="checkbox" data-id="all" ${'checked' if 'all' == default else ''} />
-                        <strong>All Characters</strong>
-                    </button>
+                    % if not only_one_char:
+                        <button
+                            class="btn ${'active btn-info' if 'all' == default else ''}"
+                            ${'disabled' if 'all' == default else ''}
+                            data-id="all"
+                            data-toggle="collapse"
+                            data-target="#character-toggles"
+                            >
+                            <input type="checkbox" data-id="all" ${'checked' if 'all' == default else ''} />
+                            <strong>All Characters</strong>
+                        </button>
+                    % endif
                     <div id="character-toggles" class="${'collapse.in in' if default != 'all' else ''} collapse">
                         % for record in characters:
                             <button class="btn ${'active btn-info' if record == default else ''}" data-id="${record.id}">
-                                <input type="checkbox" data-id="${record.id}" ${'checked' if record == default else ''} />
+                                <input type="${'radio' if only_one_char else 'checkbox'}" name="char" data-id="${record.id}" ${'checked' if record == default else ''} />
                                 <img src="//image.eveonline.com/Character/${record.identifier}_32.jpg" />
                                 <strong>${record.name | h}</strong>
+                                % if record == default:
+                                <span class="label label-inverse" style="margin-left: 5px;">Default</span>
+                                % endif
                             </button>
                         % endfor
                     </div>
