@@ -385,6 +385,11 @@ class EVEKeyMask:
         
     def __repr__(self):
         return 'EVEKeyMask({0})'.format(self.mask)
+
+    def __nonzero__(self):
+        if self.mask:
+            return True
+        return False
         
     def has_access(self, mask):
         if isinstance(mask, EVEKeyMask):
