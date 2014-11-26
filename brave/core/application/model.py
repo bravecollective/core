@@ -66,7 +66,7 @@ class Application(Document):
     
     # Permissions
     EDIT_PERM = 'core.application.edit.{app_short}'
-    CREATE_PERM = 'core.application.create.{app_short}'
+    CREATE_PERM = 'core.application.create'
     AUTHORIZE_PERM = 'core.application.authorize.{app_short}'
     
     # Related Data
