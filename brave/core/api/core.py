@@ -188,7 +188,6 @@ class CoreAPI(SignedController):
         # Step 2: Assemble the information for each character
         characters_info = []
         character = token.default_character
-        tags = []
         
         for char in token.characters:
             # Ensure that this character still belongs to this user
@@ -222,21 +221,23 @@ class CoreAPI(SignedController):
             for group in Group.objects(id__in=request.service.groups):
                 if group.evaluate(token.user, char):
                     char_tags.append(group.id)
-                    if char == token.default_character:
-                        tags.append(group.id)
+
             character_info['tags'] = char_tags
             character_info['perms'] = char.permissions_tags(token.application)
 
             characters_info.append(character_info)
-            
+
+            if char == token.default_character:
+                default_char_info = character_info
+
         return dict(
-            character = dict(id=character.identifier, name=character.name),
-            corporation = dict(id=character.corporation.identifier, name=character.corporation.name),
-            alliance = dict(id=character.alliance.identifier, name=character.alliance.name) if character.alliance else None,
-            characters = characters_info,
-            tags = tags,
-            perms = character.permissions_tags(token.application),
-            expires = None,
-            mask = token.mask
+            character=default_char_info['character'],
+            corporation=default_char_info['corporation'],
+            alliance=default_char_info['alliance'] if 'alliance' in default_char_info else None,
+            characters=characters_info,
+            tags=default_char_info['tags'],
+            perms=default_char_info['perms'],
+            expires=None,
+            mask=token.mask
         )
             
