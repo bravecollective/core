@@ -3,7 +3,7 @@
 from marrow.util.bunch import Bunch
 from marrow.mailer.validator import EmailValidator
 from web.auth import authenticate as web_authenticate, deauthenticate, user
-from web.core import Controller, HTTPMethod, request, config
+from web.core import Controller, HTTPMethod, request, config, session
 from web.core.http import HTTPFound, HTTPSeeOther, HTTPForbidden, HTTPNotFound, HTTPBadRequest
 from web.core.locale import _
 from mongoengine import ValidationError, NotUniqueError
@@ -51,6 +51,11 @@ class Authenticate(HTTPMethod):
         return 'brave.core.account.template.signin', dict(form=form)
 
     def post(self, identity, password, remember=False, redirect=None):
+
+        # Prevent users from specifying their session IDs (Some user-agents were sending null ids, leading to users
+        # authenticated with a session id of null
+        session.regenerate_id()
+
         # First try with the original input
         success = web_authenticate(identity, password)
 
