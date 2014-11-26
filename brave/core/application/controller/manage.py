@@ -14,7 +14,10 @@ from web.core.http import HTTPFound, HTTPNotFound
 
 from brave.core.application.model import Application
 from brave.core.application.form import manage_form
-from brave.core.util.predicate import authorize, authenticate, is_administrator
+from brave.core.util.predicate import authenticate
+from brave.core.permission.util import user_has_permission
+from brave.core.permission.model import Permission
+from brave.core.permission.controller import createPerms
 
 
 log = __import__('logging').getLogger(__name__)
@@ -29,11 +32,19 @@ class ApplicationInterface(HTTPMethod):
         except Application.DoesNotExist:
             raise HTTPNotFound()
 
-        if self.app.owner.id != user.id and not user.admin:
+        if self.app.owner.id != user.id and not user.has_permission(self.app.edit_perm):
             raise HTTPNotFound()
     
     def get(self):
         app = self.app
+        
+        perms = ""
+        
+        for p in Permission.objects(id__startswith=(app.short + ".")):
+            desc = p.description
+            if not desc:
+                desc = "None"
+            perms += p.id + ":" + desc + "\n"
         
         if request.is_xhr:
             return 'brave.core.template.form', dict(
@@ -52,6 +63,8 @@ class ApplicationInterface(HTTPMethod):
                             required = app.mask.required,
                             optional = app.mask.optional,
                             groups = app.groups,
+                            short = app.short,
+                            perms=perms,
                             expire = app.expireGrantDays
                         )
                 )
@@ -70,6 +83,12 @@ class ApplicationInterface(HTTPMethod):
         app = self.app
         valid, invalid = manage_form().native(kw)
         
+        # No dots in application shorts
+        if '.' in valid['short']:
+            return 'json:', dict(
+                    success=False,
+                    message=_("Stop being bad and remove the periods in your app short."))
+        
         for k in ('name', 'description', 'groups', 'site', 'contact', 'development'):
             setattr(app, k, valid[k])
         
@@ -80,9 +99,17 @@ class ApplicationInterface(HTTPMethod):
         app.key.public = valid['key']['public']
         app.mask.required = valid['required'] or 0
         app.mask.optional = valid['optional'] or 0
+        # Ignore their provided app short because we can't change permission names #ThanksMongo
         
         if user.admin:
             app.expireGrantDays = valid['expire'] or 30
+            
+        app.short = valid['short'] or app.name.replace(" ", "").lower()
+
+        if valid['perms'] and not createPerms(valid['perms'], app.short):
+            return 'json:', dict(
+                    success=False,
+                    message=_("Stop being bad and only include permissions for your app."))
         
         app.save()
         
@@ -107,10 +134,13 @@ class ApplicationInterface(HTTPMethod):
 class ApplicationList(HTTPMethod):
     @authenticate
     def get(self):
-        if user.admin:
-            adminRecords = {record for record in Application.objects() if record.owner != user._current_obj()}
-        else:
-            adminRecords = {}
+        adminRecords = set()
+        
+        user_perms = user.permissions
+        
+        for app in Application.objects():
+            if app.owner.id != user.id and Permission.set_grants_permission(user_perms, app.edit_perm):
+                adminRecords.add(app)
         
         records = Application.objects(owner=user._current_obj())
         
@@ -127,13 +157,24 @@ class ApplicationList(HTTPMethod):
                 adminRecords = adminRecords
             )
     
-    @authenticate
+    @user_has_permission(Application.CREATE_PERM)
     def post(self, **kw):
         if not request.is_xhr:
             raise HTTPNotFound()
         
         u = user._current_obj()
         valid, invalid = manage_form().native(kw)
+        
+        # No dots in application shorts
+        if '.' in valid['short']:
+            return 'json:', dict(
+                    success=False,
+                    message=_("Stop being bad and remove the periods in your app short."))
+                    
+        if len(Application.objects(short=valid['short'])):
+            return 'json:', dict(
+                    success=False,
+                    message=_("An application with this permission name already exists."))
         
         app = Application(owner=u, **{k: v for k, v in valid.iteritems() if k in ('name', 'description', 'groups', 'site', 'contact')})
         
@@ -145,6 +186,19 @@ class ApplicationList(HTTPMethod):
             app.development = True
         else:
             app.development = False
+
+        app.short = valid['short'] or app.name.replace(" ", "").lower()
+        
+        if valid['perms'] and not createPerms(valid['perms'], app.short):
+            return 'json:', dict(
+                    success=False,
+                    message=_("Stop being bad and only include permissions for your app."))
+        
+        p = Permission('core.application.authorize.{0}'.format(app.short), "Ability to authorize application {0}".format(app.name))
+        p.save()
+        if u.primary:
+            u.primary.personal_permissions.append(p)
+        u.primary.save()
         
         app.save()
         

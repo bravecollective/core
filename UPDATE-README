@@ -26,6 +26,36 @@ ad709e0: It is highly recommended that admins remove all characters whose owners
 feature/authenticated: The config value 'web.auth.intercept' should be added to the production config file with a value 
     of 401.
 
+20b85a5: A new field was added to Applications, which will need to be set before attempting to run Core after the update.
+    The field name is short, and it must be unique. This is used as the basis for that application's permissions, so
+    pick a reasonable name such as 'jabber'. Must be lowercase.
+    Commands:
+        from brave.core.application.model import Application
+        apps = Application.objects
+        a = apps[0]
+        print a.name
+        a.short = ...
+        a.save()
+        ....
+
+feature/permissions:
+    Admins must run initialize permissions in the database.
+    Commands:
+        from brave.core.permission.controller import init_perms
+        init_perms()
+
+    Admins need to grant themselves the core.* permission in order to retain all previous
+    abilities that they had. Admins are also encouraged to grant the necessary permissions to normal users as well.
+    Commands:
+        from brave.core.account.model import User
+        from brave.core.permission.model import Permission
+        admin_perm = Permission.objects(id='core.*').first()
+        admins = User.objects(admin=True)
+        for u in admins:
+            c = u.primary
+            c.personal_permissions.append(admin_perm)
+            c.save()
+
 feature/recommendedKeyMask: The config value 'core.recommended_key_mask' should be added to the production config file with
     a value equal to that which the admin wants to be recommended for users as the standard key.
 
