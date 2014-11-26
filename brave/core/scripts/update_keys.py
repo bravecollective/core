@@ -55,9 +55,10 @@ class CredentialUpdateThread(Thread):
         except HTTPError as e:
             print("Error {}: {}".format(e.response.status_code, e.response.text))
         except Exception as ex:
+            key_result = False
             print("Error {}".format(ex))
             
-        if not key_result:
+        if key_result is None:
             print("Removed disabled key {0} from account {1} with characters {2}".format(k, key.owner, key.characters))
 
 def refresh_keylist(num_timeslots):
