@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 from operator import __or__
 
 from web.core import request, response, url, config
+from web.core.http import HTTPUnauthorized
 from web.auth import user
 from mongoengine import Q
 from marrow.util.url import URL
@@ -213,7 +214,7 @@ class CoreAPI(SignedController):
 
         characters_info = filter(None, map(char_info, token.characters))
         if not characters_info:
-            return gtjk
+            raise HTTPUnauthorized()
 
         info = char_info(token.default_character)
         info['characters'] = characters_info
