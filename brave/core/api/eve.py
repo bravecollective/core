@@ -39,7 +39,7 @@ class ProxyAPI(SignedController):
         except ApplicationGrant.DoesNotExist:
             return dict(success=False, reason='grant.invalid', message="Application grant invalid or expired.")
 
-        if token and token.owner.banned(app=token.application.short):
+        if token and token.user.person.banned(app=token.application.short):
             return dict(
                 success=False,
                 message="This user has been banned from accessing this application."
