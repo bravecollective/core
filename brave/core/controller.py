@@ -40,6 +40,7 @@ class AuthorizeHandler(HTTPMethod):
         except AuthenticationRequest.DoesNotExist:
             raise HTTPNotFound()
     
+    @authenticate
     def get(self, ar=None):
         from brave.core.application.model import ApplicationGrant
 
@@ -118,6 +119,7 @@ class AuthorizeHandler(HTTPMethod):
         raise HTTPFound(location=str(target))
     
     # **kwargs as jQuery form encodes 'characters' to 'characters[]'
+    @authenticate
     def post(self, ar, grant=None, all_chars=False, **kwargs):
         from brave.core.character.model import EVECharacter
         from brave.core.application.model import ApplicationGrant
