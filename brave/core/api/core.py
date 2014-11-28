@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 from operator import __or__
 
 from web.core import request, response, url, config
+from web.core.http import HTTPUnauthorized
 from web.auth import user
 from mongoengine import Q
 from marrow.util.url import URL
@@ -182,22 +183,39 @@ class CoreAPI(SignedController):
         from brave.core.application.model import ApplicationGrant
         from brave.core.group.model import Group
         
-        # Step 1: Get the appropraite grant.
+        # Step 1: Get the appropriate grant.
         token = ApplicationGrant.objects.get(id=token, application=request.service)
-        character = token.character
-        
-        # Step 2: Match ACLs.
-        tags = []
-        for group in Group.objects(id__in=request.service.groups):
-            if group.evaluate(token.user, character):
-                tags.append(group.id)
-        
-        return dict(
-                character = dict(id=character.identifier, name=character.name),
-                corporation = dict(id=character.corporation.identifier, name=character.corporation.name),
-                alliance = dict(id=character.alliance.identifier, name=character.alliance.name) if character.alliance else None,
+
+        # Step 2: Assemble the information for each character
+        def char_info(char):
+            # Ensure that this character still belongs to this user. 
+            if char.owner != token.user:
+                token.remove_character(char)
+                token.reload()
+                return None
+
+            # Match ACLs.
+            tags = []
+            for group in Group.objects(id__in=request.service.groups):
+                if group.evaluate(token.user, char):
+                    tags.append(group.id)
+
+            return dict(
+                character = dict(id=char.identifier, name=char.name),
+                corporation = dict(id=char.corporation.identifier, name=char.corporation.name),
+                alliance = (dict(id=char.alliance.identifier, name=char.alliance.name)
+                            if char.alliance
+                            else None),
                 tags = tags,
-                perms = character.permissions_tags(token.application),
+                perms = char.permissions_tags(token.application),
                 expires = None,
-                mask = token.mask.mask if token.mask else 0
+                mask = token.mask,
             )
+
+        characters_info = filter(None, map(char_info, token.characters))
+        if not characters_info:
+            raise HTTPUnauthorized()
+
+        info = char_info(token.default_character)
+        info['characters'] = characters_info
+        return info

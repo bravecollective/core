@@ -21,6 +21,16 @@
         
         .login-wrapper .box { width: 500px; }
         .login-wrapper .box .content-wrap { width: 440px; }
+
+        #character-select button { width: 100%; text-align: left; }
+        #character-select input[type=checkbox] { vertical-align: baseline; }
+        #character-select img {
+            vertical-align: -60%;
+            margin-right: 5px;
+            border-radius: 6px;
+            width: 32px;
+            height: 32px;
+        }
     </style>
 </%block>
 
@@ -30,16 +40,19 @@
     <script type="text/javascript" charset="utf-8">
         $(function(){
             function process(){
-                var self = $(this),
-                    id = self.data('id');
-                
                 // Fade to the progress spinner.
                 $('.auth').animate({opacity: 0.25}, 250);
                 $('.btn').addClass('disabled').attr('disabled', true);
+                $('#alerts').empty();
                 $('.overlay.wait').fadeIn(250);
-                
+
                 // Submit XHR request.
-                var receipt = $.post(window.location, {grant: true, character: id});
+                var chars = $('button.active').map(function (i, val){ return $(val).data('id');}).get();
+                var all_chars = chars.indexOf('all');
+                chars[all_chars] = null;
+                all_chars = all_chars > -1;
+                var data = {grant: true, 'characters': chars, 'all_chars': all_chars};
+                var receipt = $.post(window.location, data);
                 receipt.fail(function(jqXHR, textStatus, errorThrown){
                     // Something went wrong.
                     console.log(jqXHR, textStatus, errorThrown);
@@ -67,6 +80,26 @@
 
                 return false;
             }
+
+            $('#character-select button').click(function() {
+                var old_state = $(this).hasClass("active");
+                if (${1 if only_one_char else 0}) {
+                    if (!old_state){
+                        $(this).siblings().toggleClass('btn-info', false);
+                        $(this).siblings().toggleClass('active', false);
+                        $(this).toggleClass('btn-info', true);
+                        $(this).find('input[type=radio]').prop('checked', true);
+                    }
+                } else {
+                    $(this).toggleClass('btn-info', !old_state);
+                    $(this).find('input[type=checkbox]').prop('checked', !old_state);
+                }
+            });
+
+            $('#character-select').on('show.bs.collapsible', function() {
+                $(this).siblings('.btn-group').hide();
+                $(this).siblings('#authorize-button-2').show();
+            });
 
             $('.allow').click(process);
             
@@ -134,22 +167,41 @@
             </ul>
             % endif
             
+            <!-- TODO: all-characters-required -->
             <div style="text-align: right; margin-top: 30px;">
-                <div class="btn-group dropup">
-                    <a class="btn btn-success btn-large allow" style="padding-left: 50px;" href="#" data-id="${default.id}"><img src="//image.eveonline.com/Character/${default.identifier}_32.jpg" style="border-radius: 4px; position: absolute; left: 4px; top: 4px; border: 1px inset rgba(127,127,127,0.5); height: 32px;"> Authorize</a>
-                    <a class="btn btn-success btn-large dropdown-toggle" data-toggle="dropdown" href="#"><i class="fa fa-caret-up"></i></a>
-                    <ul class="dropdown-menu" style="width: 300px; left: auto; right: 0px;">
+                <div id="character-select" data-toggle="buttons-checkbox" ${'class="collapse"' if default != 'all' else ''}>
+                    % if not only_one_char:
+                        <button
+                            class="btn ${'active btn-info' if 'all' == default else ''}"
+                            ${'disabled' if 'all' == default else ''}
+                            data-id="all"
+                            data-toggle="collapse"
+                            data-target="#character-toggles"
+                            >
+                            <input type="checkbox" data-id="all" ${'checked' if 'all' == default else ''} />
+                            <strong>All Characters</strong>
+                        </button>
+                    % endif
+                    <div id="character-toggles" class="${'collapse.in in' if default != 'all' else ''} collapse">
                         % for record in characters:
-                        <li><a tabindex="-1" href="#" data-id="${record.id}" class="allow"><span class="ellipsis">
-                            <img src="//image.eveonline.com/Character/${record.identifier}_32.jpg" style="vertical-align: -60%; margin-right: 5px; border-radius: 6px; width: 32px; height: 32px;">
-                            <strong>${record.name | h}</strong>
-                            % if default == record:
-                            <span class="label label-inverse" style="margin-left: 5px;">Default</span>
-                            % endif
-                        </span></a></li>
+                            <button class="btn ${'active btn-info' if record == default else ''}" data-id="${record.id}">
+                                <input type="${'radio' if only_one_char else 'checkbox'}" name="char" data-id="${record.id}" ${'checked' if record == default else ''} />
+                                <img src="//image.eveonline.com/Character/${record.identifier}_32.jpg" />
+                                <strong>${record.name | h}</strong>
+                                % if record == default:
+                                <span class="label label-inverse" style="margin-left: 5px;">Default</span>
+                                % endif
+                            </button>
                         % endfor
-                    </ul>
+                    </div>
                 </div>
+                % if default != 'all':
+                <div class="btn-group">
+                    <a class="btn btn-success btn-large allow" style="padding-left: 50px;" href="#" data-id="${default.id}"><img src="//image.eveonline.com/Character/${default.identifier}_32.jpg" style="border-radius: 4px; position: absolute; left: 4px; top: 4px; border: 1px inset rgba(127,127,127,0.5); width: 32px; height: 32px;"> Authorize</a>
+                    <a class="btn btn-success btn-large dropdown-toggle" data-toggle="collapse" data-target="#character-select"><i class="fa fa-caret-up"></i></a>
+                </div>
+                % endif
+                <a id="authorize-button-2" class="btn btn-success btn-large allow" href="#" ${'style="display: none"' if default != 'all' else ''}>Authorize</a>
                 <a class="btn btn-inverse pull-left" style="margin-top: 15px;">Deny Authorization</a>
             </div>
         </div>
@@ -158,7 +210,6 @@
         <div class="overlay fa-4x result fail"><i class="fa fa-times fa-4x"></i></div>
         <div class="overlay fa-4x result success"><i class="fa fa-check fa-4x"></i></div>
         <div class="overlay fa-4x result bad"><i class="fa fa-exclamation-triangle fa-4x"></i></div>
-        
     </div>
 </div>
 

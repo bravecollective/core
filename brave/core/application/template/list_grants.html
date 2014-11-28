@@ -20,6 +20,7 @@
     
     <script src="/js/vendor/jquery.timeago.js" charset="utf-8"></script>
     <script src="/js/vendor/bootbox.js" charset="utf-8"></script>
+    <script src="/js/validation.js" charset="utf-8"></script>
     
     <script type="text/javascript" charset="utf-8">
         $(function()
@@ -77,9 +78,9 @@
                 <thead>
                     <tr>
                         <th class="span5 sortable name">Name</th>
-                        <th class="span3 sortable character hidden-tablet hidden-phone"><span class="line"></span>Character</th>
+                        <th class="span3 sortable character hidden-tablet hidden-phone"><span class="line"></span>Characters</th>
                         <th class="span3 sortable date"><span class="line"></span>Authorized</th>
-                        <th class="span1 actions"><span class="line"></span></th>
+                        <th class="span1 actions"><span class="line"></span>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -90,12 +91,17 @@
                             <span class="subtext">${record.application.description | h}</span>
                         </td>
                         <td class="character hidden-tablet hidden-phone">
-                            <img src="//image.eveonline.com/Character/${record.character.identifier}_32.jpg" style="vertical-align: middle; margin-right: 5px; border-radius: 3px; width: 24px; height: 24px;" title="${record.character.name | h}"> ${record.character.name}
+                            % for character in record.characters:
+                            <img src="//image.eveonline.com/Character/${character.identifier}_32.jpg" style="vertical-align: middle; margin-right: 5px; border-radius: 3px; width: 24px; height: 24px;" title="${character.name | h}">
+                            % endfor
                         </td>
                         <td class="date">
                             <time class="relative" datetime="${record.id.generation_time |n,f.iso}">${record.id.generation_time |n,f.pretty}</time>
                         </td>
                         <td class="actions">
+                            % if not record.application.require_all_chars:
+                                <a class="btn btn-small" href="/application/${record.id}/" rel="modal" title="Edit application permissions." rel="tooltip" data-placement="left" data-trigger="genericform"><i class="fa fa-pencil"></i></a>
+                            % endif
                             <button class="btn btn-danger btn-small delete" title="Revoke application permissions." rel="tooltip" data-placement="left"><i class="fa fa-times"></i></button>
                         </td>
                     </tr>

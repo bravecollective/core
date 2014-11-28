@@ -62,6 +62,10 @@ class Application(Document):
     # Number of days that grants for this application should last.
     expireGrantDays = IntField(db_field='e', default=30)
     
+    # This field indicates whether the application requires access to every character on the authorizing user's account.
+    require_all_chars = BooleanField(db_field='a', default=False)
+    auth_only_one_char = BooleanField(db_field='one', default=False)
+    
     owner = ReferenceField('User', db_field='o')
     
     # Permissions
@@ -107,13 +111,36 @@ class ApplicationGrant(Document):
     user = ReferenceField('User', db_field='u')
     application = ReferenceField(Application, db_field='a')
     
+    # Deprecated
     character = ReferenceField('EVECharacter', db_field='c')
+    
+    chars = ListField(ReferenceField('EVECharacter'), db_field='chars', required=True)
+    all_chars = BooleanField(db_field='b', default=False)
     _mask = IntField(db_field='m', default=0)
     
     immutable = BooleanField(db_field='i', default=False)  # Onboarding is excempt from removal by the user.
     expires = DateTimeField(db_field='x')  # Default grant is 30 days, some applications exempt.  (Onboarding, Jabber, TeamSpeak, etc.)
     
     # Python Magic Methods
+    
+    @property
+    def characters(self):
+        if self.all_chars:
+            return self.user.characters
+        
+        return self.chars
+    
+    @property
+    def default_character(self):
+        """This is used for backwards compatibility for old single character grants."""
+        if self.character:
+            return self.character
+        
+        for c in self.characters:
+            if c == c.owner.primary:
+                return c
+        
+        return self.characters[0]
     
     @property
     def mask(self):
@@ -141,3 +168,14 @@ class ApplicationGrant(Document):
     
     def __repr__(self):
         return 'Grant({0}, "{1}", "{2}", {3})'.format(self.id, self.user, self.application, self.mask).encode('ascii', 'backslashreplace')
+
+    def remove_character(self, character):
+        """Removes the given character from the list of characters this grant applies to.
+
+        If there are no other characters for this grant, the grant is removed.
+        """
+        if len(self.characters) == 1:
+            self.delete()
+        else:
+            self.characters.remove(character)
+            self.save()

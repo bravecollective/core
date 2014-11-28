@@ -252,20 +252,30 @@ class EVECredential(Document):
             return self
         
         allCharsOK = True
+        pulled_characters = set()
 
         for char in result.characters.row:
             if 'corporationName' not in char:
                 log.error("corporationName missing for key %d", self.key)
                 continue
             
-            if not self.pull_character(char):
+            character = self.pull_character(char)
+            if not character:
                 allCharsOK = False
+            else:
+                pulled_characters.add(character)
+
         
         if allCharsOK and self.violation == "Character":
             self.violation = None
-        
+
+        outdated_characters = set(self.characters) - pulled_characters
+        # This key no longer has access to these characters (like a character transfer)
+        for character in outdated_characters:
+            character.detach()
+
         self.eval_violation()
-        
+
         self.modified = datetime.utcnow()
         self.save()
 

@@ -92,10 +92,19 @@ class AuthorizeHandler(HTTPMethod):
                         "Please add an {1} API key with a mask of <a href='/key/mask/{0}'>{0}</a> or better to your account."
                         .format(config['core.recommended_key_mask'], config['core.recommended_key_kind'])),
                         ar=ar))
-                     
-            return 'brave.core.template.authorize', dict(success=True, ar=ar, characters=chars, default=default)
 
-        ngrant = ApplicationGrant(user=u, application=ar.application, mask=grant.mask, expires=datetime.utcnow() + timedelta(days=ar.application.expireGrantDays), character=grant.character)
+            if ar.application.require_all_chars:
+                default = 'all'
+                     
+            return 'brave.core.template.authorize', dict(
+                success=True,
+                ar=ar,
+                characters=chars,
+                default=default,
+                only_one_char=ar.application.auth_only_one_char,
+            )
+
+        ngrant = ApplicationGrant(user=u, application=ar.application, mask=grant.mask, expires=datetime.utcnow() + timedelta(days=ar.application.expireGrantDays), chars=grant.characters, all_chars=grant.all_chars)
         ngrant.save()
         
         ar.user = u
@@ -109,7 +118,8 @@ class AuthorizeHandler(HTTPMethod):
         target.query.update(dict(token=str(ngrant.id)))
         raise HTTPFound(location=str(target))
     
-    def post(self, ar, grant=None, character=None):
+    # **kwargs as jQuery form encodes 'characters' to 'characters[]'
+    def post(self, ar, grant=None, all_chars=False, **kwargs):
         from brave.core.character.model import EVECharacter
         from brave.core.application.model import ApplicationGrant
         
@@ -128,17 +138,35 @@ class AuthorizeHandler(HTTPMethod):
             
             return 'json:', dict(success=True, location=str(target))
         
-        try:
-            character = EVECharacter.objects.get(owner=u, id=character)
-        except EVECharacter.DoesNotExist:
-            return 'json:', dict(success=False, message="Unknown character ID.")
-        except:
-            log.exception("Error loading character.")
-            return 'json:', dict(success=False, message="Error loading character.")
+        characters = []
+
+        if all_chars.lower() == 'true':
+            all_chars = True
+        else:
+            all_chars = False
+        
+        if not all_chars and ar.application.require_all_chars:
+            return 'json:', dict(success=False, message="This application requires access to all of your characters.")
+        
+        # Require at least one character
+        if 'characters[]' not in kwargs and not all_chars:
+            return 'json:', dict(success=False, message="Select at least one character.")
+        character_ids = kwargs['characters[]'] if 'characters[]' in kwargs else []
+        # Handle only one character being authorized
+        if character_ids and not isinstance(character_ids, list):
+            character_ids = [character_ids]
+        for character in character_ids:
+            try:
+                characters.append(EVECharacter.objects.get(owner=u, id=character))
+            except EVECharacter.DoesNotExist:
+                return 'json:', dict(success=False, message="Unknown character ID.")
+            except:
+                log.exception("Error loading character.")
+                return 'json:', dict(success=False, message="Error loading character.")
         
         # TODO: Add support for 'optional' masks
         mask = ar.application.mask.required
-        grant = ApplicationGrant(user=u, application=ar.application, _mask=mask, expires=datetime.utcnow() + timedelta(days=ar.application.expireGrantDays), character=character)
+        grant = ApplicationGrant(user=u, application=ar.application, _mask=mask, expires=datetime.utcnow() + timedelta(days=ar.application.expireGrantDays), chars=characters if characters else u.characters, all_chars=all_chars)
         grant.save()
         
         ar.user = u
