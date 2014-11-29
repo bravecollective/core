@@ -2,18 +2,127 @@
 
 from __future__ import unicode_literals
 
-from itertools import chain
+from marrow.util.convert import boolean
 from datetime import datetime, timedelta
-from mongoengine import Document, StringField, EmailField, DateTimeField, BooleanField, ReferenceField, ListField
+from mongoengine import Document, StringField, EmailField, DateTimeField, BooleanField, ReferenceField, ListField, ValidationError, EmbeddedDocument, EmbeddedDocumentField
 from mongoengine.fields import LongField
+from yubico import yubico
 
 from brave.core.util.signal import update_modified_timestamp
 from brave.core.util.field import PasswordField, IPAddressField
+from pyotp import TOTP, random_base32
 
 from web.core import config
 
 
 log = __import__('logging').getLogger(__name__)
+
+
+class OTP(EmbeddedDocument):
+    """Generic OTP class, for saving and managing the various types of OTPs users can add to their account."""
+    
+    meta = dict(
+        allow_inheritance=True,
+        indexes=['identifier']
+    )
+    
+    # The 'unique' part of the OTP. This could be an actual identifier (in the case of a yubico OTP) or the secret
+    # of the OTP setup.
+    identifier = StringField(db_field='i')
+    # Whether the OTP is required.
+    required = BooleanField(db_field='r', default=True)
+    
+    def verify(self, response):
+        """Validates the response to see if it matches our computed value."""
+        raise NotImplementedError
+    
+
+class TimeOTP(OTP):
+    """OTP sub-class for an RFC 4226 compliant one time password."""
+    
+    def __init__(self, identifier, *args, **kwargs):
+        """Check that the provided identifier is 16 characters. This was done to ensure that the identifier
+        field is a StringField across all subclasses, and as far as I know, it is not possible to add additional
+        restrictions to a field that is declared in a parent class. Note that the identifier in this case is the
+        shared secret."""
+        
+        if len(identifier) != 16:
+            raise ValidationError('The identifier for TimeOTPs must be 16 characters.')
+            
+        super(TimeOTP, self).__init__(identifier=identifier, *args, **kwargs)
+        
+    def verify(self, response):
+        """Checks response for validity, taking into account the current time."""
+        
+        response = int(response)
+        
+        return self.otp.verify(response)
+    
+    def now(self):
+        return self.otp.now()
+    
+    @property
+    def uri(self):
+        """Returns the provisioning URI for this OTP object."""
+        
+        owner = User.objects(otp__identifier=self.identifier).first()
+        
+        if not owner:
+            log.warning("Apparently no one owns the OTP with identifier {0}".format(self.identifier))
+            return None
+            
+        return self.otp.provisioning_uri("Core Auth - " + owner.username) 
+            
+        
+    @property
+    def otp(self):
+        """Returns the PyOTP TOTP representation of this object. This is used for things such as creating provisioning
+        URIs, QR Codes, and verifying user responses."""
+        
+        return TOTP(self.identifier)
+    
+    @classmethod
+    def create(cls):
+        """Creates and returns a new TimeOTP object."""
+        otp = cls(identifier=random_base32(), required=False)
+        return otp
+
+
+class YubicoOTP(OTP):
+    """OTP sub-class for handling Yubico OTPs registered to user accounts."""
+    
+    def __init__(self, identifier, *args, **kwargs):
+        """Check that the provided identifier is 12 or fewer characters. This was done to ensure that the identifier
+        field is a StringField across all subclasses, and as far as I know, it is not possible to add additional
+        restrictions to a field that is declared in a parent class."""
+        
+        if len(identifier) > 12:
+            raise ValidationError('The identifier for YubicoOTPs must be 12 or fewer characters.')
+            
+        super(YubicoOTP, self).__init__(identifier=identifier, *args, **kwargs)
+        
+    def verify(self, response):
+        client = yubico.Yubico(
+            config['yubico.client'],
+            config['yubico.key'],
+            boolean(config.get('yubico.secure', False))
+        )
+            
+        try:
+            status = client.verify(response, return_response=True)
+        except:
+            return False
+        
+        if not status:
+            return False
+            
+        return True
+    
+    @classmethod
+    def create(cls, yid):
+        yid = yid[:12]
+        otp = YubicoOTP(identifier=yid, required=True)
+        return otp
 
 
 @update_modified_timestamp.signal
@@ -33,9 +142,7 @@ class User(Document):
     confirmed = DateTimeField(db_field='c')
     admin = BooleanField(db_field='d', default=False)
     
-    # TODO: Extract into a sub-document and re-name the DB fields.
-    rotp = BooleanField(default=False)
-    otp = ListField(StringField(max_length=12), default=list)
+    otp = EmbeddedDocumentField(OTP, db_field='o')
     
     primary = ReferenceField('EVECharacter')  # "Default" character to use during authz.
 
@@ -90,26 +197,36 @@ class User(Document):
 
     @property
     def otp_required(self):
-        return self.rotp and len(self.otp)
+        return self.otp and self.otp.required
+        
+    @property
+    def tfa_required(self):
+        return self.otp and self.otp.required and not isinstance(self.otp, YubicoOTP)
 
-    # Functions to manage YubiKey OTP
+    # Functions to manage OTPs
 
-    def addOTP(self, yid):
-        yid = yid[:12]
-        if yid in self.otp:
+    def add_otp(self, otp):
+        """Adds otp as the user's otp value iff the user has no otp set currently."""
+        if not isinstance(otp, OTP):
             return False
-        self.otp.append(yid)
+        
+        if self.otp:
+            return False
+        
+        self.otp = otp
         self.save()
         return True
 
-    def removeOTP(self, yid):
-        yid = yid[:12]
-        if not yid in self.otp:
+    def remove_otp(self):
+        """Removes the user's OTP iff it's been disabled."""
+
+        if self.otp and self.otp.required:
             return False
-        self.otp.remove(yid)
+
+        self.otp = None
         self.save()
         return True
-    
+        
     def merge(self, other):
         """Consumes other and takes its children."""
         
@@ -293,3 +410,18 @@ class PasswordRecovery(Document):
             self.user.username,
             self.recovery_key
         )
+
+
+class OTPHistory(Document):
+    meta = dict(
+        allow_inheritance=False,
+        indexes=['user', 'otp', dict(fields=['expires'], expireAfterSeconds=0)]
+    )
+
+    user = ReferenceField(User, required=True, db_field='u')
+    otp = StringField(db_field='o', required=True)
+    # Expire after 90 seconds, (support for at most a radius of 2 when checking OTP validity)
+    expires = DateTimeField(db_field='e', default=lambda: datetime.utcnow() + timedelta(seconds=90))
+
+    def __repr__(self):
+        return 'OTPHistory({0}, {1})'.format(self.otp, self.user.username)

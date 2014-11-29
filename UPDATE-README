@@ -71,5 +71,13 @@ feature/requireKeys: The config value 'core.require_recommended_key' should be a
 1b58513: Changes were made to the structure of external application permissions grants.
     brave/core/scripts/multiple_characters_grant_migration.py should migrate old grants to the new format.
     
+
+feature/otp: The 'otp' and 'rotp' fields in the 'Users' collection has been changed, so users who previously had OTP set
+    up on their accounts will no longer have it enabled. It is required that admins run the script 'remove_otps' to
+    remove these from User accounts.
+    
+    The package 'pyotp' is now required. Running 'python setup.py develop' again should set it up for you.
+
 feature/configPassReqs: The config value 'core.required_pass_strength' should be added to the config to the value of
     the zxcvbn score the admin wants to require of all passwords.
+

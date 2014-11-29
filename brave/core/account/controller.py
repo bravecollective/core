@@ -7,11 +7,12 @@ from web.core import Controller, HTTPMethod, request, config, session
 from web.core.http import HTTPFound, HTTPSeeOther, HTTPForbidden, HTTPNotFound, HTTPBadRequest
 from web.core.locale import _
 from mongoengine import ValidationError, NotUniqueError
+from datetime import timedelta, datetime
 
-from brave.core.account.model import User, PasswordRecovery
+from brave.core.account.model import User, PasswordRecovery, TimeOTP, YubicoOTP, OTPHistory
 from brave.core.account.form import authenticate as authenticate_form, register as register_form, \
-    recover as recover_form, reset_password as reset_password_form
-from brave.core.account.authentication import lookup_email, send_recover_email
+    recover as recover_form, reset_password as reset_password_form, tfa as tfa_form
+from brave.core.account.authentication import lookup_email, send_recover_email, verify_credentials
 from brave.core.util.predicate import is_administrator, authenticate
 
 from yubico import yubico
@@ -41,6 +42,57 @@ def _check_password(passwd1, passwd2):
     return True, None
 
 
+class TFA(HTTPMethod):
+    
+    @staticmethod
+    def clear_session():
+        """This nullifies all TFA related session values for the current session."""
+        session['auth'] = None
+        session['preauth_username'] = None
+        session['redirect'] = None
+        session.save()
+    
+    def get(self):
+        form = tfa_form()
+        return 'brave.core.account.template.tfa', dict(form=form)
+
+    def post(self, OTP=None):
+        if not OTP:
+            return 'json:', dict(success=False, message=_("You must provide a One Time Password"))
+        
+        try:
+            user = User.objects.get(username=session['preauth_username'])
+        except User.DoesNotExist:
+            self.clear_session()
+            return 'json:', dict(success=False, message=_("Current Session has expired, please log in again"))
+        
+        if datetime.now() - session['auth'] > timedelta(minutes=15):
+            self.clear_session()
+            return 'json:', dict(success=False, message=_("Current Session has expired, please log in again"))
+
+        previously_used = OTPHistory.objects(otp=OTP, user=user).first()
+        if previously_used:
+            self.clear_session()
+            return 'json:', dict(success=False, message=_("You have already used this One Time Password"))
+
+        # TODO: Give them 3 tries to fail the OTP before requiring username and pass again
+        if not user.otp.verify(OTP):
+            self.clear_session()
+            return 'json:', dict(success=False, message=_("Incorrect One Time Password"))
+        
+        web_authenticate(user)
+
+        otp_history = OTPHistory(otp=OTP, user=user)
+        otp_history.save()
+
+        # Prevent redirect loops from occurring when a user fails the TFA, gets redirected to authenticate,
+        #  then successfully completes the TFA
+        if session['redirect'].endswith('/account/tfa'):
+            session['redirect'] = None
+        
+        return 'json:', dict(success=True, location=session['redirect'] or '/')
+
+
 class Authenticate(HTTPMethod):
     def get(self, redirect=None):
         if redirect is None:
@@ -57,18 +109,28 @@ class Authenticate(HTTPMethod):
         session.regenerate_id()
 
         # First try with the original input
-        success = web_authenticate(identity, password)
+        user = verify_credentials(identity, password)
 
-        if not success:
+        if not user:
             # Try lowercase if it's an email or username, but not if it's an OTP
             if '@' in identity or len(identity) != 44:
-                success = web_authenticate(identity.lower(), password)
+                user = verify_credentials(identity.lower(), password)
 
-        if not success:
+        if not user:
             if request.is_xhr:
                 return 'json:', dict(success=False, message=_("Invalid user name or password."))
 
             return self.get(redirect)
+        
+        # User has a 2FA OTP type enabled.
+        if user.otp and user.otp.required and not isinstance(user.otp, YubicoOTP):
+            session['redirect'] = redirect
+            if request.is_xhr:
+                return 'json:', dict(success=True, location='/account/tfa')
+            
+            raise HTTPFound(location='/account/tfa')
+            
+        web_authenticate(user)
 
         if request.is_xhr:
             return 'json:', dict(success=True, location=redirect or '/')
@@ -254,7 +316,7 @@ class Settings(HTTPMethod):
 
             user.password = data.passwd
             user.save()
-        elif data.form == "addotp":
+        elif data.form == "addyubicootp":
             if isinstance(data.password, unicode):
                 data.password = data.password.encode('utf-8')
 
@@ -275,14 +337,27 @@ class Settings(HTTPMethod):
 
             if not status:
                 return 'json:', dict(success=False, message=_("Failed to verify key."), data=data)
+            
+            otp = YubicoOTP.create(identifier)
+            
+            if not user.add_otp(otp):
+                return 'json:', dict(success=False, message=_("User already has an OTP enabled."), data=data)
+        elif data.form == "addtimeotp":
+            if isinstance(data.password, unicode):
+                data.password = data.password.encode('utf-8')
 
-            if not User.addOTP(user, identifier[:12]):
-                return 'json:', dict(success=False, message=_("YubiKey already exists."), data=data)
+            if not User.password.check(user.password, data.password):
+                return 'json:', dict(success=False, message=_("Password incorrect."), data=data)
+            
+            otp = TimeOTP.create()
+            
+            if not user.add_otp(otp):
+                return 'json:', dict(success=False, message=_("User already has an OTP enabled."), data=data)
         elif data.form == "removeotp":
             identifier = data.otp
 
-            if not User.removeOTP(user, identifier[:12]):
-                return 'json:', dict(success=False, message=_("YubiKey invalid."), data=data)
+            if not user.remove_otp():
+                return 'json:', dict(success=False, message=_("User has no OTP set up on their account or it's still required."), data=data)
 
         elif data.form == "configureotp":
             if isinstance(data.password, unicode):
@@ -291,8 +366,11 @@ class Settings(HTTPMethod):
 
             if not User.password.check(user.password, data.password):
                 return 'json:', dict(success=False, message=_("Password incorrect."), data=data)
+
+            if isinstance(user.otp, TimeOTP) and  not user.otp.verify(data.otp_code):
+                return 'json:', dict(success=False, message=_("OTP incorrect."), data=data)
             
-            user.rotp = rotp
+            user.otp.required = rotp
             user.save()
             
         #Handle the user attempting to delete their account
@@ -433,6 +511,7 @@ class AccountController(Controller):
     register = Register()
     settings = Settings()
     recover = Recover()
+    tfa = TFA()
     
     def exists(self, **query):
         query.pop('ts', None)
