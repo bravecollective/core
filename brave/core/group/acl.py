@@ -87,9 +87,9 @@ class ACLList(ACLRule):
             )
 
     def __unicode__(self):
-        return "{grant} if character {is}{prep} {set}".format(
+        return "{grant} if character {is_}{prep} {set}".format(
                 grant='grant' if self.grant else 'deny',
-                not_='is not' if self.inverse else 'is',
+                is_='is not' if self.inverse else 'is',
                 prep=' in' if self.kind != 'c' else '',
                 set=' or '.join([o.name for o in self.target_objects()]),
             )
@@ -116,7 +116,7 @@ class ACLKey(ACLRule):
     def __unicode__(self):
         return '{grant} if user {has} submitted a {kind} key'.format(
                 grant='grant' if self.grant else 'deny',
-                not_='has not' if self.inverse else 'has',
+                has='has not' if self.inverse else 'has',
                 kind=self.KINDS[self.kind].lower()
         )
 
