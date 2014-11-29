@@ -36,9 +36,19 @@ class DeveloperTools(Controller):
 class AuthorizeHandler(HTTPMethod):
     def ar(self, ar):
         if not session.get('ar', None) == ar:
-            session['ar'] = ar
-            session.save()
-            raise HTTPFound(location='/account/authenticate?redirect=%2Fauthorize%2F{0}'.format(ar))
+            try:
+                ar = AuthenticationRequest.objects.get(id=ar, user=None, grant=None)
+                grants = user.grants if user else []
+                for a in grants:
+                    if a.application == ar.application:
+                        return ar
+
+                # The 'ar' session variable is used to check if we've validated credentials for this application already
+                session['ar'] = ar.id
+                session.save()
+                raise HTTPFound(location='/account/authenticate?redirect=%2Fauthorize%2F{0}'.format(ar.id))
+            except AuthenticationRequest.DoesNotExist:
+                raise HTTPNotFound()
         
         try:
             return AuthenticationRequest.objects.get(id=ar, user=None, grant=None)
@@ -64,6 +74,11 @@ class AuthorizeHandler(HTTPMethod):
                 dict(success=False, message=_("This application requires that you have a character connected to your"
                                               " account. Please <a href=\"/key/\">add an API key</a> to your account."),
                      ar=ar))
+
+            if not u.has_permission(ar.application.authorize_perm):
+                return ('brave.core.template.authorize',
+                dict(success=False, message=_("You do not have permission to use this application."), ar=ar))
+
             chars = []
             for c in characters:
                 if c.credential_for(ar.application.mask.required):
@@ -82,13 +97,30 @@ class AuthorizeHandler(HTTPMethod):
                 default = u.primary if u.primary in chars else chars[0]
             else:
                 return ('brave.core.template.authorize',
-                dict(success=False, message=_("You do not have any API keys on your account which match the requirements for this service. Please add an {1} API key with a mask of <a href='/key/mask/{0}'>{0}</a> or better, please add an API key with that mask to your account.".format(config['core.recommended_key_mask'], config['core.recommended_key_kind'])),
-                     ar=ar))
+                    dict(success=False, message=_(
+                        "You do not have any API keys on your account which match the requirements for this service. "
+                        "Please add an {1} API key with a mask of <a href='/key/mask/{0}'>{0}</a> or better to your account."
+                        .format(config['core.recommended_key_mask'], config['core.recommended_key_kind'])),
+                        ar=ar))
+
+            if ar.application.require_all_chars:
+                default = 'all'
                      
-            return 'brave.core.template.authorize', dict(success=True, ar=ar, characters=chars, default=default)
-            
-        
-        ngrant = ApplicationGrant(user=u, application=ar.application, mask=grant.mask, expires=datetime.utcnow() + timedelta(days=ar.application.expireGrantDays), character=grant.character)
+            return 'brave.core.template.authorize', dict(
+                success=True,
+                ar=ar,
+                characters=chars,
+                default=default,
+                only_one_char=ar.application.auth_only_one_char,
+            )
+
+        # User had to log in for this authorization, so we extend the expiry.
+        if session.get('ar', None) == ar.id:
+            expiration = datetime.utcnow() + timedelta(days=ar.application.expireGrantDays)
+        else:
+            expiration = grant.expires
+
+        ngrant = ApplicationGrant(user=u, application=ar.application, mask=grant.mask, expires=expiration, chars=grant.characters, all_chars=grant.all_chars)
         ngrant.save()
         
         ar.user = u
@@ -102,7 +134,8 @@ class AuthorizeHandler(HTTPMethod):
         target.query.update(dict(token=str(ngrant.id)))
         raise HTTPFound(location=str(target))
     
-    def post(self, ar, grant=None, character=None):
+    # **kwargs as jQuery form encodes 'characters' to 'characters[]'
+    def post(self, ar, grant=None, all_chars=False, **kwargs):
         from brave.core.character.model import EVECharacter
         from brave.core.application.model import ApplicationGrant
         
@@ -121,17 +154,35 @@ class AuthorizeHandler(HTTPMethod):
             
             return 'json:', dict(success=True, location=str(target))
         
-        try:
-            character = EVECharacter.objects.get(owner=u, id=character)
-        except EVECharacter.DoesNotExist:
-            return 'json:', dict(success=False, message="Unknown character ID.")
-        except:
-            log.exception("Error loading character.")
-            return 'json:', dict(success=False, message="Error loading character.")
+        characters = []
+
+        if all_chars.lower() == 'true':
+            all_chars = True
+        else:
+            all_chars = False
+        
+        if not all_chars and ar.application.require_all_chars:
+            return 'json:', dict(success=False, message="This application requires access to all of your characters.")
+        
+        # Require at least one character
+        if 'characters[]' not in kwargs and not all_chars:
+            return 'json:', dict(success=False, message="Select at least one character.")
+        character_ids = kwargs['characters[]'] if 'characters[]' in kwargs else []
+        # Handle only one character being authorized
+        if character_ids and not isinstance(character_ids, list):
+            character_ids = [character_ids]
+        for character in character_ids:
+            try:
+                characters.append(EVECharacter.objects.get(owner=u, id=character))
+            except EVECharacter.DoesNotExist:
+                return 'json:', dict(success=False, message="Unknown character ID.")
+            except:
+                log.exception("Error loading character.")
+                return 'json:', dict(success=False, message="Error loading character.")
         
         # TODO: Add support for 'optional' masks
         mask = ar.application.mask.required
-        grant = ApplicationGrant(user=u, application=ar.application, _mask=mask, expires=datetime.utcnow() + timedelta(days=ar.application.expireGrantDays), character=character)
+        grant = ApplicationGrant(user=u, application=ar.application, _mask=mask, expires=datetime.utcnow() + timedelta(days=ar.application.expireGrantDays), chars=characters if characters else u.characters, all_chars=all_chars)
         grant.save()
         
         ar.user = u

@@ -1,5 +1,7 @@
 ## encoding: utf-8
 
+<%! from web.core import config %>
+
 <%inherit file="brave.core.template.light"/>
 
 <%block name="title">${_("Sign Up")}</%block>
@@ -22,6 +24,7 @@
 
     <script src="/js/changedelay.js" charset="utf-8"></script>
     <script src="/js/validation.js" charset="utf-8"></script>
+    <script src="/js/vendor/zxcvbn.js" charset="utf-8"></script>
 
     <script type="text/javascript" charset="utf-8">
         //Function to streamline popovers.
@@ -35,6 +38,8 @@
                 container: '#register-form'
                 }).popover('show');
         }
+
+        var ZXCVBN_RESULT_STRINGS = ['Fail', 'Really Shit', 'Shit', 'Fine, I Guess', 'Impregnable!'];
     
         $(function(){
             //Handle checking of available usernames.
@@ -114,7 +119,7 @@
             //using changeDelay was slow to update the user about the limit.
             $('#password-field').on('input',function(){
                 var self = $(this);
-                
+
                 //Delete the contents of the 'confirm password' field when the user modifies the primary password field
                 $('#pass2-field').val('').change();
 
@@ -123,6 +128,20 @@
                 }
                 else {
                     self.popover('destroy');
+                }
+
+                var zxcvbnResult = zxcvbn(self.val());
+                $(".password-verdict").text(ZXCVBN_RESULT_STRINGS[zxcvbnResult.score]);
+                $(".password-meter .bar").width( Math.min(100, zxcvbnResult.entropy + 20) + "%");
+                if( zxcvbnResult.score < ${config['core.required_pass_strength']} )
+                {
+                    $(".progress .bar").removeClass("bar-success");
+                    $(".progress .bar").addClass("bar-danger");
+                }
+                else
+                {
+                    $(".progress .bar").removeClass("bar-danger");
+                    $(".progress .bar").addClass("bar-success");
                 }
             });
 
@@ -217,7 +236,7 @@
             
                 return false;
             }
-            
+
             $('#submit').click(process_signup);
             $('#register-form').submit(process_signup);
         });
@@ -229,7 +248,7 @@
         <h6>${_("Create Account")}</h6>
         <div style="margin-bottom:15px; padding:0px 5px 10px"><span class="label label-info" style="padding: 5px 10px"><a style="color:#fff; font-size:16px" href="https://wiki.braveineve.com/it/core" target="_blank">${_("Learn how to set up a Core Account")}</a></span></div>
         ${form}
-
+        <div class="password-meter progress"><div class="bar bar-danger" style="width: 0%;"><span class="password-verdict"></span></div></div>
         <div class="overlay fa-4x wait"><i class="fa fa-spinner fa-spin fa-4x"></i></div>
         <div class="overlay fa-4x result fail"><i class="fa fa-times fa-4x"></i></div>
         <div class="overlay fa-4x result success"><i class="fa fa-check fa-4x"></i></div>

@@ -13,6 +13,9 @@ from brave.core.util.field import PasswordField, IPAddressField
 from web.core import config
 
 
+log = __import__('logging').getLogger(__name__)
+
+
 @update_modified_timestamp.signal
 class User(Document):
     meta = dict(
@@ -44,6 +47,9 @@ class User(Document):
     # because IP address IDing can cause mis-IDs
     other_accs_char_key = ListField(ReferenceField('User'), db_field='otherAccountsCharKey')
     other_accs_IP = ListField(ReferenceField('User'), db_field='otherAccountsIP')
+    
+    # Permissions
+    VIEW_PERM = 'core.account.view.{account_id}'
     
     # Python Magic Methods
     
@@ -81,6 +87,10 @@ class User(Document):
     @property
     def recovery_keys(self):
         return PasswordRecovery.objects(user=self)
+
+    @property
+    def otp_required(self):
+        return self.rotp and len(self.otp)
 
     # Functions to manage YubiKey OTP
 
@@ -138,6 +148,49 @@ class User(Document):
             self.remove_duplicate(self, other, IP=True)
         
         super(User, self).delete()
+    
+    @property
+    def permissions(self):
+        """Returns all permissions that any character this user owns has."""
+        
+        perms = set()
+        
+        for c in self.characters:
+            for p in c.permissions():
+                perms.add(p)
+                
+        perms = list(perms)
+        perms.sort(key=lambda p: p.id)
+        return perms
+        
+    def has_permission(self, permission):
+        """Accepts both Permission objects and Strings. Returns the first character found with that permission,
+           preferring the user's primary character."""
+        
+        from brave.core.group.model import Permission
+        
+        if isinstance(permission, Permission):
+            permission = permission.id
+        
+        log.debug('Checking if user has permission {0}'.format(permission))
+        
+        return Permission.set_grants_permission(self.permissions, permission)
+        
+    def has_any_permission(self, permission):
+        """Returns true if the character has a permission that would be granted by permission."""
+        from brave.core.permission.model import WildcardPermission
+        p = WildcardPermission.objects(id=permission)
+        if len(p):
+            p = p.first()
+        else:
+            p = WildcardPermission(id=permission)
+        for permID in self.permissions:
+            if p.grants_permission(permID.id):
+                return True
+            if permID.grants_permission(p.id):
+                return True
+                
+        return False
         
     @staticmethod
     def add_duplicate(acc, other, IP=False):
@@ -183,6 +236,12 @@ class User(Document):
                 
         acc.save()
         other.save()
+    
+    @property
+    def view_perm(self):
+        """Returns the permission required to view this user's account details."""
+        return self.VIEW_PERM.format(account_id=str(self.id))
+
 
 class LoginHistory(Document):
     meta = dict(

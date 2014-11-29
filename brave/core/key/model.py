@@ -8,6 +8,7 @@ from mongoengine.errors import NotUniqueError
 from requests.exceptions import HTTPError
 
 from brave.core.account.model import User
+from brave.core.application.model import ApplicationGrant
 from brave.core.util import strip_tags
 from brave.core.util.signal import update_modified_timestamp, trigger_api_validation
 from brave.core.util.eve import api, EVECharacterKeyMask, EVECorporationKeyMask
@@ -48,6 +49,10 @@ class EVECredential(Document):
     
     modified = DateTimeField(db_field='m', default=datetime.utcnow)
     
+    # Permissions
+    VIEW_PERM = 'core.key.view.{credential_key}'
+    LIST_PERM = 'core.key.list.all'
+    
     def __repr__(self):
         return 'EVECredential({0}, {1}, {2}, {3!r})'.format(self.id, self.kind, self._mask, self.owner)
     
@@ -57,6 +62,8 @@ class EVECredential(Document):
             # Make sure not to include this key when checking if there are still keys for the character
             if len([c for c in char.credentials if c.id != self.id]) == 0:
                 char.detach()
+
+            char.credentials.remove(self)
                 
         super(EVECredential, self).delete()
     
@@ -126,6 +133,8 @@ class EVECredential(Document):
         char.corporation, char.alliance = self.get_membership(info)
 
         char.name = info.name if 'name' in info else info.characterName
+        if not isinstance(char.name, basestring):
+            char.name = str(char.name)
         char.owner = self.owner
         if self not in char.credentials:
             char.credentials.append(self)
@@ -166,11 +175,7 @@ class EVECredential(Document):
         if corporation.name != corporationName:
             corporation.name = corporationName
         
-        if alliance and corporation.alliance != alliance:
-            corporation.alliance = alliance
-        
-        elif not alliance and corporation.alliance:
-            alliance = corporation.alliance
+        corporation.alliance = alliance
         
         if corporation._changed_fields:
             corporation = corporation.save()
@@ -247,20 +252,43 @@ class EVECredential(Document):
             return self
         
         allCharsOK = True
+        pulled_characters = set()
 
         for char in result.characters.row:
             if 'corporationName' not in char:
                 log.error("corporationName missing for key %d", self.key)
                 continue
             
-            if not self.pull_character(char):
+            character = self.pull_character(char)
+            if not character:
                 allCharsOK = False
+            else:
+                pulled_characters.add(character)
+
         
         if allCharsOK and self.violation == "Character":
             self.violation = None
-        
+
+        outdated_characters = set(self.characters) - pulled_characters
+        # This key no longer has access to these characters (like a character transfer)
+        for character in outdated_characters:
+            character.detach()
+
         self.eval_violation()
-        
+
         self.modified = datetime.utcnow()
         self.save()
+
+        for c in self.characters:
+            char_has_verified_key = False
+            for k in c.credentials:
+                if k.verified:
+                    char_has_verified_key = True
+            if not char_has_verified_key:
+                ApplicationGrant.remove_grants_for_character(c)
+
         return self
+    
+    @property
+    def view_perm(self):
+        return self.VIEW_PERM.format(credential_key=str(self.key))

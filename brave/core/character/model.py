@@ -8,6 +8,8 @@ from mongoengine import Document, StringField, DateTimeField, ReferenceField, In
 from brave.core.util.signal import update_modified_timestamp
 from brave.core.key.model import EVECredential
 from brave.core.util.eve import api
+from brave.core.permission.model import Permission, WildcardPermission
+from brave.core.application.model import Application
 
 
 log = __import__('logging').getLogger(__name__)
@@ -164,18 +166,21 @@ class EVECharacter(EVEEntity):
     
     titles = ListField(StringField(), db_field='ti', default=list)
     roles = ListField(StringField(), db_field='ro', default=list)
+    personal_permissions = ListField(ReferenceField(Permission), db_field='p', default=list)
     
     credentials = ListField(ReferenceField(EVECredential, reverse_delete_rule=PULL), db_field='e', default=list)
     
     owner = ReferenceField('User', db_field='o', reverse_delete_rule=NULLIFY)
     
+    # Permissions
+    VIEW_PERM = 'core.character.view.{character_id}'
+    LIST_PERM = 'core.character.list.all'
+    
+    # DEPRECATED
     @property
     def tags(self):
         from brave.core.group.model import Group
         mapping = dict()
-
-        if not self.owner:
-            return dict()
         
         for group in Group.objects:
             if group.evaluate(self.owner, self):
@@ -185,6 +190,97 @@ class EVECharacter(EVEEntity):
             return mapping[i].title
         
         return OrderedDict((i, mapping[i]) for i in sorted(mapping.keys(), key=titlesort))
+        
+    @property
+    def groups(self):
+        """Returns the groups a character is in."""
+        
+        from brave.core.group.model import Group
+        
+        char_groups = set()
+        
+        for group in Group.objects:
+            if group.evaluate(self.owner, self):
+                char_groups.add(group)
+                
+        return char_groups
+    
+    def permissions(self, app=None):
+        """Return all permissions that the character has that start with core or app.
+           An app of None returns all of the character's permissions."""
+        
+        # Use a set so we don't need to worry about characters having a permission from multiple groups.
+        permissions = set()
+        
+        # Allow app to be either the short name or the application object itself.
+        if isinstance(app, Application):
+            app = app.short + '.'
+        
+        # Ensure the provided string ends with a . to prevent pulling permissions from another application with the
+        # same starting letters (forums should not return forums2's permissions.)
+        if app and app[-1] != '.':
+            app = app + '.'
+        
+        # Return permissions from groups that this character has.
+        for group in self.groups:
+            for perm in group.permissions:
+                # Append all of the group's permissions when no app is specified.
+                if not app:
+                    permissions.add(perm)
+                    continue
+                
+                # Permissions are case-sensitive.
+                if perm.id.startswith('core') or perm.id.startswith(app):
+                    permissions.add(perm)
+        
+        # Return permissions that have been assigned directly to this user.
+        for perm in self.personal_permissions:
+            # Append all of the user's individual permissions when no app is specified.
+            if not app:
+                permissions.add(perm)
+                continue
+            
+            # If an app is specified, return only Core permissions and permissions for that app.
+            if perm.id.startswith('core') or perm.id.startswith(app):
+                permissions.add(perm)
+        
+        permissions = list(permissions)
+        permissions.sort()
+        return permissions
+        
+    def permissions_tags(self, application=None):
+        """Returns just the string for the permissions owned by this character."""
+        
+        perms = self.permissions(application)
+        permissions = list()
+        
+        for p in perms:
+            permissions.append(p.id)
+            
+        return permissions
+        
+    def has_permission(self, permission):
+        """Accepts both Permission objects and Strings."""
+        
+        from brave.core.group.model import Permission
+        
+        if isinstance(permission, Permission):
+            permission = permission.id
+        
+        return Permission.set_grants_permission(self.permissions(), permission)
+        
+    def has_any_permission(self, permission):
+        """Returns true if the character has a permission that would be granted by permission."""
+        p = WildcardPermission.objects(id=permission)
+        if len(p):
+            p = p.first()
+        else:
+            p = WildcardPermission(id=permission)
+        for permID in self.permissions():
+            if p.grants_permission(permID.id):
+                return True
+                
+        return False
     
     @property
     def has_verified_key(self):
@@ -229,14 +325,20 @@ class EVECharacter(EVEEntity):
             return
         
         # If this character is the primary character for the account, wipe that field for the user.
-        if self == self.owner.primary:
-            self.owner.primary = None
-            self.owner.save()
-                    
-        # Delete any application grants associated with the character.
-        for grant in self.owner.grants:
-            if self == grant.character:
-                grant.delete()
-        
-        self.owner = None
+        if self.owner:
+            if self == self.owner.primary:
+                self.owner.primary = None
+                self.owner.save()
+
+            # Delete any application grants associated with the character.
+            for grant in self.owner.grants:
+                if self in grant.characters:
+                    grant.remove_character(self)
+
+            self.owner = None
+
         self.save()
+    
+    @property
+    def view_perm(self):
+        return self.VIEW_PERM.format(character_id=str(self.id))
