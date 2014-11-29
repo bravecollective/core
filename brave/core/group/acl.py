@@ -33,7 +33,7 @@ class ACLRule(EmbeddedDocument):
         raise NotImplementedError()
     
     def __repr__(self):
-        return "{0}({1} {2})".format(self.__class__.__name__, self)
+        return "{0}({1})".format(self.__class__.__name__, self)
     
     def __unicode__(self):
         return '{0} {1}'.format(
