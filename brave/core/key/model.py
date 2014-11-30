@@ -225,8 +225,12 @@ class EVECredential(Document):
             result = api.account.APIKeyInfo(self)  # cached
         except HTTPError as e:
             if e.response.status_code == 403:
-                log.debug("key disabled; deleting %d" % self.key)
-                self.delete()
+                if '<error code="221">' in e.response.text:
+                    # Workaround for transient API failures, see https://github.com/bravecollective/core/issues/370
+                    log.debug("got an error code=221; not deleting %d" % self.key)
+                else:
+                    log.debug("key disabled; deleting %d" % self.key)
+                    self.delete()
                 return None
             log.exception("Unable to call: APIKeyInfo(%d)", self.key)
             return
