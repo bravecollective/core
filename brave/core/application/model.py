@@ -174,6 +174,15 @@ class ApplicationGrant(Document):
 
         If there are no other characters for this grant, the grant is removed.
         """
+
+        if self.all_chars:
+            # If the grant is for all of the user's characters, we cannot simply remove a single
+            # character. For the moment, we'll lie and say we did. This is *definitely* not the
+            # right solution though. Maybe we should return a bool, or throw an exception that
+            # callers must handle?
+            # TODO figure out what to really do here
+            return
+
         if len(self.characters) == 1:
             self.delete()
         else:
