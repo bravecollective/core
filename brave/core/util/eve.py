@@ -237,7 +237,7 @@ class APICall(Document):
         log.info("Making query to %s for key ID %d.", self.name, payload.get('keyID', -1))
 
         # Provide a User-Agent because CCP asks us to.
-        headers = {'User-Agent': 'BRAVE Core Auth; Operated by: {0}'.format(config['core.alliance'])}
+        headers = {'User-Agent': 'BRAVE Core Auth; Operated by: {0}'.format(config['core.operator'])}
 
         # Actually perform the query if a cached version could not be found.
         response = requests.post(uri, data=payload or None, headers=headers)
