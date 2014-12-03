@@ -35,26 +35,12 @@ class DeveloperTools(Controller):
 
 class AuthorizeHandler(HTTPMethod):
     def ar(self, ar):
-        if not session.get('ar', None) == ar:
-            try:
-                ar = AuthenticationRequest.objects.get(id=ar, user=None, grant=None)
-                grants = user.grants if user else []
-                for a in grants:
-                    if a.application == ar.application:
-                        return ar
-
-                # The 'ar' session variable is used to check if we've validated credentials for this application already
-                session['ar'] = ar.id
-                session.save()
-                raise HTTPFound(location='/account/authenticate?redirect=%2Fauthorize%2F{0}'.format(ar.id))
-            except AuthenticationRequest.DoesNotExist:
-                raise HTTPNotFound()
-        
         try:
             return AuthenticationRequest.objects.get(id=ar, user=None, grant=None)
         except AuthenticationRequest.DoesNotExist:
             raise HTTPNotFound()
     
+    @authenticate
     def get(self, ar=None):
         from brave.core.application.model import ApplicationGrant
 
@@ -114,11 +100,9 @@ class AuthorizeHandler(HTTPMethod):
                 only_one_char=ar.application.auth_only_one_char,
             )
 
-        # User had to log in for this authorization, so we extend the expiry.
-        if session.get('ar', None) == ar.id:
-            expiration = datetime.utcnow() + timedelta(days=ar.application.expireGrantDays)
-        else:
-            expiration = grant.expires
+        # We're conservative and have the user reapprove the application occasionally. (Subject to
+        # change.)
+        expiration = grant.expires
 
         ngrant = ApplicationGrant(user=u, application=ar.application, mask=grant.mask, expires=expiration, chars=grant.characters, all_chars=grant.all_chars)
         ngrant.save()
@@ -135,6 +119,7 @@ class AuthorizeHandler(HTTPMethod):
         raise HTTPFound(location=str(target))
     
     # **kwargs as jQuery form encodes 'characters' to 'characters[]'
+    @authenticate
     def post(self, ar, grant=None, all_chars=False, **kwargs):
         from brave.core.character.model import EVECharacter
         from brave.core.application.model import ApplicationGrant
