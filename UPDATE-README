@@ -73,3 +73,6 @@ feature/requireKeys: The config value 'core.require_recommended_key' should be a
     
 feature/configPassReqs: The config value 'core.required_pass_strength' should be added to the config to the value of
     the zxcvbn score the admin wants to require of all passwords.
+
+feature/user-agent: The config value 'core.operator' should be added to the config, with a string representing
+    the name of the alliance (or other group) operating this particular instance of Core.

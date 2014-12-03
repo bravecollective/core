@@ -35,6 +35,7 @@ As a few examples:
 from __future__ import print_function
 
 import requests
+from web.core import config
 
 from hashlib import sha256
 from datetime import datetime
@@ -234,9 +235,12 @@ class APICall(Document):
             return bunchify_lite(cv.result)
         
         log.info("Making query to %s for key ID %d.", self.name, payload.get('keyID', -1))
-        
+
+        # Provide a User-Agent because CCP asks us to.
+        headers = {'User-Agent': 'BRAVE Core Auth; Operated by: {0}'.format(config['core.operator'])}
+
         # Actually perform the query if a cached version could not be found.
-        response = requests.post(uri, data=payload or None)
+        response = requests.post(uri, data=payload or None, headers=headers)
         response.raise_for_status()
         
         # We don't want the initial XML prefix.  We should still check it, though.
