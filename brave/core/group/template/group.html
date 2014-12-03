@@ -25,7 +25,7 @@ def selected(bool):
     % elif isinstance(rule, ACLVerySecure):
         ${aclverysecure(rule)}
     % else:
-        ERROR THIS WON'T WORK: ${rule.human_readable_repr() | h}
+        ERROR THIS WON'T WORK: ${rule | h}
     % endif
 </%def>
 
