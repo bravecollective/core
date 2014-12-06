@@ -123,7 +123,7 @@ class BanSearch(HTTPMethod):
                 )
 
             temp = character
-            character = EVECharacter.objects(name__istartswith=character).first()
+            characters = EVECharacter.objects(name__istartswith=character)
 
             if not character:
                 return 'brave.core.ban.template.index', dict(
@@ -135,13 +135,14 @@ class BanSearch(HTTPMethod):
 
             bans = []
             # We only show enabled bans in the search window to users without permission
-            for b in character.person.bans:
-                if b.enabled and b.banned_ident == character.name:
-                    bans.append(b)
-                    continue
+            for character in characters:
+                for b in character.person.bans:
+                    if b.enabled and b.banned_ident == character.name:
+                        bans.append(b)
+                        continue
 
-                if user.has_permission(b.view_perm):
-                    bans.append(b)
+                    if user.has_permission(b.view_perm):
+                        bans.append(b)
 
             return 'brave.core.ban.template.index', dict(
                     success = True,
@@ -173,7 +174,7 @@ class BanSearch(HTTPMethod):
             if not app:
                 return 'json:', dict(success=False, message="Application not found.")
 
-            if not user.has_permission(Ban.CREATE_APP_PERM.format(app_short=app)):
+            if not user.has_permission(Ban.CREATE_APP_PERM.format(app_short=app.short)):
                 return 'json:', dict(success=False, message="You don't have permission to do this.")
 
             subarea = None
@@ -185,7 +186,7 @@ class BanSearch(HTTPMethod):
             if not app:
                 return 'json:', dict(success=False, message="Application not found.")
 
-            if not user.has_permission(Ban.CREATE_SUBAPP_PERM.format(app_short=app, subapp_id=subarea)):
+            if not user.has_permission(Ban.CREATE_SUBAPP_PERM.format(app_short=app.short, subapp_id=subarea)):
                 return 'json:', dict(success=False, message="You don't have permission to do this.")
         else:
             return 'json:', dict(success=False, message="How about no.")
