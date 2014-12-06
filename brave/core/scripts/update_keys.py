@@ -45,12 +45,20 @@ class CredentialUpdateThread(Thread):
     @staticmethod
     def update_key(k):
         key = EVECredential.objects(key=k).first()
+        if not key:
+            print "Key {} not found".format(k)
+            return
+        key_result = None
         try:
             print "Pulling key ID {0}".format(k)
             key_result = key.pull()
         except HTTPError as e:
             print("Error {}: {}".format(e.response.status_code, e.response.text))
-        if not key_result:
+        except Exception as ex:
+            key_result = False
+            print("Error {}".format(ex))
+            
+        if key_result is None:
             print("Removed disabled key {0} from account {1} with characters {2}".format(k, key.owner, key.characters))
 
 def refresh_keylist(num_timeslots):
