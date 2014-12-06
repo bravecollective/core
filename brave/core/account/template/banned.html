@@ -1,0 +1,61 @@
+## encoding: utf-8
+
+<%inherit file="brave.core.template.light"/>
+
+<%block name="title">${_("Sign In Error")}</%block>
+
+<%block name="header">
+    ${parent.header()}
+
+    <style>
+        input[type=submit] { float: right; border: 0 none; height: 0; width: 0; padding: 0; margin: 0; overflow: hidden; }
+        .content-wrap.authentication { position: relative; }
+        .overlay { position: absolute; top: 15px; left: 0; right: 0; text-align: center; display: none; }
+        .overlay.result { text-shadow: 0 1px 4px rgba(0,0,0,0.75); }
+        .overlay.fail { color: #b00; }
+        .overlay.success { color: #0b0; }
+    </style>
+</%block>
+
+<div class="span12 box">
+    <div class="content-wrap authentication">
+        <h6>${_("You have been banned.")}</h6>
+        <h4><font color="white">Good work. You went and got yourself banned. Details of the ban${'' if len(results) == 1 else 's'} are below:</font></h4>
+    </div>
+</div>
+
+<br/>
+<br/>
+
+        <div class="row-fluid table span8" style="float:none; margin-left: auto; margin-right:auto">
+            <table class="table table-hover">
+                <thead>
+                    <tr bgcolor="000000">
+                        <th class="span2 sortable ban-id">${_("Ban ID")}</th>
+                        <th class="span1 sortable ban-char"><span class="line"></span>${_("Character")}</th>
+                        <th class="span1 sortable ban-enabled"><span class="line"></span>${_("Enabled")}</th>
+                        <th class="span1 sortable type"><span class="line"></span>${_("Ban Type")}</th>
+                        <th class="span1 sortable type"><span class="line"></span>${_("Application")}</th>
+                        <th class="span1 sortable type"><span class="line"></span>${_("Sub-Area")}</th>
+                        <th class="span1 sortable type"><span class="line"></span>${_("Expires")}</th>
+                        <th class="span1 sortable ban-date hidden-phone"><span class="line"></span>${_("Created")}</th>
+                        <th class="span3 sortable type"><span class="line"></span>${_("Reason")}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    % for record in results:
+                        <tr data-id="${record.id}" bgcolor="000000">
+                            <td class="ban-id"><a href="/ban/${record.id}">${record.id | h}</a></td>
+                            <td class="ban-char">${record.banned_ident | h}</td>
+                            <td class="ban-enabled">${record.enabled}</td>
+                            <td class="ban-type">${record.ban_type}</td>
+                            <td class="ban-application">${"N/A" if not record.app else record.app.short}</td>
+                            <td class="ban-subarea">${"N/A" if not record.subarea else record.subarea}</td>
+                            <td class="ban-expires">${"Never" if not record.expires else record.expires.strftime("%Y-%m-%d %H:%M:%S")}</td>
+                            <td class="ban-created"><time datetime="${record.id.generation_time.isoformat().replace('+00:00', 'Z')}">${record.id.generation_time.isoformat(' ').replace('+00:00', '')}</time></td>
+                            <td class="ban-reason">${record.reason}</td>
+                        </tr>
+                    % endfor
+                </tbody>
+            </table>
+        </div>

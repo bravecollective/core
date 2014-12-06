@@ -1,0 +1,172 @@
+## encoding: utf-8
+
+<%inherit file="brave.core.template.master"/>
+
+<%block name="title">Search Bans</%block>
+
+<%block name="post">
+    ${parent.post()}
+
+    <script type="text/javascript" charset="utf-8">
+        $(function()
+        {
+            $(document).on('click', '.ban-confirm', function() {
+                var form = $(this).parents(".modal-content").find("form");
+                var char = form.find('input[name=char]').val();
+                var duration = form.find('input[name=duration]').val();
+                var reason = form.find('input[name=reason]').val();
+                var secret_reason = form.find('input[name=secret_reason]').val();
+                var type = form.find('input[name=type]:checked').val();
+                var app = form.find('input[name=app]').val();
+                var subarea = form.find('input[name=subarea]').val();
+                $.post('/ban/create', {
+                        char: char,
+                        duration: duration,
+                        reason: reason,
+                        secret_reason: secret_reason,
+                        ban_type: type,
+                        app: app,
+                        subarea: subarea,
+                    }, function(data) {
+                        if (data.success) {
+                            window.location = "/ban/" + data.id;
+                        } else {
+                            alert(data.message);
+                        }
+                    }
+                );
+            });
+        });
+    </script>
+</%block>
+
+<div class="modal fade" id="create-ban">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Create Ban</h4>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <table class="table">
+                        <tr>
+                            <td>Character Name</td>
+                            <td><input name="char" type="text" required /></td>
+                        </tr>
+                        <tr>
+                            <td>Duration</td>
+                            <td><input name="duration" type="text" required/></td>
+                            <td>How long the ban lasts in hours. 0 is a permanent ban.</td>
+                        </tr>
+                        <tr>
+                            <td>Reason</td>
+                            <td><input name="reason" type="text" required/></td>
+                            <td>Note, this is public information.</td>
+                        </tr>
+                        % if web.user.has_any_permission("core.ban.modify_secret_reason.*"):
+                        <tr>
+                            <td>Secret Reason</td>
+                            <td><input name="secret_reason" type="text" required/></td>
+                            <td>For when you want to keep the reason for the ban a secret!</td>
+                        </tr>
+                        % endif
+                        <tr>
+                            <td>Ban Type</td>
+                            <td>
+                                <% from brave.core.ban.model import Ban %>
+                                % if web.user.has_permission(Ban.CREATE_GLOBAL_PERM):
+                                <input name="type" type="radio" value="global" required /> Global<br/>
+                                % endif
+                                % if web.user.has_permission(Ban.CREATE_SERVICE_PERM):
+                                <input name="type" type="radio" value="service" required /> Service<br/>
+                                % endif
+                                % if web.user.has_any_permission(Ban.CREATE_APP_PERM.format(app_short="*")):
+                                <input name="type" type="radio" value="app" required /> App<br/>
+                                % endif
+                                % if web.user.has_any_permission(Ban.CREATE_SUBAPP_PERM.format(app_short="*", subapp_id="*")):
+                                <input name="type" type="radio" value="subapp" required /> Subapp
+                                % endif
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>App Short</td>
+                            <td><input name="app" type="text"></td>
+                            <td>Only used for app and subapp bans</td>
+                        </tr>
+                        <tr>
+                            <td>SubApp Area</td>
+                            <td><input name="subarea" type="text"></td>
+                            <td>Only used for subapp bans</td>
+                        </tr>
+                    </table>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary ban-confirm" id="ban-confirm">Create Ban</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<div class="container-fluid">
+    <div id="pad-wrapper">
+        % if web.user.has_any_permission("core.ban.create.*"):
+        <div class="area">
+            <span class="actions">
+                <a class="btn btn-danger pull-right create-ban-button" id="create-ban-button" data-toggle="modal" data-target="#create-ban"><i class="fa fa-times"></i> Create Ban</a>
+            </span>
+        </div>
+        % endif
+        <div class="row-fluid header">
+            <h3>Ban Search</h3>
+        </div>
+        <h4>Note: Your search must contain at least 5 characters.</h4><br/>
+        <div class="span12">
+            <form method="GET" action="/ban" id="search" class="form-inline">
+                <div class="span2">
+                    <input name="character" type="text" placeholder="Character Name" class="span2"/>
+                </div>
+                <br>
+                <br>
+                <div class="span5"></div>
+                <input type="submit" name="submit" class="btn btn-default" value="Search" />
+            </form>
+        </div>
+        % if search_param:
+            <div class="row-fluid table">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th class="span2 sortable ban-id"><span class="line"></span>${_("Ban ID")}</th>
+                        <th class="span1 sortable ban-char"><span class="line"></span>${_("Character")}</th>
+                        <th class="span1 sortable ban-enabled"><span class="line"></span>${_("Enabled")}</th>
+                        <th class="span1 sortable type"><span class="line"></span>${_("Ban Type")}</th>
+                        <th class="span1 sortable type"><span class="line"></span>${_("Application")}</th>
+                        <th class="span1 sortable type"><span class="line"></span>${_("Sub-Area")}</th>
+                        <th class="span1 sortable type"><span class="line"></span>${_("Expires")}</th>
+                        <th class="span1 sortable ban-date hidden-phone"><span class="line"></span>${_("Created")}</th>
+                        <th class="span3 sortable type"><span class="line"></span>${_("Reason")}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    % for record in results:
+                        <tr data-id="${record.id}">
+                            <td class="ban-id"><a href="/ban/${record.id}">${record.id | h}</a></td>
+                            <td class="ban-char">${record.banned_ident | h}</td>
+                            <td class="ban-enabled">${record.enabled}</td>
+                            <td class="ban-type">${record.ban_type}</td>
+                            <td class="ban-application">${"N/A" if not record.app else record.app.short}</td>
+                            <td class="ban-subarea">${"N/A" if not record.subarea else record.subarea}</td>
+                            <td class="ban-expires">${"Never" if not record.expires else record.expires.strftime("%Y-%m-%d %H:%M:%S")}</td>
+                            <td class="ban-created"><time datetime="${record.id.generation_time.isoformat().replace('+00:00', 'Z')}">${record.id.generation_time.isoformat(' ').replace('+00:00', '')}</time></td>
+                            <td class="ban-reason">${record.reason}</td>
+                        </tr>
+                    % endfor
+                </tbody>
+            </table>
+        </div>
+        % endif
+    </div>
+</div>

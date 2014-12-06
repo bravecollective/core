@@ -186,6 +186,12 @@ class CoreAPI(SignedController):
         # Step 1: Get the appropriate grant.
         token = ApplicationGrant.objects.get(id=token, application=request.service)
 
+        if token.user.person.banned(app=token.application.short):
+            return dict(
+                success=False,
+                message="This user has been banned from accessing this application."
+            )
+
         # Step 2: Assemble the information for each character
         def char_info(char):
             # Ensure that this character still belongs to this user. 
@@ -200,6 +206,21 @@ class CoreAPI(SignedController):
                 if group.evaluate(token.user, char):
                     tags.append(group.id)
 
+            subbans = []
+
+            for b in token.user.person.bans:
+
+                if not b.enabled:
+                    continue
+
+                if b.ban_type != "subapp":
+                    continue
+
+                if b.app != token.application:
+                    continue
+
+                subbans.append(b.subarea)
+
             return dict(
                 character = dict(id=char.identifier, name=char.name),
                 corporation = dict(id=char.corporation.identifier, name=char.corporation.name),
@@ -209,7 +230,8 @@ class CoreAPI(SignedController):
                 tags = tags,
                 perms = char.permissions_tags(token.application),
                 expires = None,
-                mask = token.mask,
+                mask = token.mask.mask if token.mask else 0,
+                subbans=subbans
             )
 
         characters_info = filter(None, map(char_info, token.characters))

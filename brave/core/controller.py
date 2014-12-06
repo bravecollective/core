@@ -53,7 +53,12 @@ class AuthorizeHandler(HTTPMethod):
         
         if not grant:
             # TODO: We need a 'just logged in' flag in the request.
-            
+
+            if u.person.banned(ar.application.short):
+                return ('brave.core.template.authorize',
+                dict(success=False, message=_("You have been banned from using this application. Please see the ban " +
+                                                "search page for more details."), ar=ar))
+
             characters = list(u.characters.order_by('name').all())
             if not len(characters):
                 return ('brave.core.template.authorize',
@@ -92,6 +97,7 @@ class AuthorizeHandler(HTTPMethod):
             if ar.application.require_all_chars:
                 default = 'all'
                      
+
             return 'brave.core.template.authorize', dict(
                 success=True,
                 ar=ar,
@@ -100,11 +106,15 @@ class AuthorizeHandler(HTTPMethod):
                 only_one_char=ar.application.auth_only_one_char,
             )
 
-        # We're conservative and have the user reapprove the application occasionally. (Subject to
-        # change.)
-        expiration = grant.expires
+            return 'brave.core.template.authorize', dict(success=True, ar=ar, characters=chars, default=default)
 
-        ngrant = ApplicationGrant(user=u, application=ar.application, _mask=grant._mask, expires=expiration, chars=grant.characters, all_chars=grant.all_chars)
+        if u.person.banned(ar.application.short):
+            return ('brave.core.template.authorize',
+                dict(success=False, message=_("You have been banned from using this application. Please see the ban " +
+                                                "search page for more details."), ar=ar))
+
+
+        ngrant = ApplicationGrant(user=u, application=ar.application, mask=grant.mask, expires=datetime.utcnow() + timedelta(days=ar.application.expireGrantDays), character=grant.character)
         ngrant.save()
         
         ar.user = u
@@ -126,6 +136,11 @@ class AuthorizeHandler(HTTPMethod):
         
         ar = self.ar(ar)
         u = user._current_obj()
+
+        if u.person.banned(ar.application.short):
+            return ('brave.core.template.authorize',
+                dict(success=False, message=_("You have been banned from using this application. Please see the ban " +
+                                                "search page for more details."), ar=ar))
         
         if not grant:
             # Deny access.
@@ -188,6 +203,7 @@ class RootController(StartupMixIn, Controller):
     api = util.load('api')
     group = util.load('group')
     admin = util.load('admin')
+    ban = util.load('ban')
 
     def __call__(self, req):
         if req.method not in ('GET', 'HEAD'):

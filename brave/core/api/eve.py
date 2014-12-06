@@ -38,7 +38,13 @@ class ProxyAPI(SignedController):
             token = ApplicationGrant.objects.get(id=token, application=request.service) if token else None
         except ApplicationGrant.DoesNotExist:
             return dict(success=False, reason='grant.invalid', message="Application grant invalid or expired.")
-        
+
+        if token and token.user.person.banned(app=token.application.short):
+            return dict(
+                success=False,
+                message="This user has been banned from accessing this application."
+            )
+
         try:  # Load the API endpoint.
             call = getattr(getattr(api, group, None), endpoint)
         except AttributeError:

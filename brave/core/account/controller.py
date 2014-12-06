@@ -71,6 +71,12 @@ class Authenticate(HTTPMethod):
 
             return self.get(redirect)
 
+        # User is global banned.
+        if user.person.banned():
+            temp = user.id
+            deauthenticate()
+            return 'json:', dict(success=True, location='/account/banned?user=' + str(temp))
+
         if request.is_xhr:
             return 'json:', dict(success=True, location=redirect or '/')
 
@@ -434,6 +440,21 @@ class AccountController(Controller):
     register = Register()
     settings = Settings()
     recover = Recover()
+
+    def banned(self, user):
+        bans = []
+
+        user = User.objects(id=user).first()
+        # We only show enabled bans in the search window to users without permission
+        for b in user.person.bans:
+            if b.enabled:
+                bans.append(b)
+                continue
+
+        return 'brave.core.account.template.banned', dict(
+                success = True,
+                results=bans,
+            )
     
     def exists(self, **query):
         query.pop('ts', None)

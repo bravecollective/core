@@ -1,0 +1,349 @@
+## encoding: utf-8
+
+<%inherit file="brave.core.template.master"/>
+
+<%block name="title">${ban.id | h} - View Ban</%block>
+
+<%block name="header">
+    ${parent.header()}
+    
+    <style>
+        .modal-body form { margin-bottom: 0; }
+        .modal-body form input.input-block-level:last-child { margin-bottom: 0; }
+        table.table { table-layout: fixed; width: 100%; }
+        span.ellipsis { display: inline-block; width: 100%; overflow: hidden !important; white-space: nowrap !important; text-overflow: ellipsis !important; word-break: break-all !important; word-wrap: break-word !important; }
+    </style>
+</%block>
+
+<%block name="post">
+    ${parent.post()}
+    
+    <script type="text/javascript" charset="utf-8">
+        $(function()
+        {
+
+            $('time').timeago();
+
+            $(document).on('click', '.comment-confirm', function() {
+                var form = $(this).parents(".modal-content").find("form");
+                var comment = form.find('input[name=comment]').val();
+                $.post('/ban/${ban.id}/comment', {
+                        comment: comment,
+                    }, function(data) {
+                        if (data.success) {
+                            window.location = "/ban/${ban.id}";
+                        } else {
+                            alert(data.message);
+                        }
+                    }
+                );
+            });
+
+            $(document).on('click', '.reason-confirm', function() {
+                var form = $(this).parents(".modal-content").find("form");
+                var reason = form.find('input[name=reason]').val();
+                $.post('/ban/${ban.id}/modify_reason', {
+                        reason: reason,
+                    }, function(data) {
+                        if (data.success) {
+                            window.location = "/ban/${ban.id}";
+                        } else {
+                            alert(data.message);
+                        }
+                    }
+                );
+            });
+
+            $(document).on('click', '.secret-reason-confirm', function() {
+                var form = $(this).parents(".modal-content").find("form");
+                var reason = form.find('input[name=reason]').val();
+                $.post('/ban/${ban.id}/modify_secret_reason', {
+                        reason: reason,
+                    }, function(data) {
+                        if (data.success) {
+                            window.location = "/ban/${ban.id}";
+                        } else {
+                            alert(data.message);
+                        }
+                    }
+                );
+            });
+
+            $(document).on('click', '.ban-type-confirm', function() {
+                var form = $(this).parents(".modal-content").find("form");
+                var type = form.find('input[name=type]:checked').val();
+                var app = form.find('input[name=app]').val();
+                var subarea = form.find('input[name=subarea]').val();
+                $.post('/ban/${ban.id}/modify_type', {
+                        type: type,
+                        app: app,
+                        subarea: subarea,
+                    }, function(data) {
+                        if (data.success) {
+                            window.location = "/ban/${ban.id}";
+                        } else {
+                            alert(data.message);
+                        }
+                    }
+                );
+            });
+            
+            $(document).on('click', '.disable', function() {
+                $('i', this).addClass('fa-spin');
+                $.ajax('/ban/${ban.id}/disable', {
+                        type: 'POST'
+                    }).done(function() {
+                        window.location = window.location;
+                    });
+            });
+
+            $(document).on('click', '.enable', function() {
+                $('i', this).addClass('fa-spin');
+                $.ajax('/ban/${ban.id}/enable', {
+                        type: 'POST'
+                    }).done(function() {
+                        window.location = window.location;
+                    });
+            });
+
+            $(document).on('click', '.unlock', function() {
+                $('i', this).addClass('fa-spin');
+                $.ajax('/ban/${ban.id}/unlock', {
+                        type: 'POST'
+                    }).done(function() {
+                        window.location = window.location;
+                    });
+            });
+
+            $(document).on('click', '.lock', function() {
+                $('i', this).addClass('fa-spin');
+                $.ajax('/ban/${ban.id}/lock', {
+                        type: 'POST'
+                    }).done(function() {
+                        window.location = window.location;
+                    });
+            });
+        });
+    </script>
+</%block>
+
+<div class="modal fade" id="comment">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Add Comment</h4>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <table class="table">
+                        <tr>
+                            <td>Comment</td>
+                            <td><input name="comment" type="text" required /></td>
+                            <td>The comment you want to add, stupid.</td>
+                        </tr>
+                    </table>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary comment-confirm" id="comment-confirm">Add Comment</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<div class="modal fade" id="modify-reason">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Modify Reason</h4>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <table class="table">
+                        <tr>
+                            <td>Reason</td>
+                            <td><input name="reason" type="text" required /></td>
+                        </tr>
+                    </table>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary reason-confirm" id="reason-confirm">Modify Reason</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+
+<div class="modal fade" id="modify-secret-reason">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Modify Secret Reason</h4>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <table class="table">
+                        <tr>
+                            <td>Secret Reason</td>
+                            <td><input name="reason" type="text" required /></td>
+                        </tr>
+                    </table>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary secret-reason-confirm" id="secret-reason-confirm">Modify Secret Reason</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<div class="modal fade" id="modify-ban-type">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Modify Ban Type</h4>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <table class="table">
+                        <tr>
+                            <td>Ban Type</td>
+                            <td>
+                                <%
+                                from brave.core.ban.model import Ban
+                                from brave.core.permission.model import Permission
+
+                                user_perms = web.user.permissions
+                                %>
+                                % if Permission.set_grants_permission(user_perms, Ban.CREATE_GLOBAL_PERM):
+                                <input name="type" type="radio" value="global" required /> Global<br/>
+                                % endif
+                                % if Permission.set_grants_permission(user_perms, Ban.CREATE_SERVICE_PERM):
+                                <input name="type" type="radio" value="service" required /> Service<br/>
+                                % endif
+                                % if Permission.set_grants_permission(user_perms, Ban.CREATE_APP_PERM.format(app_short="*")):
+                                <input name="type" type="radio" value="app" required /> App<br/>
+                                % endif
+                                % if Permission.set_grants_permission(user_perms, Ban.CREATE_SUBAPP_PERM.format(app_short="*", subapp_id="*")):
+                                <input name="type" type="radio" value="subapp" required /> Subapp
+                                % endif
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>App Short</td>
+                            <td><input name="app" type="text"></td>
+                            <td>Only used for app and subapp bans</td>
+                        </tr>
+                        <tr>
+                            <td>SubApp Area</td>
+                            <td><input name="subarea" type="text"></td>
+                            <td>Only used for subapp bans</td>
+                        </tr>
+                    </table>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary ban-type-confirm" id="ban-type-confirm">Modify Ban Type</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<div class="container-fluid">
+    <div id="pad-wrapper">
+        <div class="row-fluid header">
+            <h3>${ban.ban_type.upper() + _(" Ban")}</h3>
+        </div>
+        
+        <b>Ban ID:</b> <a href="/ban/${ban.id}">${ban.id}</a><br/>
+        <b>Ban Type:</b> ${ban.ban_type}<br/>
+        <b>Created:</b> <time datetime="${ban.id.generation_time.isoformat().replace('+00:00', 'Z')}">${ban.id.generation_time.isoformat(' ').replace('+00:00', '')}</time><br/>
+        <b>Duration:</b> ${ban.duration if ban.duration else "Permanent"}<br/>
+        <b>Banned ${ban.banned_type}:</b> ${ban.banned_ident}</a><br/>
+        <b>Banner:</b> ${ban.banner.primary if ban.banner.primary else ban.banner}<br/>
+        <b>Reason:</b> ${ban.reason}<br/>
+        % if web.user.has_permission(ban.view_secret_reason_perm):
+            <b>Secret Reason:</b> ${ban.secret_reason}<br/>
+        % endif
+        <b>Enabled:</b> ${ban.enabled}<br/>
+        <b>Locked:</b> ${ban.locked}<br/>
+        <b>Application:</b> ${"N/A" if not ban.app else ban.app}<br/>
+        <b>Subarea:</b> ${"N/A" if not ban.subarea else ban.subarea}<br/>
+
+        <br/>
+        <br/>
+        <br/>
+
+
+        <b>Actions:</b>
+        % if ban._enabled:
+            % if Permission.set_grants_permission(user_perms, ban.disable_perm):
+            <button class="btn btn-danger btn-small disable ${'disabled' if ban.locked and not web.user.has_permission(ban.unlock_perm) else ''}" title="Disable Ban" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i> Disable Ban</button>
+            % endif
+        % else:
+            % if Permission.set_grants_permission(user_perms, ban.enable_perm):
+            <button class="btn btn-danger btn-small enable ${'disabled' if ban.locked and not web.user.has_permission(ban.unlock_perm) else ''}" title="Enable Ban" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i> Enable Ban</button>
+            % endif
+        % endif
+        % if ban.locked:
+            % if Permission.set_grants_permission(user_perms, ban.unlock_perm):
+            <button class="btn btn-danger btn-small unlock" title="Unlock Ban" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i> Unlock Ban</button>
+            % endif
+        % else:
+            % if Permission.set_grants_permission(user_perms, ban.lock_perm):
+            <button class="btn btn-danger btn-small lock" title="Lock Ban" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i> Lock Ban</button>
+            % endif
+        % endif
+        % if Permission.set_grants_permission(user_perms, ban.comment_perm):
+        <button class="btn btn-success btn-small comment ${'disabled' if ban.locked and not web.user.has_permission(ban.unlock_perm) else ''}" title="Comment" rel="tooltip" data-placement="bottom" data-toggle="modal" data-target="#comment"><i class="fa fa-plus"></i> Comment</button>
+        % endif
+        % if Permission.set_grants_permission(user_perms, ban.modify_reason_perm):
+        <button class="btn btn-warning btn-small modify-reason ${'disabled' if ban.locked and not web.user.has_permission(ban.unlock_perm) else ''}" title="Modify Reason" rel="tooltip" data-placement="bottom" data-toggle="modal" data-target="#modify-reason"><i class="fa fa-circle"></i> Modify Reason</button>
+        % endif
+        % if Permission.set_grants_permission(user_perms, ban.modify_secret_reason_perm):
+        <button class="btn btn-warning btn-small modify-secret-reason ${'disabled' if ban.locked and not web.user.has_permission(ban.unlock_perm) else ''}" title="Modify Secret Reason" rel="tooltip" data-placement="bottom" data-toggle="modal" data-target="#modify-secret-reason"><i class="fa fa-circle"></i> Modify Secret Reason</button>
+        % endif
+        % if Permission.set_grants_permission(user_perms, ban.disable_perm):
+        <button class="btn btn-warning btn-small modify-ban-type ${'disabled' if ban.locked and not web.user.has_permission(ban.unlock_perm) else ''}" title="Modify Ban Type" rel="tooltip" data-placement="bottom" data-toggle="modal" data-target="#modify-ban-type"><i class="fa fa-circle"></i> Modify Ban Type</button>
+        % endif
+        <br/>
+        <br/>
+        <h4>Ban History</h4>
+        <div class="row-fluid table">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th class="span2 sortable action"><span class="line"></span>${_("Action")}</th>
+                        <th class="span2 sortable time"><span class="line"></span>${_("Time")}</th>
+                        <th class="span2 sortable user"><span class="line"></span>${_("User")}</th>
+                        <th class="span6 sortable display"><span class="line"></span>${_("Content")}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    % for h in ban.history:
+                        <% if h.__class__.__name__ == "ModifySecretReasonHistory" and not Permission.set_grants_permission(user_perms, ban.view_secret_reason_perm):
+                            continue
+                        %>
+                        <tr data-id="${ban.id}" bgcolor=${"009999" if h.__class__.__name__.replace("Ban", "").replace("History", "") == "Comment" else "FFFFFF"}>
+                            <td class="action">${h.__class__.__name__.replace("Ban", "").replace("History", "")}</td>
+                            <td class="time">${h.time.strftime("%Y-%m-%d %H:%M:%S")}</td>
+                            <td class="user">${h.user.primary if h.user.primary else h.user}</td>
+                            <td class="display">${h.display()}</td>
+                        </tr>
+                    % endfor
+                </tbody>
+            </table>
+        </div>
+
+
+    </div>
+</div>

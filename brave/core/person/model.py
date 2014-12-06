@@ -155,6 +155,41 @@ class Person(Document):
         person.save()
         tbd_person.delete()
 
+    @property
+    def bans(self):
+
+        from brave.core.ban.model import PersonBan
+
+        bans = []
+        for b in PersonBan.objects:
+            if b.person == self:
+                bans.append(b)
+
+        return bans
+
+    def banned(self, app=None, subarea=None):
+        bans = self.bans
+        for b in bans:
+            if not b.enabled:
+                continue
+
+            if b.ban_type == "global":
+                return b
+
+            if app:
+                if b.ban_type == "service":
+                    return b
+
+                if b.ban_type == "app" and b.app.short == app:
+                    return b
+
+                if subarea:
+                    if b.ban_type == "subapp" and b.app.short == app and b.subarea == subarea:
+                        return b
+
+        return False
+
+
     def __repr__(self):
         return "Person({e.id}, users={e._users}, characters={e._characters}, keys={e._characters}, ips={e._ips})".format(e=self)
 
