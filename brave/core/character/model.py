@@ -204,6 +204,24 @@ class EVECharacter(EVEEntity):
                 char_groups.add(group)
                 
         return char_groups
+
+    @property
+    def person(self):
+        if self.owner:
+            return self.owner.person
+
+        from brave.core.person.model import Person
+
+        person = Person.objects(_characters=self).first()
+
+        if person:
+            return person
+
+        person = Person()
+        # Ensure that the person has an id before adding a component.
+        person.save()
+        person.add_component((self, "create"), self)
+        return person.save()
     
     def permissions(self, app=None):
         """Return all permissions that the character has that start with core or app.

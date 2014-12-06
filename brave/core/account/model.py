@@ -92,6 +92,21 @@ class User(Document):
     def otp_required(self):
         return self.rotp and len(self.otp)
 
+    @property
+    def person(self):
+        from brave.core.person.model import Person
+
+        person = Person.objects(_users=self).first()
+
+        if person:
+            return person
+
+        person = Person()
+        # Ensure that the person has an id before adding a component.
+        person.save()
+        person.add_component((self, "create"), self)
+        return person.save()
+
     # Functions to manage YubiKey OTP
 
     def addOTP(self, yid):

@@ -135,8 +135,14 @@
                     %>
                     <li><a href="/account/${other_user.id}">${other_user | h}</a> ${method}</li>
                     % endfor
+                 </ul>
                 % endif
                 % endif
+                <hr>
+                <h4>Person</h4>
+                <ul>
+                    <li>${account.person.id}</li>
+                </ul>
             </div>
         </div>
         

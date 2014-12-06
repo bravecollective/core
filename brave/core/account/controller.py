@@ -12,6 +12,7 @@ from brave.core.account.model import User, PasswordRecovery
 from brave.core.account.form import authenticate as authenticate_form, register as register_form, \
     recover as recover_form, reset_password as reset_password_form
 from brave.core.account.authentication import lookup_email, send_recover_email
+from brave.core.person.model import Person
 from brave.core.util.predicate import is_administrator, authenticate
 
 from yubico import yubico
