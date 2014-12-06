@@ -15,7 +15,7 @@ class Ban(Document):
     )
 
     banner = ReferenceField(User, db_field='b', required=True)
-    created = DateTimeField(default=datetime.utcnow(), db_field='c', required=True)
+    created = DateTimeField(db_field='c', required=True)
     # Note: We don't use Mongoengine expireasafterseconds because we want to retain copies of bans after they expire.
     # An expiration of None means that the ban is permanent.
     expires = DateTimeField(db_field='d')
@@ -237,6 +237,7 @@ class Ban(Document):
         """Mongoengine pre-save validation \o/
         We opt to throw an error for extraneous information here instead of just purging it because the history files
         will be created with the (incorrect) extraneous information even if we purge it from the ban itself on save."""
+
         if self.ban_type == "global" or self.ban_type == "service":
             if self.app or self.subarea:
                 raise ValidationError("Global and Service bans don't have apps or subareas.")
@@ -250,6 +251,9 @@ class Ban(Document):
         if self.ban_type == "subapp":
             if not self.app or not self.subarea:
                 raise ValidationError("Subapp bans require that an app and subarea be specified")
+
+        if not self.created:
+            self.created = datetime.utcnow()
 
     @property
     def permanent(self):
@@ -282,6 +286,7 @@ class PersonBan(Ban):
     def create(banner, duration, ban_type, reason, banned_ident, person, app=None, subarea=None, secret_reason=None, banned_type="character"):
         ban = PersonBan(banner=banner, ban_type=ban_type, reason=reason,
                         orig_person=str(person.id), app=app, subarea=subarea,secret_reason=secret_reason, banned_type=banned_type, banned_ident=banned_ident)
+        ban.created = datetime.utcnow()
         ban.expires = ban.created + duration if duration else None
         ban.history.append(CreateBanHistory(user=banner))
         return ban.save()
