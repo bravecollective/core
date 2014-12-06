@@ -281,7 +281,7 @@ class GroupList(HTTPMethod):
                 "leave": self.leave,
                 "join": self.join,
                 "request": self.request,
-                "widthdraw": self.withdraw,
+                "withdraw": self.withdraw,
             }[action](group)
 
 class ManageGroupList(HTTPMethod):
