@@ -104,7 +104,7 @@ class AuthorizeHandler(HTTPMethod):
         # change.)
         expiration = grant.expires
 
-        ngrant = ApplicationGrant(user=u, application=ar.application, mask=grant.mask, expires=expiration, chars=grant.characters, all_chars=grant.all_chars)
+        ngrant = ApplicationGrant(user=u, application=ar.application, _mask=grant._mask, expires=expiration, chars=grant.characters, all_chars=grant.all_chars)
         ngrant.save()
         
         ar.user = u
