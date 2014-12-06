@@ -360,3 +360,41 @@ class EVECharacter(EVEEntity):
     @property
     def view_perm(self):
         return self.VIEW_PERM.format(character_id=str(self.id))
+
+    @classmethod
+    def pull_character(cls, name):
+        """Pulls public information about this character from the EVE API, and adds them to the Character Collection.
+        This is important for when we need to manipulate a character who doesn't have an API key in Core, such as
+        banning."""
+        if cls.objects(name=name).first():
+            return False
+
+        from brave.core.util.eve import api
+        id = api.eve.CharacterID(names=[name]).row[0].characterID
+
+        # Character doesn't exist
+        if id == 0:
+            return False
+
+        info = api.eve.CharacterInfo(characterID=id)
+
+        char = cls()
+
+        char.identifier = id
+        
+        char.corporation, char.alliance = EVECredential.get_membership(info)
+
+        char.name = info.name if 'name' in info else info.characterName
+        if not isinstance(char.name, basestring):
+            char.name = str(char.name)
+        char.race = info.race if 'race' in info else None
+        char.bloodline = (info.bloodLine if 'bloodLine' in info
+                          else info.bloodline if 'bloodline' in info
+                          else None)
+        char.ancestry = info.ancestry if 'ancestry' in info else None
+        char.gender = info.gender if 'gender' in info else None
+        char.security = info.security if 'security' in info else None
+        char.titles = [EVECredential.strip_tags(i.titleName) for i in info.corporationTitles.row] if 'corporationTitles' in info else []
+
+        return char.save()
+
