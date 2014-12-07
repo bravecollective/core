@@ -224,7 +224,9 @@ class ACLGroupMembership(ACLRule):
         groups_referenced.append(self.group.id)
 
         try:
-            return self.group.evaluate(user, character)
+            if self.group.evaluate(user, character):
+                return None if self.inverse else self.grant
+            return self.grant if self.inverse else None
         finally:
             id = groups_referenced.pop()
             assert id == self.group.id
@@ -235,7 +237,7 @@ class ACLGroupMembership(ACLRule):
             'if not' if self.inverse else 'if',
             self.group)
 
-    def human_readable_repr(self):
+    def __unicode__(self):
         return '{0} if user/character {1} in group {2}'.format(
             'grant' if self.grant else 'deny',
             'is not' if self.inverse else 'if',
