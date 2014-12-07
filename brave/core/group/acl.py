@@ -195,7 +195,7 @@ class ACLVerySecure(ACLRule):
     def __repr__(self):
         return "ACLVerySecure({0})".format(self.human_readable_repr())
     
-    def human_readable_repr(self):
+    def __unicode__(self):
         # We usually call this __unicode__ in Python 2, __str__ in Python 3.  Then you can just
         # unicode(aclruleobj) to get the text version, and ${aclruleobj} will naturally work in templates
         # without extra function calls (since ${expr} automatically calls unicode(expr) anyway!)
