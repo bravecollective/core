@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 
 from datetime import datetime
 from collections import OrderedDict
-from contextlib import contextmanager
 from mongoengine import Document, EmbeddedDocument, EmbeddedDocumentField, StringField, EmailField, URLField, DateTimeField, BooleanField, ReferenceField, ListField, IntField
 
 from brave.core.util.signal import update_modified_timestamp
