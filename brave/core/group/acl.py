@@ -219,8 +219,9 @@ class ACLGroupMembership(ACLRule):
 
     def evaluate(self, user, character, _context=None):
         if _context is None:
-            _context = {'groups_referenced': []}
-
+            _context = {}
+        if 'groups_referenced' not in _context:
+            _context['groups_referenced'] = []
         groups_referenced = _context['groups_referenced']
 
         if self.group.id in groups_referenced:
