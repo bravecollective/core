@@ -207,7 +207,6 @@ class ACLVerySecure(ACLRule):
                 'if not' if self.inverse else 'if'
             )
 
-
 class CyclicGroupReference(Exception):
     def __init__(self, cycle):
         self.cycle = cycle
