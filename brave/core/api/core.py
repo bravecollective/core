@@ -13,7 +13,7 @@ from marrow.util.object import load_object as load
 from marrow.util.convert import boolean
 
 from brave.core.api.model import AuthenticationBlacklist, AuthenticationRequest
-from brave.core.api.util import SignedController
+from brave.core.api.util import SignedController, get_token
 from brave.core.util.eve import EVECharacterKeyMask, api
 from brave.core.permission.model import create_permission
 
@@ -180,11 +180,10 @@ class CoreAPI(SignedController):
         return self.authorize(success=success, failure=failure)
     
     def info(self, token):
-        from brave.core.application.model import ApplicationGrant
         from brave.core.group.model import Group
-        
+
         # Step 1: Get the appropriate grant.
-        token = ApplicationGrant.objects.get(id=token, application=request.service)
+        token = get_token(request, token)
 
         # Step 2: Assemble the information for each character
         def char_info(char):

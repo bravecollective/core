@@ -62,8 +62,12 @@ class Application(Document):
     # Number of days that grants for this application should last.
     expireGrantDays = IntField(db_field='e', default=30)
 
-    auth_methods = ListField(StringField(choices=['oauth2ac']))
+    oauth_grant_type = StringField(choices=['authorization_code'], db_field='ogt')
+    oauth_redirect_uri = URLField(regex=r'^https://', db_field='ori')
+    oauth_client_secret = StringField(min_length=64)
 
+    auth_methods = ListField(StringField(choices=['oauth2ac']))
+    
     # This field indicates whether the application requires access to every character on the authorizing user's account.
     require_all_chars = BooleanField(db_field='a', default=False)
     auth_only_one_char = BooleanField(db_field='one', default=False)
@@ -76,6 +80,11 @@ class Application(Document):
     AUTHORIZE_PERM = 'core.application.authorize.{app_short}'
     
     # Related Data
+
+    @property
+    def client_id(self):
+        """This is used extensively by oauthlib"""
+        return str(self.id)
     
     @property
     def grants(self):
@@ -122,7 +131,10 @@ class ApplicationGrant(Document):
     
     immutable = BooleanField(db_field='i', default=False)  # Onboarding is excempt from removal by the user.
     expires = DateTimeField(db_field='x')  # Default grant is 30 days, some applications exempt.  (Onboarding, Jabber, TeamSpeak, etc.)
-    
+
+    oauth_access_token = StringField(min_length=25)
+    oauth_refresh_token = StringField(min_length=25)
+
     # Python Magic Methods
     
     @property
