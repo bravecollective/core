@@ -102,7 +102,9 @@ class ApplicationInterface(HTTPMethod):
         app.mask.required = valid['required'] or 0
         app.mask.optional = valid['optional'] or 0
         # Ignore their provided app short because we can't change permission names #ThanksMongo
-        
+
+        app.auth_methods=valid['auth_methods'].split(" ")
+
         if user.admin:
             app.expireGrantDays = valid['expire'] or 30
             
@@ -190,6 +192,8 @@ class ApplicationList(HTTPMethod):
         app.key.public = valid['key']['public']
         app.mask.required = valid['required'] or 0
         app.mask.optional = valid['optional'] or 0
+
+        app.auth_methods=valid['auth_methods'].split(" ")
 
         if valid['all_chars'] and valid['only_one_char']:
             return 'json:', dict(
