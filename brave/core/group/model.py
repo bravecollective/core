@@ -6,7 +6,7 @@ from datetime import datetime
 from mongoengine import Document, EmbeddedDocument, EmbeddedDocumentField, StringField, EmailField, URLField, DateTimeField, BooleanField, ReferenceField, ListField, IntField
 
 from brave.core.util.signal import update_modified_timestamp
-from brave.core.group.acl import ACLRule
+from brave.core.group.acl import ACLRule, ACLGroupMembership, CyclicGroupReference
 from brave.core.permission.model import Permission, WildcardPermission
 from brave.core.character.model import EVECharacter
 
@@ -105,7 +105,10 @@ class Group(Document):
     def __repr__(self):
         return 'Group({0})'.format(self.id).encode('ascii', 'backslashreplace')
     
-    def evaluate(self, user, character, rule_set=None):
+    def evaluate(self, user, character, rule_set=None, _context=None):
+        """Evaluate group ACL rules for the given user and character. _context is used to track
+        information through recursive evaluation. ACL and Group evaluation should forward the
+        context if one is passed in."""
         # If the character has no owner (and therefore no API key), deny them access to every group.
         if not character.owner:
             return False
@@ -123,19 +126,41 @@ class Group(Document):
             # but is now automatically granted access to the group.
             # TODO: Perhaps automatically clean up the join lists when a character no longer applies?
             if character in self.join_members:
-                if self.evaluate(user, character, rule_set='join'):
+                if self.evaluate(user, character, rule_set='join', _context=_context):
                     return True
             if character in self.request_members:
-                if self.evaluate(user, character, rule_set='request'):
+                if self.evaluate(user, character, rule_set='request', _context=_context):
                     return True
             rules = self.rules
         
         for rule in rules:
-            result = rule.evaluate(user, character)
+            result = rule.evaluate(user, character, _context=_context)
             if result is not None:
                 return result
         
         return False  # deny by default
+
+    def cycle_check(self, rules=None, groups_referenced=None):
+        if groups_referenced is None:
+            groups_referenced = []
+
+        if rules is None:
+            self.cycle_check(self.request_rules, groups_referenced)
+            self.cycle_check(self.join_rules, groups_referenced)
+            self.cycle_check(self.rules, groups_referenced)
+            return
+
+        if self.id in groups_referenced:
+            raise CyclicGroupReference(list(groups_referenced))
+        groups_referenced.append(self.id)
+
+        try:
+            for rule in rules:
+                if isinstance(rule, ACLGroupMembership):
+                    rule.group.cycle_check(groups_referenced=groups_referenced)
+        finally:
+            id = groups_referenced.pop()
+            assert id == self.id
 
     @staticmethod
     def create(id, title, user, rules=[]):

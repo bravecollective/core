@@ -12,7 +12,7 @@ from web.core.http import HTTPNotFound
 
 from brave.core.character.model import EVECharacter
 from brave.core.group.model import Group, GroupCategory
-from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask, ACLVerySecure, ACLGroupMembership
+from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask, ACLVerySecure, ACLGroupMembership, CyclicGroupReference
 from brave.core.util import post_only
 from brave.core.permission.util import user_has_permission, user_has_any_permission
 from brave.core.permission.model import Permission, WildcardPermission, GRANT_WILDCARD
@@ -138,17 +138,24 @@ class OneGroupController(Controller):
 
         log.debug(rule_objects)
 
-        if not really:
-            log.debug("not really")
-            return "json:", "\n".join([unicode(r) for r in rule_objects])
-
-        log.debug("really!")
         if rule_set == "request":
             self.group.request_rules = rule_objects
         elif rule_set == "join":
             self.group.join_rules = rule_objects
         else:
             self.group.rules = rule_objects
+
+        try:
+            self.group.recursion_check()
+        except CyclicGroupReference as e:
+            return 'json:', dict(success=False,
+                                 message="Circular group reference: {}".format(e.cycle))
+
+        if not really:
+            log.debug("not really")
+            return "json:", "\n".join([unicode(r) for r in rule_objects])
+
+        log.debug("really!")
         success = self.group.save()
         log.debug(success)
         if success:

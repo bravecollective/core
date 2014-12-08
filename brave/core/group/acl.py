@@ -30,7 +30,10 @@ class ACLRule(EmbeddedDocument):
     grant = BooleanField(db_field='g', default=False)  # paranoid default
     inverse = BooleanField(db_field='z', default=False)  # pass/fail if the rule *doesn't* match
     
-    def evaluate(self, user, character):
+    def evaluate(self, user, character, _context=None):
+        """Evaluate the rule for the given user and character. _context is used to track information
+        through recursive evaluation. ACL and Group evaluation should forward the context if one is passed
+        in to it."""
         raise NotImplementedError()
     
     def __repr__(self):
@@ -69,7 +72,7 @@ class ACLList(ACLRule):
     def evaluate_alliance(self, user, character):
         return character.alliance and character.alliance.identifier in self.ids
     
-    def evaluate(self, user, character):
+    def evaluate(self, user, character, _context=None):
         if getattr(self, 'evaluate_' + self.KINDS[self.kind].lower())(user, character):
             return None if self.inverse else self.grant
         
@@ -107,7 +110,7 @@ class ACLKey(ACLRule):
     
     kind = StringField(db_field='k', choices=KINDS.items())
     
-    def evaluate(self, user, character):
+    def evaluate(self, user, character, _context=None):
         for key in character.credentials:
             if key.kind == self.kind:
                 return None if self.inverse else self.grant
@@ -127,7 +130,7 @@ class ACLTitle(ACLRule):
     
     titles = ListField(StringField(), db_field='t')
     
-    def evaluate(self, user, character):
+    def evaluate(self, user, character, _context=None):
         if set(character.titles) & set(self.titles):
             return None if self.inverse else self.grant
         
@@ -147,7 +150,7 @@ class ACLRole(ACLRule):
     
     roles = ListField(StringField(), db_field='t')
     
-    def evaluate(self, user, character):
+    def evaluate(self, user, character, _context=None):
         if set(character.roles) & set(self.roles):
             return None if self.inverse else self.grant
         
@@ -167,7 +170,7 @@ class ACLMask(ACLRule):
     
     mask = IntField(db_field='m')
     
-    def evaluate(self, user, character):
+    def evaluate(self, user, character, _context=None):
         mask = self.mask
         
         for cred in character.credentials:
@@ -187,7 +190,7 @@ class ACLMask(ACLRule):
 class ACLVerySecure(ACLRule):
     """Grant or deny access based on mandatory use of an OTP."""
     
-    def evaluate(self, user, character):
+    def evaluate(self, user, character, _context=None):
         if user.otp_required:
             return None if self.inverse else self.grant
         
@@ -206,25 +209,28 @@ class ACLVerySecure(ACLRule):
             )
 
 
-class RecursiveGroupReference(Exception):
-    pass
-
-# global!!
-groups_referenced = []
+class CyclicGroupReference(Exception):
+    def __init__(self, cycle):
+        self.cycle = cycle
+        super(CyclicGroupReference, self).__init__(unicode(cycle))
 
 class ACLGroupMembership(ACLRule):
     """Grant or deny access based on membership in a group."""
 
     group = ReferenceField('Group')
 
-    def evaluate(self, user, character):
-        global groups_referenced
+    def evaluate(self, user, character, _context=None):
+        if _context is None:
+            _context = {'groups_referenced': []}
+
+        groups_referenced = _context['groups_referenced']
+
         if self.group.id in groups_referenced:
-            raise RecursiveGroupReference(str(groups_referenced))
+            raise CyclicGroupReference(list(groups_referenced))
         groups_referenced.append(self.group.id)
 
         try:
-            if self.group.evaluate(user, character):
+            if self.group.evaluate(user, character, _context=_context):
                 return None if self.inverse else self.grant
             return self.grant if self.inverse else None
         finally:
