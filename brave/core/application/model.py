@@ -61,7 +61,9 @@ class Application(Document):
     development = BooleanField(db_field='dev')
     # Number of days that grants for this application should last.
     expireGrantDays = IntField(db_field='e', default=30)
-    
+
+    auth_methods = ListField(StringField(choices=['oauth2_auth_code']))
+
     # This field indicates whether the application requires access to every character on the authorizing user's account.
     require_all_chars = BooleanField(db_field='a', default=False)
     auth_only_one_char = BooleanField(db_field='one', default=False)

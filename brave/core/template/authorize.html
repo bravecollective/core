@@ -2,7 +2,7 @@
 
 <%inherit file="brave.core.template.light"/>
 
-<%block name="title">${_("Authorize {0}").format(ar.application.name) | h}</%block>
+<%block name="title">${_("Authorize {0}").format(application.name) | h}</%block>
 
 <%block name="header">
     ${parent.header()}
@@ -145,7 +145,7 @@
         <div class="auth">
             <h6>${_("Granting Authorization")}</h6>
             
-            <blockquote data-application="${ar.application.name | h}"></blockquote>
+            <blockquote data-application="${application.name | h}"></blockquote>
             
             <p>This application wishes to know certain information about your character.  All applications are given access to the following information:</p>
             
@@ -153,13 +153,13 @@
                 <li><strong>Public Character Information</strong><span class="pull-right">Name, Corporation, Alliance</span></li>
             </ul>
             
-            % if ar.application.mask.required:
+            % if application.mask.required:
             <p>Additionally, this application requires the following additional information:</p>
             
             <ul>
                 <%
                  from brave.core.util.eve import EVECharacterKeyMask
-                 k = EVECharacterKeyMask(ar.application.mask.required) 
+                 k = EVECharacterKeyMask(application.mask.required)
                 %>
                 % for func in k.functionsAllowed():
                     <li>${func.name[5:]}</li>
