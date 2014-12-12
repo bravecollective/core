@@ -8,7 +8,6 @@ from mongoengine import Document, EmbeddedDocument, EmbeddedDocumentField, Strin
 from brave.core.util.signal import update_modified_timestamp
 from brave.core.group.acl import ACLRule
 from brave.core.permission.model import Permission, WildcardPermission
-from brave.core.character.model import EVECharacter
 
 
 log = __import__('logging').getLogger(__name__)
@@ -40,9 +39,9 @@ class Group(Document):
     join_rules = ListField(EmbeddedDocumentField(ACLRule), db_field='j', default=list)
     request_rules = ListField(EmbeddedDocumentField(ACLRule), db_field='q', default=list)
     
-    join_members = ListField(ReferenceField(EVECharacter), db_field='jm', default=list)
-    request_members = ListField(ReferenceField(EVECharacter), db_field='rm', default=list)
-    requests = ListField(ReferenceField(EVECharacter), db_field='rl', default=list)
+    join_members = ListField(StringField(), db_field='jmn', default=list)
+    request_members = ListField(StringField(), db_field='rmn', default=list)
+    requests = ListField(StringField(), db_field='rln', default=list)
     
     creator = ReferenceField('User', db_field='c')
     modified = DateTimeField(db_field='m', default=datetime.utcnow)
@@ -93,7 +92,7 @@ class Group(Document):
             return
         
         self.request_members.append(character)
-        
+
     def add_request(self, character):
         """Use this to prevent duplicates in the database when not checking if a user is already in the list, does not
             prevent duplicates due to concurrent modification."""
@@ -122,10 +121,10 @@ class Group(Document):
             # Cascade down to further checks in case they joined or applied to join, then lost the ability to do so
             # but is now automatically granted access to the group.
             # TODO: Perhaps automatically clean up the join lists when a character no longer applies?
-            if character in self.join_members:
+            if character.name in self.join_members:
                 if self.evaluate(user, character, rule_set='join'):
                     return True
-            if character in self.request_members:
+            if character.name in self.request_members:
                 if self.evaluate(user, character, rule_set='request'):
                     return True
             rules = self.rules

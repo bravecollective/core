@@ -106,7 +106,7 @@
                                 <td>
                                 % if g in web.user.primary.groups:
                                     Member
-                                % elif web.user.primary in g.requests:
+                                % elif web.user.primary.name in g.requests:
                                     Request pending
                                 % endif
                                 </td>
@@ -115,7 +115,7 @@
                                     <button class="btn btn-danger btn-small leave"><i class="fa fa-times"></i> Leave Group</button>
                                 % elif g in joinableGroups:
                                     <button class="btn btn-success btn-small join"><i class="fa fa-plus"></i> Join Group</button>
-                                % elif web.user.primary in g.requests:
+                                % elif web.user.primary.name in g.requests:
                                     <button class="btn btn-warning btn-small withdraw"><i class="fa fa-times"></i> Withdraw Request</button>
                                 % elif g in requestableGroups:
                                     <button class="btn btn-success btn-small request"><i class="fa fa-plus"></i> Request Access</button>
