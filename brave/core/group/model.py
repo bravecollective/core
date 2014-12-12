@@ -62,21 +62,11 @@ class Group(Document):
     
     @property
     def permissions(self):
-        """Returns the permissions that this group grants as Permission objects. Evaluates the wildcard permissions
-            as well."""
+        """Returns the permissions that this group grants as Permission objects. Note, this is mostly here for backwards
+        compatibility from when we evaluated Wildcard permissions out into all known Permissions (which we stopped doing
+        because it's horrifically slow."""
         
-        perms = set()
-        
-        for perm in self._permissions:
-            # if perm is not a wildcard permission, add it to the set.
-            if not isinstance(perm, WildcardPermission):
-                perms.add(perm)
-                continue
-                
-            for p in perm.get_permissions():
-                perms.add(p)
-                
-        return perms
+        return self._permissions
         
     def add_join_member(self, character):
         """Use this to prevent duplicates in the database when not checking if a user is already in the list, does not
