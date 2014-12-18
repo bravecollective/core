@@ -66,7 +66,7 @@ class Application(Document):
     oauth_redirect_uri = URLField(regex=r'^https://', db_field='ori')
     oauth_client_secret = StringField(min_length=64)
 
-    auth_methods = ListField(StringField(choices=['oauth2ac']))
+    auth_methods = ListField(StringField(choices=['oauth2ac', 'core_legacy']))
     
     # This field indicates whether the application requires access to every character on the authorizing user's account.
     require_all_chars = BooleanField(db_field='a', default=False)

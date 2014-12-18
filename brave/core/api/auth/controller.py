@@ -3,6 +3,7 @@ from brave.core.character.model import EVECharacter
 from brave.core.application.model import ApplicationGrant
 from brave.core.api.auth.model import AuthorizationMethod
 from brave.core.api.auth.oauth2 import OAuth2AuthorizationCode
+from brave.core.api.auth.core import CoreLegacy
 
 from web.core.locale import _
 from web.core import Controller, HTTPMethod, config, request
@@ -145,3 +146,4 @@ class AuthMethodController(Controller):
 class AuthorizeController(Controller):
     """Authorization Methods Go Here."""
     oauth2 = AuthMethodController(OAuth2AuthorizationCode)
+    core = AuthMethodController(CoreLegacy)
