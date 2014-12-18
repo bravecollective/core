@@ -20,7 +20,7 @@ class AuthorizeHandler(HTTPMethod):
         super(AuthorizeHandler, self).__init__()
 
     @authenticate
-    def get(self, ar=None, *args, **kw):
+    def get(self, *args, **kw):
         """We've just had the client redirect the user-agent to us trying to get authorization, so we need to
         authenticate the user (handled by the decorator), verify that the application can request authorizations using
         the specified authorization method, and verify that they're eligible to authorize the application."""
@@ -32,7 +32,7 @@ class AuthorizeHandler(HTTPMethod):
 
         grant = ApplicationGrant.objects(user=u, application=app).first()
         if grant:
-            raise HTTPFound(location=self.auth_method.authenticate(u, app, request, *args, **kw))
+            raise HTTPFound(location=self.auth_method.authenticate(u, app, request, grant, *args, **kw))
 
         if not app:
             raise HTTPBadRequest("Application not found, please ensure you're providing the correct credentials for the"
@@ -89,7 +89,7 @@ class AuthorizeHandler(HTTPMethod):
         )
 
     @authenticate
-    def post(self, ar=None, grant=None, all_chars=False, *args, **kw):
+    def post(self, grant=None, all_chars=False, *args, **kw):
 
         u = user._current_obj()
         app = self.auth_method.get_application(request, *args, **kw)

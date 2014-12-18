@@ -256,7 +256,7 @@ class OAuthValidator(RequestValidator):
 class OAuth2AuthorizationCode(AuthorizationMethod):
     name = "OAuth2 Authorization Code"
 
-    short = "oauth2_auth_code"
+    short = "oauth2ac"
 
     # OAuthlib authorization endpoint
     _authorization_endpoint = WebApplicationServer(OAuthValidator)
@@ -317,9 +317,8 @@ class OAuth2AuthorizationCode(AuthorizationMethod):
                                                                       " to access their data.")
 
     @classmethod
-    def authenticate(cls, user, app, request, *args, **kwargs):
-        grant = ApplicationGrant.objects.get(user=user, application=app)
-        ret = cls.authorize(user, app, request, grant.characters, grant.all_chars, *args, **kwargs)
+    def authenticate(cls, user, app, request, grant, *args, **kw):
+        ret = cls.authorize(user, app, request, grant.characters, grant.all_chars, *args, **kw)
         grant.delete()
         return ret[1]['location']
 

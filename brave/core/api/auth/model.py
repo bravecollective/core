@@ -43,7 +43,7 @@ class AuthorizationMethod(object):
         raise NotImplementedError()
 
     @classmethod
-    def authenticate(cls, user, app, request, *args, **kwargs):
+    def authenticate(cls, user, app, request, *args, **kw):
         """Called when an application requests authorization to a user who has already authorized the application. You
             MUST validate the request, ensuring it meets the requirements of the authorization method. As the user has
             already approved the app to access the requested scope, you merely have to reply to the request as the
