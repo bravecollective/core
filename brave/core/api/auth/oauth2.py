@@ -1,6 +1,5 @@
 from brave.core.api.auth.model import AuthorizationMethod
 from brave.core.application.model import Application, ApplicationGrant
-from brave.core.api.util import parse_http_basic
 from brave.core.character.model import EVECharacter
 
 from datetime import datetime, timedelta
@@ -19,7 +18,12 @@ class OAuthValidator(RequestValidator):
 
     @staticmethod
     def verify_http_basic(request):
+        from brave.core.api.util import parse_http_basic
+
         id, secret = parse_http_basic(request)
+
+        if not id or not secret:
+            return False
 
         client = OAuthValidator.verify_id_and_secret(id, secret)
 
@@ -327,7 +331,25 @@ class OAuth2AuthorizationCode(AuthorizationMethod):
         if 'client_id' in kw:
             return Application.objects.get(id=kw['client_id'])
         if 'Authorization' in request.headers:
-            return OAuthValidator.verify_http_basic(request.headers['Authorization'])
+            # TODO: Temp holdover b/c Bearer tokens in Authorization header
+            res = OAuthValidator.verify_http_basic(request)
+            if res:
+                return res
+        if 'token' in kw:
+            try:
+                token = ApplicationGrant.objects.get(oauth_access_token=kw['token'])
+            except ApplicationGrant.DoesNotExist:
+                raise HTTPBadRequest()
+            return token.application
+
+    @classmethod
+    def before_api(cls, *args, **kw):
+        from web.core import request
+        return cls.get_application(request, *args, **kw)
+
+    @classmethod
+    def after_api(cls, response, result, *args, **kw):
+        return response
 
     @classmethod
     def access_token(cls, *args, **kwargs):

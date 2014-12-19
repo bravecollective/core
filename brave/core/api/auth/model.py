@@ -57,3 +57,20 @@ class AuthorizationMethod(object):
 
         raise NotImplementedError()
 
+    @classmethod
+    def before_api(cls, *args, **kw):
+        """Called before API calls from applications using this authorization method. Provides an opportunity for
+        authorization methods that enforce additional requirements on API calls to check those. This method should
+        return the Application object corresponding to the application that made the API call if the call is valid, and
+        should raise an HTTPEError describing the error if the validation fails,"""
+
+        raise NotImplementedError()
+
+    @classmethod
+    def after_api(cls, response, result, *args, **kw):
+        """Called after API calls from applications using this authorization method. Provides an opportunity for
+        authorization methods that enforce additional requirements on API calls to check those. This method should
+        return response, modified as necessary."""
+
+        raise NotImplementedError()
+

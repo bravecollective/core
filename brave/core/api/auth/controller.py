@@ -147,3 +147,16 @@ class AuthorizeController(Controller):
     """Authorization Methods Go Here."""
     oauth2 = AuthMethodController(OAuth2AuthorizationCode)
     core = AuthMethodController(CoreLegacy)
+
+    @classmethod
+    def get_auth_method(cls, short=None):
+        """Returns the auth method that matches the short."""
+        for m in dir(cls):
+            m = getattr(cls, m)
+            if not isinstance(m, AuthMethodController):
+                continue
+
+            if m.auth_method.short == short:
+                return m.auth_method
+
+        return None

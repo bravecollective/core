@@ -10,6 +10,7 @@ from web.core.templating import render
 
 from brave.api.controller import SignedController as OriginalSignedController
 from brave.core.application.model import Application, ApplicationGrant
+from brave.core.api.auth.controller import AuthorizeController
 
 
 log = __import__('logging').getLogger(__name__)
@@ -20,43 +21,25 @@ class SignedController(OriginalSignedController):
         return Application.objects.get(id=identifier)
 
     def __before__(self, *args, **kw):
-        if 'X-Service' in request.headers and 'X-Signature' in request.headers:
-            # TODO: Better check for if it's an OAUTH or LEGACY app
-            if self.__service__(request.headers['X-Service']).oauth_redirect_uri:
-                raise HTTPBadRequest()
-            super(SignedController, self).__before__(args, kw)
-            return args, kw
-        """For requests from OAuth clients, we'll accept either an access token or the client credentials as
-            verification of identity."""
-        # TODO: Handle Bearer tokens in this header
-        if 'Authorization' in request.headers:
-            id, secret = parse_http_basic(request)
-            if id:
-                if not self.__service__(id).oauth_redirect_uri:
-                    raise HTTPBadRequest()
-                request.service = self.__service__(id)
-                return args, kw
-        if 'client_id' in kw and 'client_secret' in kw:
-            if not self.__service__(kw['client_id']).oauth_redirect_uri:
-                raise HTTPBadRequest()
-            request.service = self.__service__(kw['client_id'])
-            return args, kw
-        if 'token' in kw:
-            try:
-                token = ApplicationGrant.objects.get(oauth_access_token=kw['token'])
-            except ApplicationGrant.DoesNotExist:
-                raise HTTPBadRequest()
-            if not token.application.oauth_redirect_uri:
-                raise HTTPBadRequest()
-            request.service = token.application
-            return args, kw
 
-        raise HTTPBadRequest()
+        auth = kw.get('auth_method', 'core_legacy')
+        auth_method = AuthorizeController.get_auth_method(auth)
+
+        if not auth_method:
+            raise HTTPBadRequest("Authorization method with short {} not found.".format(auth))
+
+        request.auth_method = auth_method
+        request.service = auth_method.before_api(*args, **kw)
+
+        if not auth_method.short in request.service.auth_methods:
+            raise HTTPBadRequest("This application is not allowed to use this auth_method.")
+
+        if 'auth_method' in kw:
+            del kw['auth_method']
+
+        return args, kw
 
     def __after__(self, result, *args, **kw):
-        if 'X-Service' in request.headers and 'X-Signature' in request.headers:
-            return super(SignedController, self).__after__(result, args, kw)
-
         response = Response(status=200, charset='utf-8')
         response.date = datetime.utcnow()
         response.last_modified = result.pop('updated', None)
@@ -65,7 +48,7 @@ class SignedController(OriginalSignedController):
         response.headers[b'Content-Type'] = str(ct)  # protect against lack of conversion in Flup
         response.body = body
 
-        return response
+        return request.auth_method.after_api(response, result, *args, **kw)
 
 
 def get_token(request, token):
