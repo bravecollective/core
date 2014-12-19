@@ -74,3 +74,9 @@ class AuthorizationMethod(object):
 
         raise NotImplementedError()
 
+    @classmethod
+    def get_token(cls, token, service):
+        """Returns the ApplicationGrant object corresponding to the provided token."""
+
+        raise NotImplementedError()
+

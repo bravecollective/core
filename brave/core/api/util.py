@@ -26,13 +26,17 @@ class SignedController(OriginalSignedController):
         auth_method = AuthorizeController.get_auth_method(auth)
 
         if not auth_method:
+            return dict(success=False, reason='auth_method.invalid',
+                        message="Authorization method with short {} not found.".format(auth))
+
             raise HTTPBadRequest("Authorization method with short {} not found.".format(auth))
 
         request.auth_method = auth_method
         request.service = auth_method.before_api(*args, **kw)
 
         if not auth_method.short in request.service.auth_methods:
-            raise HTTPBadRequest("This application is not allowed to use this auth_method.")
+            return dict(success=False, reason='auth_method.not_authorized',
+                        message="This application is not allowed to use this auth_method.")
 
         if 'auth_method' in kw:
             del kw['auth_method']
@@ -51,12 +55,6 @@ class SignedController(OriginalSignedController):
         return request.auth_method.after_api(response, result, *args, **kw)
 
 
-def get_token(request, token):
-    if request.service.oauth_redirect_uri:
-        return ApplicationGrant.objects.get(oauth_access_token=token, application=request.service)
-    else:
-        return ApplicationGrant.objects.get(id=token, application=request.service)
-
 def parse_http_basic(request):
     if not 'Authorization' in request.headers:
         log.debug("No Authorization header found.")
@@ -73,3 +71,59 @@ def parse_http_basic(request):
     auth = request.headers['Authorization'][6:]
     auth = b64decode(auth)
     return auth.split(":")
+
+
+def handle_token(function):
+    """Takes the token keyword parameter from the decorated function and replaces it with the ApplicationGrant object
+    that it corresponds to. Do not use on API calls where the token can be provided via positional arguments, such as
+    where the token is part of the URL."""
+
+    def retrieve_token(self, *args, **kwargs):
+
+        if 'token' in kwargs:
+            token = kwargs.get('token')
+            del kwargs['token']
+
+        # Some API calls call others, so the token may already be converted
+        if not token or isinstance(token, ApplicationGrant):
+            return function(self, *args, **kwargs)
+
+        try:
+            token = request.auth_method.get_token(token, request.service)
+        except:
+            return dict(success=False, reason='grant.invalid', message="Application grant invalid or expired.")
+
+        return function(self, token=token, *args, **kwargs)
+
+    return retrieve_token
+
+def handle_positional_token(function):
+    """Takes the token keyword parameter from the decorated function and replaces it with the ApplicationGrant object
+    that it corresponds to. Do not use on API calls where the token can be provided via positional arguments, such as
+    where the token is part of the URL. If there is no keyword argument called token, we take the first positional
+    argument and use that instead. Only for use in API calls where the token is mandatory."""
+
+    def retrieve_token(self, *args, **kwargs):
+
+        if 'token' in kwargs:
+            token = kwargs.get('token')
+            del kwargs['token']
+        elif len(args):
+            token = args[0]
+            args = args[1:] if len(args) > 1 else ()
+        else:
+            return dict(success=False, reason='grant.missing', message="Application grant not supplied.")
+
+        # Some API calls call others, so the token may already be converted
+        if isinstance(token, ApplicationGrant):
+            return function(self, *args, **kwargs)
+
+        try:
+            token = request.auth_method.get_token(token, request.service)
+        except:
+            return dict(success=False, reason='grant.invalid', message="Application grant invalid or expired.")
+
+        return function(self, token=token, *args, **kwargs)
+
+    return retrieve_token
+

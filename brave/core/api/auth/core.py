@@ -149,6 +149,10 @@ class CoreLegacy(AuthorizationMethod):
         return response
 
     @classmethod
+    def get_token(cls, token, service):
+        return ApplicationGrant.objects.get(id=token, application=service)
+
+    @classmethod
     def _ar(cls, ar):
         return AuthenticationRequest.objects.get(id=ar)
 

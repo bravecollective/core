@@ -352,6 +352,11 @@ class OAuth2AuthorizationCode(AuthorizationMethod):
         return response
 
     @classmethod
+    def get_token(cls, token, service):
+        # TODO: Add support for refresh tokens.
+        return ApplicationGrant.objects.get(oauth_access_token=token, application=service)
+
+    @classmethod
     def access_token(cls, *args, **kwargs):
         from web.core import request
         uri = request.url

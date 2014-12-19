@@ -13,7 +13,7 @@ from marrow.util.object import load_object as load
 from marrow.util.convert import boolean
 
 from brave.core.api.model import AuthenticationBlacklist, AuthenticationRequest
-from brave.core.api.util import SignedController, get_token
+from brave.core.api.util import SignedController, handle_token, handle_positional_token
 from brave.core.util.eve import EVECharacterKeyMask, api
 from brave.core.permission.model import create_permission
 
@@ -68,26 +68,23 @@ class PermissionAPI(SignedController):
 
 class CoreAPI(SignedController):
     permission = PermissionAPI()
-    
 
-    
+    @handle_positional_token
     def deauthorize(self, token):
-        from brave.core.application.model import ApplicationGrant
-        count = ApplicationGrant.objects(id=token, application=request.service).delete()
+        count = token.delete()
         return dict(success=bool(count))
-    
+
+    @handle_positional_token
     def reauthorize(self, token, success=None, failure=None):
         result = self.deauthorize(token)
         if not result['success']: return result
         return self.authorize(success=success, failure=failure)
-    
+
+    @handle_positional_token
     def info(self, token):
         from brave.core.group.model import Group
 
-        # Step 1: Get the appropriate grant.
-        token = get_token(request, token)
-
-        # Step 2: Assemble the information for each character
+        # Step 1: Assemble the information for each character
         def char_info(char):
             # Ensure that this character still belongs to this user. 
             if char.owner != token.user:

@@ -13,7 +13,7 @@ from marrow.util.convert import boolean
 
 from brave.core.application.model import Application
 from brave.core.api.model import AuthenticationBlacklist, AuthenticationRequest
-from brave.core.api.util import SignedController, get_token
+from brave.core.api.util import SignedController, handle_token
 from brave.core.util.eve import api, APICall
 from brave.core.character.model import EVECharacter
 
@@ -21,6 +21,8 @@ log = __import__('logging').getLogger(__name__)
 
 
 class ProxyAPI(SignedController):
+
+    @handle_token
     def __default__(self, group, endpoint, token=None, anonymous=None, **kw):
         from brave.core.application.model import ApplicationGrant
         
@@ -34,11 +36,6 @@ class ProxyAPI(SignedController):
         if group == 'account' and endpoint != 'AccountStatus':
             return dict(success=False, reason='endpoint.restricted', message="Access restricted to endpoint: {0}.{1}".format(group, endpoint))
 
-        try:  # Get the appropriate grant.
-            token = get_token(request, token) if token else None
-        except ApplicationGrant.DoesNotExist:
-            return dict(success=False, reason='grant.invalid', message="Application grant invalid or expired.")
-        
         try:  # Load the API endpoint.
             call = getattr(getattr(api, group, None), endpoint)
         except AttributeError:
