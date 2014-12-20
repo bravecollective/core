@@ -60,7 +60,7 @@ class OAuthValidator(RequestValidator):
 
         value = True
 
-        for p, k in zip(client_secret, app.oauth_client_secret):
+        for p, k in zip(client_secret, app.oauth2ac.client_secret):
             if p != k:
                 value = False
 
@@ -95,14 +95,14 @@ class OAuthValidator(RequestValidator):
 
     @staticmethod
     def confirm_redirect_uri(client_id, code, redirect_uri, client, *args, **kwargs):
-        if redirect_uri != client.oauth_redirect_uri:
+        if redirect_uri != client.oauth2ac.redirect_uri:
             return False
 
         return True
 
     @staticmethod
     def get_default_redirect_uri(client_id, request, *args, **kwargs):
-        return request.client.oauth_redirect_uri
+        return request.client.oauth2ac.redirect_uri
 
     @staticmethod
     def get_default_scopes(client_id, request, *args, **kwargs):
@@ -162,7 +162,7 @@ class OAuthValidator(RequestValidator):
         ar = AuthorizationCode(code=code['code'], application=request.client, user=request.user,
                                redirect_uri=request.redirect_uri, scopes=request.scopes, state=request.state)
         ar.save()
-        return request.client.oauth_redirect_uri
+        return request.client.oauth2ac.redirect_uri
 
     @staticmethod
     def save_bearer_token(token, request, *args, **kwargs):
@@ -175,7 +175,7 @@ class OAuthValidator(RequestValidator):
                                  oauth_refresh_token=token['refresh_token'] if 'refresh_token' in token else None,
                                  chars=chars, all_chars=all_chars)
         grant.save()
-        return request.client.oauth_redirect_uri
+        return request.client.oauth2ac.redirect_uri
 
     @staticmethod
     def validate_bearer_token(token, scopes, request):
@@ -223,14 +223,14 @@ class OAuthValidator(RequestValidator):
 
     @staticmethod
     def validate_grant_type(client_id, grant_type, client, request, *args, **kwargs):
-        if client.oauth_grant_type and grant_type == client.oauth_grant_type:
+        if client.oauth2ac.grant_type and grant_type == client.oauth2ac.grant_type:
             return True
 
         return False
 
     @staticmethod
     def validate_redirect_uri(client_id, redirect_uri, request, *args, **kwargs):
-        if request.client.oauth_redirect_uri == redirect_uri:
+        if request.client.oauth2ac.redirect_uri == redirect_uri:
             return True
         return False
 

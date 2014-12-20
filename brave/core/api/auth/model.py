@@ -1,5 +1,3 @@
-from brave.core.application.model import ApplicationGrant
-
 class AuthorizationMethod(object):
     """Generic class that declares the methods for the various authorization methods Core supports. To add a new
         authorization method, simply create a subclass of this class and override all of the methods. Authentication of

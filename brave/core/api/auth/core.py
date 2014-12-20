@@ -5,7 +5,6 @@ from brave.api.controller import SignedController
 from brave.core.api.model import AuthenticationBlacklist, AuthenticationRequest
 
 from datetime import datetime, timedelta
-from mongoengine import Document, EmbeddedDocument, EmbeddedDocumentField, StringField, EmailField, URLField, DateTimeField, BooleanField, ReferenceField, ListField, IntField
 from oauthlib.oauth2 import RequestValidator
 from web.core.http import HTTPBadRequest
 from web.core import session, response, request, config, url
@@ -101,7 +100,7 @@ class CoreLegacy(AuthorizationMethod):
             log.exception("Exception attempting to load service: %s", request.headers['X-Service'])
             raise HTTPBadRequest("Unknown or invalid service identity.")
 
-        hex_key = service.key.public.encode('utf-8')
+        hex_key = service.core_legacy.key.public.encode('utf-8')
         key = VerifyingKey.from_string(unhexlify(hex_key), curve=NIST256p, hashfunc=sha256)
 
         log.debug("Canonical request:\n\n\"{r.headers[Date]}\n{r.url}\n{r.body}\"".format(r=request))
@@ -134,7 +133,7 @@ class CoreLegacy(AuthorizationMethod):
     @classmethod
     def after_api(cls, response, result, *args, **kw):
 
-        key = SigningKey.from_string(unhexlify(request.service.key.private), curve=NIST256p, hashfunc=sha256)
+        key = SigningKey.from_string(unhexlify(request.service.core_legacy.key.private), curve=NIST256p, hashfunc=sha256)
 
         canon = "{req.service.id}\n{resp.headers[Date]}\n{req.url}\n{resp.body}".format(
                     req = request,

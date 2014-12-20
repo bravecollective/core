@@ -12,14 +12,25 @@ from brave.core.application.signal import trigger_private_key_generation
 log = __import__('logging').getLogger(__name__)
 
 
-
+# Core Legacy Storage
 class ApplicationKeys(EmbeddedDocument):
     meta = dict(
             allow_inheritance = False,
         )
-    
+
     public = StringField(db_field='u')  # Application public key.
     private = StringField(db_field='r')  # Server private key.
+
+
+class CoreLegacyStorage(EmbeddedDocument):
+    key = EmbeddedDocumentField(ApplicationKeys, db_field='k', default=lambda: ApplicationKeys())
+
+
+# OAuth2 Authorization Code Storage
+class OAuth2ACStorage(EmbeddedDocument):
+    redirect_uri = URLField(regex=r'^https://')  # TODO: Fix regex
+    client_secret = StringField(min_length=64)
+    grant_type = StringField(choices=['authorization_code'])
 
 
 class ApplicationMasks(EmbeddedDocument):
@@ -53,20 +64,17 @@ class Application(Document):
     
     # This is the short name of the application, which is used for permissions. Must be lowercase.
     short = StringField(db_field='p', unique=True, regex='[a-z]+', required=True)
-    
-    key = EmbeddedDocumentField(ApplicationKeys, db_field='k', default=lambda: ApplicationKeys())
-    
+
     mask = EmbeddedDocumentField(ApplicationMasks, db_field='m', default=lambda: ApplicationMasks())
     groups = ListField(StringField(), db_field='g', default=list)
     development = BooleanField(db_field='dev')
     # Number of days that grants for this application should last.
     expireGrantDays = IntField(db_field='e', default=30)
 
-    oauth_grant_type = StringField(choices=['authorization_code'], db_field='ogt')
-    oauth_redirect_uri = URLField(regex=r'^https://', db_field='ori')
-    oauth_client_secret = StringField(min_length=64)
-
     auth_methods = ListField(StringField(choices=['oauth2ac', 'core_legacy']))
+
+    oauth2ac = EmbeddedDocumentField(OAuth2ACStorage, default=lambda: OAuth2ACStorage())
+    core_legacy = EmbeddedDocumentField(CoreLegacyStorage,default=lambda: CoreLegacyStorage())
     
     # This field indicates whether the application requires access to every character on the authorizing user's account.
     require_all_chars = BooleanField(db_field='a', default=False)
