@@ -2,6 +2,7 @@
 
 from __future__ import unicode_literals
 
+import os
 from datetime import datetime, timedelta
 from mongoengine import Document, EmbeddedDocument, EmbeddedDocumentField, StringField, EmailField, URLField, DateTimeField, BooleanField, ReferenceField, ListField, IntField
 
@@ -12,14 +13,25 @@ from brave.core.application.signal import trigger_private_key_generation
 log = __import__('logging').getLogger(__name__)
 
 
-
+# Core Legacy Storage
 class ApplicationKeys(EmbeddedDocument):
     meta = dict(
             allow_inheritance = False,
         )
-    
+
     public = StringField(db_field='u')  # Application public key.
     private = StringField(db_field='r')  # Server private key.
+
+
+class CoreLegacyStorage(EmbeddedDocument):
+    key = EmbeddedDocumentField(ApplicationKeys, db_field='k', default=lambda: ApplicationKeys())
+
+
+# OAuth2 Authorization Code Storage
+class OAuth2ACStorage(EmbeddedDocument):
+    redirect_uri = URLField(regex=r'^https://')  # TODO: Fix regex
+    client_secret = StringField(min_length=64, default=lambda: "".join(chr(ord(c)%42+48) for c in os.urandom(128)))
+    grant_type = StringField(choices=['authorization_code'])
 
 
 class ApplicationMasks(EmbeddedDocument):
@@ -53,14 +65,17 @@ class Application(Document):
     
     # This is the short name of the application, which is used for permissions. Must be lowercase.
     short = StringField(db_field='p', unique=True, regex='[a-z]+', required=True)
-    
-    key = EmbeddedDocumentField(ApplicationKeys, db_field='k', default=lambda: ApplicationKeys())
-    
+
     mask = EmbeddedDocumentField(ApplicationMasks, db_field='m', default=lambda: ApplicationMasks())
     groups = ListField(StringField(), db_field='g', default=list)
     development = BooleanField(db_field='dev')
     # Number of days that grants for this application should last.
     expireGrantDays = IntField(db_field='e', default=30)
+
+    auth_methods = ListField(StringField(choices=['oauth2ac', 'core_legacy']))
+
+    oauth2ac = EmbeddedDocumentField(OAuth2ACStorage, default=lambda: OAuth2ACStorage())
+    core_legacy = EmbeddedDocumentField(CoreLegacyStorage,default=lambda: CoreLegacyStorage())
     
     # This field indicates whether the application requires access to every character on the authorizing user's account.
     require_all_chars = BooleanField(db_field='a', default=False)
@@ -74,6 +89,11 @@ class Application(Document):
     AUTHORIZE_PERM = 'core.application.authorize.{app_short}'
     
     # Related Data
+
+    @property
+    def client_id(self):
+        """This is used extensively by oauthlib"""
+        return str(self.id)
     
     @property
     def grants(self):
@@ -102,7 +122,7 @@ class Application(Document):
 class ApplicationGrant(Document):
     meta = dict(
             collection = 'Grants',
-            allow_inheritance = False,
+            allow_inheritance = True,
             indexes = [
                     dict(fields=['expires'], expireAfterSeconds=0)
                 ],
@@ -120,7 +140,7 @@ class ApplicationGrant(Document):
     
     immutable = BooleanField(db_field='i', default=False)  # Onboarding is excempt from removal by the user.
     expires = DateTimeField(db_field='x')  # Default grant is 30 days, some applications exempt.  (Onboarding, Jabber, TeamSpeak, etc.)
-    
+
     # Python Magic Methods
     
     @property

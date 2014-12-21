@@ -13,14 +13,16 @@ from marrow.util.convert import boolean
 
 from brave.core.application.model import Application
 from brave.core.api.model import AuthenticationBlacklist, AuthenticationRequest
-from brave.core.api.util import SignedController
-from brave.core.util.eve import api
-
+from brave.core.api.util import SignedController, handle_token
+from brave.core.util.eve import api, APICall
+from brave.core.character.model import EVECharacter
 
 log = __import__('logging').getLogger(__name__)
 
 
 class ProxyAPI(SignedController):
+
+    @handle_token
     def __default__(self, group, endpoint, token=None, anonymous=None, **kw):
         from brave.core.application.model import ApplicationGrant
         
@@ -33,23 +35,19 @@ class ProxyAPI(SignedController):
         # Prevent access to certain overly-broad API calls.
         if group == 'account' and endpoint != 'AccountStatus':
             return dict(success=False, reason='endpoint.restricted', message="Access restricted to endpoint: {0}.{1}".format(group, endpoint))
-        
-        try:  # Get the appropriate grant.
-            token = ApplicationGrant.objects.get(id=token, application=request.service) if token else None
-        except ApplicationGrant.DoesNotExist:
-            return dict(success=False, reason='grant.invalid', message="Application grant invalid or expired.")
-        
+
         try:  # Load the API endpoint.
             call = getattr(getattr(api, group, None), endpoint)
         except AttributeError:
             return dict(success=False, reason='endpoint.invalid', message="Unknown API endpoint: {0}.{1}".format(group, endpoint))
         
         key = None
+
         if anonymous is False or token or call.mask:
             # Check that this grant allows calls to this API endpoint.
             if call.mask and (not token or not token.mask or not token.mask.has_access(call.mask)):
                 return dict(success=False, reason='grant.unauthorized', message="Not authorized to call endpoint: {0}.{1}".format(group, endpoint))
-            
+
             # Find an appropriate key to use for this request if one is required or anonymous=False.
             key = token.character.credential_for(call.mask)
             if not key:

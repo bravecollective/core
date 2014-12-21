@@ -76,3 +76,13 @@ feature/configPassReqs: The config value 'core.required_pass_strength' should be
 
 feature/user-agent: The config value 'core.operator' should be added to the config, with a string representing
     the name of the alliance (or other group) operating this particular instance of Core.
+
+feature/refactorAuthorization: OAuthlib has been added as a required package, it can be obtained by running
+    "pip install -r requirements.txt -e ." in the virtualenv command line. (See the readme for more details.)
+
+    The application model was modified, moving the ECDSA key storage.
+    brave/core/scripts/application_auth_method_migration.py will migrate old Applications to the new model. As always
+    backup your database before starting the migration.
+
+
+

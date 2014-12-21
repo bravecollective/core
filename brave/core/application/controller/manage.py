@@ -56,9 +56,11 @@ class ApplicationInterface(HTTPMethod):
                             site = app.site,
                             contact = app.contact,
                             development = app.development,
+                            auth_methods=app.auth_methods,
+                            oauth2redirect=app.oauth2ac.redirect_uri,
                             key = dict(
-                                    public = app.key.public,
-                                    private = app.key.private,
+                                    public = app.core_legacy.key.public,
+                                    private = app.core_legacy.key.private,
                                 ),
                             required = app.mask.required,
                             optional = app.mask.optional,
@@ -71,7 +73,7 @@ class ApplicationInterface(HTTPMethod):
                         )
                 )
         
-        key = SigningKey.from_string(unhexlify(app.key.private), curve=NIST256p, hashfunc=sha256)
+        key = SigningKey.from_string(unhexlify(app.core_legacy.key.private), curve=NIST256p, hashfunc=sha256)
         return 'brave.core.application.template.view_app', dict(
                 app = app,
                 key = hexlify(key.get_verifying_key().to_string()),
@@ -98,11 +100,14 @@ class ApplicationInterface(HTTPMethod):
             # Assume PEM format.
             valid['key']['public'] = hexlify(VerifyingKey.from_pem(valid['key']['public']).to_string())
         
-        app.key.public = valid['key']['public']
+        app.core_legacy.key.public = valid['key']['public']
         app.mask.required = valid['required'] or 0
         app.mask.optional = valid['optional'] or 0
         # Ignore their provided app short because we can't change permission names #ThanksMongo
-        
+
+        app.auth_methods=valid['auth_methods']
+        app.oauth2ac.redirect_uri=valid['oauth2redirect']
+
         if user.admin:
             app.expireGrantDays = valid['expire'] or 30
             
@@ -187,9 +192,12 @@ class ApplicationList(HTTPMethod):
 
         app = Application(owner=u, **{k: v for k, v in valid.iteritems() if k in ('name', 'description', 'groups', 'site', 'contact')})
         
-        app.key.public = valid['key']['public']
+        app.core_legacy.key.public = valid['key']['public']
         app.mask.required = valid['required'] or 0
         app.mask.optional = valid['optional'] or 0
+
+        app.auth_methods=valid['auth_methods']
+        app.oauth2ac.redirect_uri=valid['oauth2redirect']
 
         if valid['all_chars'] and valid['only_one_char']:
             return 'json:', dict(
