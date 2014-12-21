@@ -385,26 +385,6 @@ class OAuth2AuthorizationCode(AuthorizationMethod):
 
         return ast.literal_eval(body)
 
-class AuthenticationRequest(Document):
-    meta = dict(
-            allow_inheritance = False,
-            indexes = [
-                    dict(fields=['expires'], expireAfterSeconds=0)
-                ]
-        )
-
-    application = ReferenceField('Application', db_field='a')
-    user = ReferenceField('User', db_field='u')
-    grant = ReferenceField('ApplicationGrant', db_field='g')
-
-    success = URLField(db_field='s')
-    failure = URLField(db_field='f')
-
-    expires = DateTimeField(db_field='e', default=lambda: datetime.utcnow() + timedelta(minutes=10))
-
-    def __repr__(self):
-        return 'AuthenticationRequest({0}, {1}, {2}, {3})'.format(self.id, self.application, self.user, self.grant)
-
 
 class OAuth2ApplicationGrant(ApplicationGrant):
     access_token = StringField(min_length=25)
