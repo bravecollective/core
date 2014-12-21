@@ -76,3 +76,7 @@ feature/configPassReqs: The config value 'core.required_pass_strength' should be
 
 feature/user-agent: The config value 'core.operator' should be added to the config, with a string representing
     the name of the alliance (or other group) operating this particular instance of Core.
+
+feature/speedUpGroupEval: Due to a Group model change, you'll need to run scripts/groups_requests_join_migration,
+    with dry run off before starting the service again. Backing up the database prior to the migration is strongly
+    encouraged.

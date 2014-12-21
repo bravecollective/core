@@ -314,8 +314,8 @@ def selected(bool):
                     </thead>
                     <tbody class="sortable">
                         % for char in group.requests:
-                            <tr name="${char.name}">
-                                <td><span onclick="$(this).selectText()">${char.name | h}</span></td>
+                            <tr name="${char}">
+                                <td><span onclick="$(this).selectText()">${char | h}</span></td>
                                 <td style="text-align: center;">
                                     <a class="btn btn-success btn-small acceptRequest" href="#" title="${_('Approve Request')}" rel="tooltip" data-placement="bottom"><i class="fa fa-check"></i></a>
                                     <a class="btn btn-danger btn-small denyRequest" href="#" title="${_('Deny Request')}" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i></a>
@@ -349,8 +349,8 @@ def selected(bool):
                     </thead>
                     <tbody class="sortable">
                         % for char in getattr(group, rule_set + "_members"):
-                            <tr name="${char.name}">
-                                <td><span onclick="$(this).selectText()">${char.name | h}</span></td>
+                            <tr name="${char}">
+                                <td><span onclick="$(this).selectText()">${char | h}</span></td>
                                 <td style="text-align: center;">
                                     <a class="btn btn-danger btn-small kickMember" href="#" title="${_('Remove From Group')}" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i></a>
                                 </td>

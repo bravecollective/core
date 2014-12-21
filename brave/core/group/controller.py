@@ -41,12 +41,12 @@ class OneGroupController(Controller):
         if not c:
             return 'json:', dict(success=False, message=_("Character with that name not found."))
             
-        if not c in self.group.requests:
+        if not c.name in self.group.requests:
             return 'json:', dict(success=False, message=_("Character with that name has no request to join this group."))
         
         log.info("Adding {0} to group {1} via REQUEST_ACCEPT approved by {2}".format(c.name, self.group.id, user.primary))
-        self.group.add_request_member(c)
-        self.group.requests.remove(c)
+        self.group.add_request_member(c.name)
+        self.group.requests.remove(c.name)
         self.group.save()
         
         return 'json:', dict(success=True)
@@ -58,11 +58,11 @@ class OneGroupController(Controller):
         if not c:
             return 'json:', dict(success=False, message=_("Character with that name not found."))
             
-        if not c in self.group.requests:
+        if not c.name in self.group.requests:
             return 'json:', dict(success=False, message=_("Character with that name has no request to join this group."))
         
         log.info("Rejecting {0}'s application to group {1} via REQUEST_DENY by {2}".format(c.name, self.group.id, user.primary))
-        self.group.requests.remove(c)
+        self.group.requests.remove(c.name)
         self.group.save()
         
         return 'json:', dict(success=True)
@@ -78,11 +78,11 @@ class OneGroupController(Controller):
         if not c:
             return 'json:', dict(success=False, message=_("Character with that name not found."))
             
-        if not c in char_list:
+        if not c.name in char_list:
             return 'json:', dict(success=False, message=_("Character with that name is not a member via that method."))
             
         log.info("Removing {0} from group {1} (admitted via {2}) via KICK_MEMBER by {3}".format(c.name, self.group.id, method, user.primary))
-        char_list.remove(c)
+        char_list.remove(c.name)
         self.group.save()
         
         return 'json:', dict(success=True)
@@ -233,10 +233,10 @@ class GroupList(HTTPMethod):
         
     def leave(self, group):
         log.info("Removing {0} from group {1} via LEAVE.".format(user.primary, group.id))
-        if user.primary in group.join_members:
-            group.join_members.remove(user.primary)
-        if user.primary in group.request_members:
-            group.request_members.remove(user.primary)
+        if user.primary.name in group.join_members:
+            group.join_members.remove(user.primary.name)
+        if user.primary.name in group.request_members:
+            group.request_members.remove(user.primary.name)
             
         group.save()
         return 'json:', dict(success=True)
@@ -246,7 +246,7 @@ class GroupList(HTTPMethod):
             return 'json:', dict(success=False, message=_("You do not have permission to join this group."))
         
         log.info("Adding {0} to group {1} via JOIN.".format(user.primary, group.id))
-        group.add_join_member(user.primary)
+        group.add_join_member(user.primary.name)
         
         group.save()
         return 'json:', dict(success=True)
@@ -256,14 +256,14 @@ class GroupList(HTTPMethod):
             return 'json:', dict(success=False, message=_("You do not have permission to request access to this group."))
         
         log.info("Adding {0} to requests list of {1} via REQUEST.".format(user.primary, group.id))
-        group.add_request(user.primary)
+        group.add_request(user.primary.name)
         
         group.save()
         return 'json:', dict(success=True)
         
     def withdraw(self, group):
         log.info("Removing {0} from requests list of {1} via WITHDRAW.".format(user.primary, group.id))
-        group.requests.remove(user.primary)
+        group.requests.remove(user.primary.name)
         
         group.save()
         return 'json:', dict(success=True)
