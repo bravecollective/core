@@ -29,8 +29,6 @@ class SignedController(OriginalSignedController):
             return dict(success=False, reason='auth_method.invalid',
                         message="Authorization method with short {} not found.".format(auth))
 
-            raise HTTPBadRequest("Authorization method with short {} not found.".format(auth))
-
         request.auth_method = auth_method
         request.service = auth_method.before_api(*args, **kw)
 
