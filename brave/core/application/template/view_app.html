@@ -24,6 +24,7 @@
             <p>Your application id is:</p>
             <pre><code>${app.id}</code></pre>
             <br>
+            % if 'core_legacy' in app.auth_methods:
             <p>Your server public key is:</p>
             <pre><code>HEX
 
@@ -31,6 +32,11 @@ ${key}</code></pre>
             <pre><code>PEM
 
 ${pem}</code></pre>
+            % endif
+            % if 'oauth2ac' in app.auth_methods:
+            <p>Your client secret is:</p>
+            <pre><code>${app.oauth2ac.client_secret}</code></pre>
+            % endif
         </div>
     </div>
 </div>

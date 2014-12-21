@@ -2,6 +2,7 @@
 
 from __future__ import unicode_literals
 
+import os
 from datetime import datetime, timedelta
 from mongoengine import Document, EmbeddedDocument, EmbeddedDocumentField, StringField, EmailField, URLField, DateTimeField, BooleanField, ReferenceField, ListField, IntField
 
@@ -29,7 +30,7 @@ class CoreLegacyStorage(EmbeddedDocument):
 # OAuth2 Authorization Code Storage
 class OAuth2ACStorage(EmbeddedDocument):
     redirect_uri = URLField(regex=r'^https://')  # TODO: Fix regex
-    client_secret = StringField(min_length=64)
+    client_secret = StringField(min_length=64, default=lambda: "".join(chr(ord(c)%42+48) for c in os.urandom(128)))
     grant_type = StringField(choices=['authorization_code'])
 
 

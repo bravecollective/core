@@ -23,7 +23,8 @@ def manage_form(action='/application/manage/'):
                     CheckboxField('development', L_("Development"), title="", class_='input-block-level'),
                 ]),
             Tab('auth', L_("Authorization"), children=[
-                TextField('auth_methods', L_("Authorization Methods"), required=True, transform=TagsTransform(), class_='input-block-level', placeholder=L_("legacy oauth2ac"))
+                TextField('auth_methods', L_("Authorization Methods"), required=True, transform=TagsTransform(), class_='input-block-level', placeholder=L_("legacy oauth2ac")),
+                URLField('oauth2redirect', L_("OAuth2 Redirect URI"), placeholder="https://", class_='input-block-level validate'),
                 ]),
             EmbeddedDocumentTab('key', L_("ECDSA Key"), labels=False, children=[
                     Paragraph('ecdsa', L_("You must generate a 256-bit NIST ECDSA key (using SHA256 hashing), hexlify or PEM encode the raw public key and paste it below.  The result should be 128 hexidecimal characters.")),
