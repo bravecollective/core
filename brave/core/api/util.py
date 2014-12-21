@@ -80,12 +80,20 @@ def handle_token(function):
 
     def retrieve_token(self, *args, **kwargs):
 
+        token = None
+
         if 'token' in kwargs:
             token = kwargs.get('token')
             del kwargs['token']
+        elif request.auth_method == 'core_legacy': # Core Legacy Auth does not require a token for all API calls.
+            return function(self, *args, **kwargs)
+
+        if not token:
+            return dict(success=False, reason='token.missing',
+                        message='This authorization method requires a token for all API calls.')
 
         # Some API calls call others, so the token may already be converted
-        if not token or isinstance(token, ApplicationGrant):
+        if isinstance(token, ApplicationGrant):
             return function(self, *args, **kwargs)
 
         try:
