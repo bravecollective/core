@@ -121,7 +121,7 @@ class Application(Document):
 class ApplicationGrant(Document):
     meta = dict(
             collection = 'Grants',
-            allow_inheritance = False,
+            allow_inheritance = True,
             indexes = [
                     dict(fields=['expires'], expireAfterSeconds=0)
                 ],
@@ -139,9 +139,6 @@ class ApplicationGrant(Document):
     
     immutable = BooleanField(db_field='i', default=False)  # Onboarding is excempt from removal by the user.
     expires = DateTimeField(db_field='x')  # Default grant is 30 days, some applications exempt.  (Onboarding, Jabber, TeamSpeak, etc.)
-
-    oauth_access_token = StringField(min_length=25)
-    oauth_refresh_token = StringField(min_length=25)
 
     # Python Magic Methods
     

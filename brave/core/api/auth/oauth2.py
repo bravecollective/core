@@ -111,8 +111,8 @@ class OAuthValidator(RequestValidator):
     @staticmethod
     def get_original_scopes(refresh_token, request, *args, **kwargs):
         try:
-            grant = ApplicationGrant.objects.get(refresh_token=refresh_token, application=request.client)
-        except ApplicationGrant.DoesNotExist:
+            grant = OAuth2ApplicationGrant.objects.get(refresh_token=refresh_token, application=request.client)
+        except OAuth2ApplicationGrant.DoesNotExist:
             return False
 
         return grant.characters
@@ -130,8 +130,8 @@ class OAuthValidator(RequestValidator):
     @staticmethod
     def is_within_original_scope(request_scopes, refresh_token, request, *args, **kwargs):
         try:
-            grant = ApplicationGrant.objects.get(refresh_token=refresh_token, application=request.client)
-        except ApplicationGrant.DoesNotExist:
+            grant = OAuth2ApplicationGrant.objects.get(refresh_token=refresh_token, application=request.client)
+        except OAuth2ApplicationGrant.DoesNotExist:
             return False
 
         return all(c in grant.characters for c in request_scopes)
@@ -140,15 +140,15 @@ class OAuthValidator(RequestValidator):
     def revoke_token(token, token_type_hint, request, *args, **kwargs):
         if token_type_hint == "access_token":
             try:
-                grant = ApplicationGrant.objects.get(access_token=token)
-            except ApplicationGrant.DoesNotExist:
+                grant = OAuth2ApplicationGrant.objects.get(access_token=token)
+            except OAuth2ApplicationGrant.DoesNotExist:
                 return
 
             grant.access_token = None
         elif token_type_hint == "refresh_token":
             try:
-                grant = ApplicationGrant.objects.get(refresh_token=token)
-            except ApplicationGrant.DoesNotExist:
+                grant = OAuth2ApplicationGrant.objects.get(refresh_token=token)
+            except OAuth2ApplicationGrant.DoesNotExist:
                 return
 
             grant.refresh_token = None
@@ -169,10 +169,10 @@ class OAuthValidator(RequestValidator):
         all_chars = "all_chars" in request.scopes
         chars = [EVECharacter.objects.get(name=c.replace("&", " ")) for c in (request.scopes if not all_chars else [q.name for q in request.user.characters])]
 
-        grant = ApplicationGrant(user=request.user, _mask=request.client.mask.required, application=request.client,
+        grant = OAuth2ApplicationGrant(user=request.user, _mask=request.client.mask.required, application=request.client,
                                  expires=datetime.utcnow()+timedelta(days=request.client.expireGrantDays),
-                                 oauth_access_token=token['access_token'],
-                                 oauth_refresh_token=token['refresh_token'] if 'refresh_token' in token else None,
+                                 access_token=token['access_token'],
+                                 refresh_token=token['refresh_token'] if 'refresh_token' in token else None,
                                  chars=chars, all_chars=all_chars)
         grant.save()
         return request.client.oauth2ac.redirect_uri
@@ -180,8 +180,8 @@ class OAuthValidator(RequestValidator):
     @staticmethod
     def validate_bearer_token(token, scopes, request):
         try:
-            token = ApplicationGrant.objects.get(access_token=token)
-        except ApplicationGrant.DoesNotExist:
+            token = OAuth2ApplicationGrant.objects.get(access_token=token)
+        except OAuth2ApplicationGrant.DoesNotExist:
             return False
 
         all(c.replace("&", " ") in token.characters for c in scopes)
@@ -237,8 +237,8 @@ class OAuthValidator(RequestValidator):
     @staticmethod
     def validate_refresh_token(refresh_token, client, request, *args, **kwargs):
         try:
-            grant = ApplicationGrant.objects.get(refresh_token=refresh_token, application=client)
-        except ApplicationGrant.DoesNotExist:
+            grant = OAuth2ApplicationGrant.objects.get(refresh_token=refresh_token, application=client)
+        except OAuth2ApplicationGrant.DoesNotExist:
             return False
 
         return all(c.replace("&", " ") in grant.characters for c in request.scopes)
@@ -337,8 +337,8 @@ class OAuth2AuthorizationCode(AuthorizationMethod):
                 return res
         if 'token' in kw:
             try:
-                token = ApplicationGrant.objects.get(oauth_access_token=kw['token'])
-            except ApplicationGrant.DoesNotExist:
+                token = OAuth2ApplicationGrant.objects.get(access_token=kw['token'])
+            except OAuth2ApplicationGrant.DoesNotExist:
                 raise HTTPBadRequest()
             return token.application
 
@@ -354,7 +354,7 @@ class OAuth2AuthorizationCode(AuthorizationMethod):
     @classmethod
     def get_token(cls, token, service):
         # TODO: Add support for refresh tokens.
-        return ApplicationGrant.objects.get(oauth_access_token=token, application=service)
+        return OAuth2ApplicationGrant.objects.get(access_token=token, application=service)
 
     @classmethod
     def access_token(cls, *args, **kwargs):
@@ -404,6 +404,12 @@ class AuthenticationRequest(Document):
 
     def __repr__(self):
         return 'AuthenticationRequest({0}, {1}, {2}, {3})'.format(self.id, self.application, self.user, self.grant)
+
+
+class OAuth2ApplicationGrant(ApplicationGrant):
+    access_token = StringField(min_length=25)
+    refresh_token = StringField(min_length=25)
+
 
 class AuthorizationCode(Document):
     meta = dict(

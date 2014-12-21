@@ -74,7 +74,9 @@ class AuthorizationMethod(object):
 
     @classmethod
     def get_token(cls, token, service):
-        """Returns the ApplicationGrant object corresponding to the provided token."""
+        """Returns the ApplicationGrant object corresponding to the provided token. AuthorizationMethods may extend the
+        ApplicationGrant class and return a subclass instance, but MUST NOT override any default methods or fields of
+        the default ApplicationGrant class."""
 
         raise NotImplementedError()
 
