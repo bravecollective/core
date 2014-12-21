@@ -56,6 +56,7 @@ class ApplicationInterface(HTTPMethod):
                             site = app.site,
                             contact = app.contact,
                             development = app.development,
+                            auth_methods=app.auth_methods,
                             key = dict(
                                     public = app.core_legacy.key.public,
                                     private = app.core_legacy.key.private,
@@ -103,7 +104,7 @@ class ApplicationInterface(HTTPMethod):
         app.mask.optional = valid['optional'] or 0
         # Ignore their provided app short because we can't change permission names #ThanksMongo
 
-        app.auth_methods=valid['auth_methods'].split(" ")
+        app.auth_methods=valid['auth_methods']
 
         if user.admin:
             app.expireGrantDays = valid['expire'] or 30
