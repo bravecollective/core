@@ -24,7 +24,7 @@ setup(
                 'requests==1.1.0',
                 'marrow.tags',
                 'marrow.templating',
-                'brave.api',
+                'braveapi',
                 'WebCore>=1.1.2',
                 'MongoEngine>=0.7.999',
                 'Mako>=0.4.1',

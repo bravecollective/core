@@ -76,3 +76,5 @@ feature/configPassReqs: The config value 'core.required_pass_strength' should be
 
 feature/user-agent: The config value 'core.operator' should be added to the config, with a string representing
     the name of the alliance (or other group) operating this particular instance of Core.
+
+feature/braveapi: We now expect the api layer to be in the "braveapi" package instead of "brave.api". Be sure to install it as such.
