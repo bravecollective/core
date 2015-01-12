@@ -44,5 +44,9 @@ setup(
                 'zxcvbn',
                 'flake8',
             ],
+
+        setup_requires = [
+                'PasteScript',
+            ],
         
     )
