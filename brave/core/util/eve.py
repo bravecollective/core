@@ -44,7 +44,7 @@ from marrow.util.bunch import Bunch
 from marrow.util.convert import boolean, number, array
 from marrow.templating.serialize.bencode import EnhancedBencode
 from mongoengine import Document, IntField, StringField, ListField, DateTimeField, DictField, BooleanField, MapField
-from brave.api.client import bunchify as bunchify_lite
+from braveapi.client import bunchify as bunchify_lite
 
 
 log = __import__('logging').getLogger(__name__)

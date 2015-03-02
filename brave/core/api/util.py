@@ -2,7 +2,7 @@
 
 from __future__ import unicode_literals
 
-from brave.api.controller import SignedController as OriginalSignedController
+from braveapi.controller import SignedController as OriginalSignedController
 from brave.core.application.model import Application
 
 
