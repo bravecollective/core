@@ -545,7 +545,11 @@ def selected(bool):
                 $.post($("#acl-rules").data("action"), {
                     rules: JSON.stringify(get_rule_data())
                 }, function(data) {
-                    var confirm_text = "Here's what the server heard. Check to make sure everything looks right!<pre>" + data + "</pre>";
+                    if (!data.success) {
+                        alert(data.message);
+                        return;
+                    }
+                    var confirm_text = "Here's what the server heard. Check to make sure everything looks right!<pre>" + data.message + "</pre>";
                     confirm("confirm", confirm_text, "okay", function() {
                         $.post($("#acl-rules").data("action"), {
                             rules: JSON.stringify(get_rule_data()),

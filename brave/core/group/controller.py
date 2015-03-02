@@ -133,7 +133,8 @@ class OneGroupController(Controller):
                 g = Group.objects(id=r['group']).first()
                 if not g:
                     # TODO: change dry-run to return a success/fail format so the UI here is better
-                    return 'json:', "ERROR: Couldn't find group {}!!".format(r['group'])
+                    return 'json:', dict(success=False,
+                                         message="ERROR: Couldn't find group {}!!".format(r['group']))
                 rule_objects.append(ACLGroupMembership(grant=grant, inverse=inverse, group=g))
 
         log.debug(rule_objects)
@@ -146,21 +147,22 @@ class OneGroupController(Controller):
             self.group.rules = rule_objects
 
         try:
-            self.group.recursion_check()
+            self.group.cycle_check()
         except CyclicGroupReference as e:
             return 'json:', dict(success=False,
                                  message="Circular group reference: {}".format(e.cycle))
 
         if not really:
             log.debug("not really")
-            return "json:", "\n".join([unicode(r) for r in rule_objects])
+            return "json:", dict(success=True,
+                                 message="\n".join([unicode(r) for r in rule_objects]))
 
         log.debug("really!")
         success = self.group.save()
         log.debug(success)
         if success:
             return 'json:', dict(success=True)
-        return 'json:', dict(success=True,
+        return 'json:', dict(success=False,
                              message=_("unimplemented"))
                              
     @post_only
@@ -194,7 +196,10 @@ class OneGroupController(Controller):
     @post_only
     @user_has_permission(Group.DELETE_PERM, group_id='self.group.id')
     def delete(self):
-        self.group.delete()
+        try:
+            self.group.delete()
+        except Exception as e:
+            return 'json:', dict(success=False, message=unicode(e))
         return 'json:', dict(success=True)
 
     @post_only

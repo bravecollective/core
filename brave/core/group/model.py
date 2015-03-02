@@ -2,8 +2,10 @@
 
 from __future__ import unicode_literals
 
+import itertools
+
 from datetime import datetime
-from mongoengine import Document, EmbeddedDocument, EmbeddedDocumentField, StringField, EmailField, URLField, DateTimeField, BooleanField, ReferenceField, ListField, IntField
+from mongoengine import Document, EmbeddedDocument, EmbeddedDocumentField, StringField, EmailField, URLField, DateTimeField, BooleanField, ReferenceField, ListField, IntField, Q
 
 from brave.core.util.signal import update_modified_timestamp
 from brave.core.group.acl import ACLRule, ACLGroupMembership, CyclicGroupReference
@@ -12,6 +14,13 @@ from brave.core.character.model import EVECharacter
 
 
 log = __import__('logging').getLogger(__name__)
+
+
+class GroupReferenceException(Exception):
+    def __init__(self, referencers):
+        self.referencers = referencers
+    def __unicode__(self):
+        return "Referenced by existing groups: {}".format(self.referencers)
 
 
 class GroupCategory(Document):
@@ -59,6 +68,28 @@ class Group(Document):
     DELETE_PERM = 'core.group.delete.{group_id}'
     CREATE_PERM = 'core.group.create'
 
+
+    def delete(self):
+        """Delete this group.
+
+        We disallow deleting groups that are referenced by other group ACLs. We
+        cannot simply do this with a reverse_delete_rule on the ACL rule, since
+        it is an embedded document.
+        """
+        references = self.get_references()
+        if len(references):
+            raise GroupReferenceException(references)
+        return super(Group, self).delete()
+
+    def get_references(self):
+        # mongo is stupid and/or I am stupid, so I cannot figure out how to do
+        # this in the db.
+        ids = [g.id for g in Group.objects().only('rules', 'join_rules', 'request_rules')
+               if any(isinstance(r, ACLGroupMembership) and r.group.id == self.id
+                      for r in itertools.chain(g.rules, g.join_rules, g.request_rules))]
+        groups = Group.objects(**{'id__in': ids})
+        assert len(ids) == len(groups)
+        return groups
     
     @property
     def permissions(self):
