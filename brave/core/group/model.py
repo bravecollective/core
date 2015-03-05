@@ -70,6 +70,10 @@ class Group(Document):
 
 
     @classmethod
+    def pre_save(cls, sender, document, **kwargs):
+        document.cycle_check()
+
+    @classmethod
     def pre_delete(cls, sender, document, **kwargs):
         references = document.get_references()
         if len(references):
@@ -251,4 +255,5 @@ class Group(Document):
         return self.get_perm('DELETE')
 
 
+signals.pre_save.connect(Group.pre_save, sender=Group)
 signals.pre_delete.connect(Group.pre_delete, sender=Group)
