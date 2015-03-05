@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 import itertools
 
 from datetime import datetime
-from mongoengine import Document, EmbeddedDocument, EmbeddedDocumentField, StringField, EmailField, URLField, DateTimeField, BooleanField, ReferenceField, ListField, IntField, Q
+from mongoengine import Document, EmbeddedDocument, EmbeddedDocumentField, StringField, EmailField, URLField, DateTimeField, BooleanField, ReferenceField, ListField, IntField, Q, signals
 
 from brave.core.util.signal import update_modified_timestamp
 from brave.core.group.acl import ACLRule, ACLGroupMembership, CyclicGroupReference
@@ -69,17 +69,11 @@ class Group(Document):
     CREATE_PERM = 'core.group.create'
 
 
-    def delete(self):
-        """Delete this group.
-
-        We disallow deleting groups that are referenced by other group ACLs. We
-        cannot simply do this with a reverse_delete_rule on the ACL rule, since
-        it is an embedded document.
-        """
-        references = self.get_references()
+    @classmethod
+    def pre_delete(cls, sender, document, **kwargs):
+        references = document.get_references()
         if len(references):
             raise GroupReferenceException(references)
-        return super(Group, self).delete()
 
     def get_references(self):
         # mongo is stupid and/or I am stupid, so I cannot figure out how to do
@@ -255,3 +249,6 @@ class Group(Document):
     @property
     def delete_perm(self):
         return self.get_perm('DELETE')
+
+
+signals.pre_delete.connect(Group.pre_delete, sender=Group)
