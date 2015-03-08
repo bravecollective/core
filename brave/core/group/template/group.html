@@ -305,7 +305,7 @@ def selected(bool):
                         </tr>
                     </thead>
                     <tbody class="sortable">
-                        % for perm in group._permissions:
+                        % for perm in sorted(group._permissions, key=lambda p: p.id):
                             <tr id="${perm.id}">
                                 <td><span onclick="$(this).selectText()">${perm.id | h}</span></td>
                                 <td>${perm.description | h}</td>
