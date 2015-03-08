@@ -135,7 +135,7 @@ class EVEAlliance(EVEEntity):
 
 
 class EVECorporation(EVEEntity):
-    short = StringField(db_field='s')
+    _short = StringField(db_field='s')
     members = IntField(db_field='e')
     
     founded = DateTimeField(db_field='f')
@@ -146,6 +146,18 @@ class EVECorporation(EVEEntity):
     @property
     def characters(self):
         return EVECharacter.objects(corporation=self)
+
+    @property
+    def short(self):
+        if not self._short:
+            result = api.corp.CorporationSheet(corporationID=self.identifier)
+            self._short = result.ticker
+            EVECorporation.objects(identifier=self.identifier).update(set___short=self._short)
+        return self._short
+
+    @short.setter
+    def short(self, short):
+        self._short = short
 
 
 class EVECharacter(EVEEntity):
