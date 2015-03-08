@@ -180,14 +180,25 @@ def selected(bool):
                 %>
 
                 <li>
-                    % if type == "c":
-                        <img src="https://image.eveonline.com/Character/${item.identifier}_32.jpg" style="width: 20px; height: 20px; border-radius: 4px; margin-top: -5px;" alt="" />
-                    % elif type == "o":
-                        <img src="https://image.eveonline.com/Corporation/${item.identifier}_32.png" style="width: 20px; height: 20px; border-radius: 4px; margin-top: -5px;" alt="" />
-                    % elif type == "a":
-                        <img src="https://image.eveonline.com/Alliance/${item.identifier}_32.png" style="width: 20px; height: 20px; border-radius: 4px; margin-top: -5px;" alt="" />
-                    % endif
-                    <span onclick="$(this).selectText();" style="${style}}">${item | h}</span>
+                    <%
+                        if type == "c":
+                            image_url = "https://image.eveonline.com/Character/%d_32.jpg" % item.identifier
+                            text = unicode(item)
+                            if item.corporation:
+                                text += " [%s]" % item.corporation.short
+                            if item.alliance:
+                                text += " <%s>" % item.alliance.short
+                        elif type == "o":
+                            image_url = "https://image.eveonline.com/Corporation/%d_32.png" % item.identifier
+                            text = "%s [%s]" % (unicode(item), item.short)
+                            if item.alliance:
+                                text += " <%s>" % item.alliance.short
+                        elif type == "a":
+                            image_url = "https://image.eveonline.com/Alliance/%d_32.png" % item.identifier
+                            text = "%s <%s>" % (unicode(item), item.short)
+                    %>
+                    <img src="${image_url}" style="width: 20px; height: 20px; border-radius: 4px; margin-top: -5px;" alt="" />
+                    <span onclick="$(this).selectText();" style="${style}">${text | h}</span>
                     <input type="hidden" name="${input_name}" value="${item | h}" />
                     <i class="remove fa fa-times"></i>
                 </li>
