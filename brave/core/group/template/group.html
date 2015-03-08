@@ -1,7 +1,8 @@
 ## encoding: utf-8
 
 <%!
-from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask, ACLVerySecure
+from brave.core.group.model import Group
+from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask, ACLVerySecure, ACLGroupMembership
 
 def selected(bool):
     return "selected" if bool else ""
@@ -24,6 +25,8 @@ def selected(bool):
         ${aclmask(rule)}
     % elif isinstance(rule, ACLVerySecure):
         ${aclverysecure(rule)}
+    % elif isinstance(rule, ACLGroupMembership):
+        ${aclgroupmembership(rule)}
     % else:
         ERROR THIS WON'T WORK: ${rule | h}
     % endif
@@ -134,6 +137,22 @@ def selected(bool):
     </div>
 </%def>
 
+<%def name="aclgroupmembership(rule)">
+    <div class="aclgroupmembership acl_def">
+        <input type="hidden" name="type" value="groupmembership" />
+        ${select_grant(rule)}
+        if the user/character
+        <select name="inverse">
+            <option value="false" ${selected(not rule.inverse)}>is</option>
+            <option value="true" ${selected(rule.inverse)}>isn't</option>
+        </select>
+        a member of the group
+        <div style="margin: 7px 3px 2px 3px;">
+            <input type="text" name="group" value="${rule.group.id}" />
+        </div>
+    </div>
+</%def>
+
 <%def name="rule_row(rule, group)">
     <tr>
         <td class="handle" style="width: 35px;"><i class="fa fa-arrows-v rowdraghandle" style="padding: 19px 12px 18px 14px; font-size: 20px;"></i></td>
@@ -233,6 +252,7 @@ def selected(bool):
                     <li><a href="#" class="addrule" data-rule="key">By Key Type</a></li>
                     <li><a href="#" class="addrule" data-rule="mask">By Key Mask</a></li>
                     <li><a href="#" class="addrule" data-rule="verysecure">By OTP Setting</a></li>
+                    <li><a href="#" class="addrule" data-rule="groupmembership">By Group Membership</a></li>
                   </ul>
                 </div>
 
@@ -376,6 +396,7 @@ def selected(bool):
     ${aclrule(ACLRole(grant=True, roles=[]), None)}
     ${aclrule(ACLMask(grant=True, mask=0), None)}
     ${aclrule(ACLVerySecure(grant=True), None)}
+    ${aclrule(ACLGroupMembership(grant=True, group=Group(id='')), None)}
 </div>
 
 <%block name="pre">
@@ -524,7 +545,11 @@ def selected(bool):
                 $.post($("#acl-rules").data("action"), {
                     rules: JSON.stringify(get_rule_data())
                 }, function(data) {
-                    var confirm_text = "Here's what the server heard. Check to make sure everything looks right!<pre>" + data + "</pre>";
+                    if (!data.success) {
+                        alert(data.message);
+                        return;
+                    }
+                    var confirm_text = "Here's what the server heard. Check to make sure everything looks right!<pre>" + data.message + "</pre>";
                     confirm("confirm", confirm_text, "okay", function() {
                         $.post($("#acl-rules").data("action"), {
                             rules: JSON.stringify(get_rule_data()),

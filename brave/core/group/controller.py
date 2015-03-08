@@ -12,7 +12,7 @@ from web.core.http import HTTPNotFound
 
 from brave.core.character.model import EVECharacter
 from brave.core.group.model import Group, GroupCategory
-from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask, ACLVerySecure
+from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask, ACLVerySecure, ACLGroupMembership, CyclicGroupReference
 from brave.core.util import post_only
 from brave.core.permission.util import user_has_permission, user_has_any_permission
 from brave.core.permission.model import Permission, WildcardPermission, GRANT_WILDCARD
@@ -129,25 +129,40 @@ class OneGroupController(Controller):
                 rule_objects.append(ACLMask(grant=grant, inverse=inverse, mask=r['mask']))
             elif r['type'] == "verysecure":
                 rule_objects.append(ACLVerySecure(grant=grant, inverse=inverse))
+            elif r['type'] == "groupmembership":
+                g = Group.objects(id=r['group']).first()
+                if not g:
+                    # TODO: change dry-run to return a success/fail format so the UI here is better
+                    return 'json:', dict(success=False,
+                                         message="ERROR: Couldn't find group {}!!".format(r['group']))
+                rule_objects.append(ACLGroupMembership(grant=grant, inverse=inverse, group=g))
 
         log.debug(rule_objects)
 
-        if not really:
-            log.debug("not really")
-            return "json:", "\n".join([unicode(r) for r in rule_objects])
-
-        log.debug("really!")
         if rule_set == "request":
             self.group.request_rules = rule_objects
         elif rule_set == "join":
             self.group.join_rules = rule_objects
         else:
             self.group.rules = rule_objects
+
+        try:
+            self.group.cycle_check()
+        except CyclicGroupReference as e:
+            return 'json:', dict(success=False,
+                                 message="Circular group reference: {}".format(e.cycle))
+
+        if not really:
+            log.debug("not really")
+            return "json:", dict(success=True,
+                                 message="\n".join([unicode(r) for r in rule_objects]))
+
+        log.debug("really!")
         success = self.group.save()
         log.debug(success)
         if success:
             return 'json:', dict(success=True)
-        return 'json:', dict(success=True,
+        return 'json:', dict(success=False,
                              message=_("unimplemented"))
                              
     @post_only
@@ -181,7 +196,10 @@ class OneGroupController(Controller):
     @post_only
     @user_has_permission(Group.DELETE_PERM, group_id='self.group.id')
     def delete(self):
-        self.group.delete()
+        try:
+            self.group.delete()
+        except Exception as e:
+            return 'json:', dict(success=False, message=unicode(e))
         return 'json:', dict(success=True)
 
     @post_only

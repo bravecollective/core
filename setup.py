@@ -17,7 +17,7 @@ setup(
         paster_plugins = ['PasteScript', 'WebCore'],
         namespace_packages = ['brave'],
         
-        tests_require = ['nose', 'webtest', 'coverage'],
+        tests_require = ['nose', 'webtest', 'coverage', 'mock'],
         test_suite = 'nose.collector',
         
         install_requires = [
