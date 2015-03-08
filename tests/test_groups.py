@@ -76,3 +76,14 @@ class ACLGroupMembershipTestCase(unittest.TestCase):
         g2.join_rules = [ACLGroupMembership(group=g1)]
         g2.save()
         self.assertCantDelete(g1)
+
+    def test_rename(self):
+        g1 = Group(id='g1').save()
+        g2 = Group(id='g2').save()
+
+        g2.rules = [ACLGroupMembership(group=g1)]
+        g2.save()
+
+        g1_renamed = g1.rename('new_group')
+
+        self.assertEqual(Group.objects(id='g2').first().rules[0].group.id, g1_renamed.id)

@@ -213,19 +213,26 @@ class Group(Document):
 
     def rename(self, new_name):
         """Can't modify the primary key in Mongoengine, so we have to recreate a new group then delete this one."""
-        g = Group(id=new_name, title=self.title, rules=self.rules, join_rules=self.join_rules, request_rules=self.request_rules,
+        new_self = Group(id=new_name, title=self.title, rules=self.rules, join_rules=self.join_rules, request_rules=self.request_rules,
                         join_members=self.join_members, request_members=self.request_members, requests=self.requests,
                         creator=self.creator, modified=datetime.utcnow, _permissions=self._permissions)
 
-        g = g.save()
+        new_self = new_self.save()
+
+        for other_g in self.get_references():
+            print "other group", other_g
+            for rule in itertools.chain(other_g.rules, other_g.join_rules, other_g.request_rules):
+                if isinstance(rule, ACLGroupMembership) and rule.group.id == self.id:
+                    rule.group = new_self
+            other_g.save()
 
         for gc in GroupCategory.objects(members=self):
             gc.members.remove(self)
-            gc.members.append(g)
+            gc.members.append(new_self)
             gc.save()
 
         self.delete()
-        return g
+        return new_self
         
     def get_perm(self, perm_type):
         return getattr(self, perm_type+"_PERM").format(group_id=self.id)
