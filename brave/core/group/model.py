@@ -2,16 +2,25 @@
 
 from __future__ import unicode_literals
 
+import itertools
+
 from datetime import datetime
-from mongoengine import Document, EmbeddedDocument, EmbeddedDocumentField, StringField, EmailField, URLField, DateTimeField, BooleanField, ReferenceField, ListField, IntField
+from mongoengine import Document, EmbeddedDocument, EmbeddedDocumentField, StringField, EmailField, URLField, DateTimeField, BooleanField, ReferenceField, ListField, IntField, Q, signals
 
 from brave.core.util.signal import update_modified_timestamp
-from brave.core.group.acl import ACLRule
+from brave.core.group.acl import ACLRule, ACLGroupMembership, CyclicGroupReference
 from brave.core.permission.model import Permission, WildcardPermission
 from brave.core.character.model import EVECharacter
 
 
 log = __import__('logging').getLogger(__name__)
+
+
+class GroupReferenceException(Exception):
+    def __init__(self, referencers):
+        self.referencers = referencers
+    def __unicode__(self):
+        return "Referenced by existing groups: {}".format(self.referencers)
 
 
 class GroupCategory(Document):
@@ -59,6 +68,26 @@ class Group(Document):
     DELETE_PERM = 'core.group.delete.{group_id}'
     CREATE_PERM = 'core.group.create'
 
+
+    @classmethod
+    def pre_save(cls, sender, document, **kwargs):
+        document.cycle_check()
+
+    @classmethod
+    def pre_delete(cls, sender, document, **kwargs):
+        references = document.get_references()
+        if len(references):
+            raise GroupReferenceException(references)
+
+    def get_references(self):
+        # mongo is stupid and/or I am stupid, so I cannot figure out how to do
+        # this in the db.
+        ids = [g.id for g in Group.objects().only('rules', 'join_rules', 'request_rules')
+               if any(isinstance(r, ACLGroupMembership) and r.group.id == self.id
+                      for r in itertools.chain(g.rules, g.join_rules, g.request_rules))]
+        groups = Group.objects(**{'id__in': ids})
+        assert len(ids) == len(groups)
+        return groups
     
     @property
     def permissions(self):
@@ -95,7 +124,10 @@ class Group(Document):
     def __repr__(self):
         return 'Group({0})'.format(self.id).encode('ascii', 'backslashreplace')
     
-    def evaluate(self, user, character, rule_set=None):
+    def evaluate(self, user, character, rule_set=None, _context=None):
+        """Evaluate group ACL rules for the given user and character. _context is used to track
+        information through recursive evaluation. ACL and Group evaluation should forward the
+        context if one is passed in."""
         # If the character has no owner (and therefore no API key), deny them access to every group.
         if not character.owner:
             return False
@@ -113,19 +145,41 @@ class Group(Document):
             # but is now automatically granted access to the group.
             # TODO: Perhaps automatically clean up the join lists when a character no longer applies?
             if character in self.join_members:
-                if self.evaluate(user, character, rule_set='join'):
+                if self.evaluate(user, character, rule_set='join', _context=_context):
                     return True
             if character in self.request_members:
-                if self.evaluate(user, character, rule_set='request'):
+                if self.evaluate(user, character, rule_set='request', _context=_context):
                     return True
             rules = self.rules
         
         for rule in rules:
-            result = rule.evaluate(user, character)
+            result = rule.evaluate(user, character, _context=_context)
             if result is not None:
                 return result
         
         return False  # deny by default
+
+    def cycle_check(self, rules=None, groups_referenced=None):
+        if groups_referenced is None:
+            groups_referenced = []
+
+        if rules is None:
+            self.cycle_check(self.request_rules, groups_referenced)
+            self.cycle_check(self.join_rules, groups_referenced)
+            self.cycle_check(self.rules, groups_referenced)
+            return
+
+        if self.id in groups_referenced:
+            raise CyclicGroupReference(list(groups_referenced))
+        groups_referenced.append(self.id)
+
+        try:
+            for rule in rules:
+                if isinstance(rule, ACLGroupMembership):
+                    rule.group.cycle_check(groups_referenced=groups_referenced)
+        finally:
+            id = groups_referenced.pop()
+            assert id == self.id
 
     @staticmethod
     def create(id, title, user, rules=[]):
@@ -149,19 +203,26 @@ class Group(Document):
 
     def rename(self, new_name):
         """Can't modify the primary key in Mongoengine, so we have to recreate a new group then delete this one."""
-        g = Group(id=new_name, title=self.title, rules=self.rules, join_rules=self.join_rules, request_rules=self.request_rules,
+        new_self = Group(id=new_name, title=self.title, rules=self.rules, join_rules=self.join_rules, request_rules=self.request_rules,
                         join_members=self.join_members, request_members=self.request_members, requests=self.requests,
                         creator=self.creator, modified=datetime.utcnow, _permissions=self._permissions)
 
-        g = g.save()
+        new_self = new_self.save()
+
+        for other_g in self.get_references():
+            print "other group", other_g
+            for rule in itertools.chain(other_g.rules, other_g.join_rules, other_g.request_rules):
+                if isinstance(rule, ACLGroupMembership) and rule.group.id == self.id:
+                    rule.group = new_self
+            other_g.save()
 
         for gc in GroupCategory.objects(members=self):
             gc.members.remove(self)
-            gc.members.append(g)
+            gc.members.append(new_self)
             gc.save()
 
         self.delete()
-        return g
+        return new_self
         
     def get_perm(self, perm_type):
         return getattr(self, perm_type+"_PERM").format(group_id=self.id)
@@ -170,6 +231,14 @@ class Group(Document):
     def view_perm(self):
         return self.get_perm('VIEW')
         
+    @property
+    def edit_id_perm(self):
+        return self.get_perm('EDIT_ID')
+
+    @property
+    def edit_title_perm(self):
+        return self.get_perm('EDIT_TITLE')
+
     @property
     def edit_acl_perm(self):
         return self.get_perm('EDIT_ACL')
@@ -189,3 +258,7 @@ class Group(Document):
     @property
     def delete_perm(self):
         return self.get_perm('DELETE')
+
+
+signals.pre_save.connect(Group.pre_save, sender=Group)
+signals.pre_delete.connect(Group.pre_delete, sender=Group)

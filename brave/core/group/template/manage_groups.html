@@ -47,9 +47,13 @@
                     function()
                     {
                         $.post('/group/' + row.attr('data-id') + '/delete').
-                        done(function()
+                        done(function(data)
                         {
-                            row.remove();
+                            if (data.success) {
+                                row.remove();
+                            } else {
+                                alert(data.message);
+                            }
                         });
                     }
                 );
