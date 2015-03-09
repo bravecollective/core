@@ -77,5 +77,5 @@ class PermissionTest(unittest.TestCase):
         self.assertTrue(Permission.set_grants_permission(g.permissions, 'mumble.test'))
         self.assertTrue(Permission.set_grants_permission(g.permissions, 'core.permission.grant'))
         self.assertTrue(Permission.set_grants_permission(g.permissions, '*.test'))
-        self.assertEqual(g.permissions, set(Permission.objects(id='core.permission.grant').first(),
-            Permission.objects(id='*.test').first()))
+        self.assertEqual(g.permissions, set([Permission.objects(id='core.permission.grant').first(),
+                                             Permission.objects(id='*.test').first()]))
