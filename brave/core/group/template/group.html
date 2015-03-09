@@ -233,14 +233,18 @@ def selected(bool):
     <div id="pad-wrapper">
         <div class="row-fluid header">
             <div class="pull-right">
+                % if web.user.has_permission(group.edit_id_perm):
                 <div class="input-append">
-                          <input class="id" id="set_id" type="text" placeholder="New Group ID" class="span2"/>
-                          <button class="btn btn-success setID" type="button">Edit ID</button>
-                 </div>
-                 <div class="input-append">
-                          <input class="title" id="set_title" type="text" placeholder="New Group Title" class="span2"/>
-                          <button class="btn btn-success setTitle" type="button">Edit Title</button>
-                 </div>
+                         <input class="id" id="set_id" type="text" placeholder="New Group ID" class="span2"/>
+                         <button class="btn btn-success setID" type="button">Edit ID</button>
+                </div>
+                % endif
+                % if web.user.has_permission(group.edit_title_perm):
+                <div class="input-append">
+                         <input class="title" id="set_title" type="text" placeholder="New Group Title" class="span2"/>
+                         <button class="btn btn-success setTitle" type="button">Edit Title</button>
+                </div>
+                % endif
             </div>
             <h3 onclick="$(this).selectText();" style="font-weight: bold; margin-bottom:20px">${group.id | h}</h3>
             <div class="well well-small">${group.title | h}</div>

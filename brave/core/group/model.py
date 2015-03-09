@@ -242,6 +242,14 @@ class Group(Document):
         return self.get_perm('VIEW')
         
     @property
+    def edit_id_perm(self):
+        return self.get_perm('EDIT_ID')
+
+    @property
+    def edit_title_perm(self):
+        return self.get_perm('EDIT_TITLE')
+
+    @property
     def edit_acl_perm(self):
         return self.get_perm('EDIT_ACL')
         
