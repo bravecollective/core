@@ -7,7 +7,7 @@ from datetime import datetime
 from mongoengine import Document, StringField, DateTimeField, ReferenceField, IntField, BooleanField, FloatField, ListField, NULLIFY, PULL
 from brave.core.util.signal import update_modified_timestamp
 from brave.core.key.model import EVECredential
-from brave.core.util.eve import api
+from brave.core.util import evelink
 from brave.core.permission.model import Permission, WildcardPermission
 from brave.core.application.model import Application
 
@@ -71,60 +71,60 @@ class EVEAlliance(EVEEntity):
         
         results, a, b, c, d = None, 0, 0, 0, 0
         
+        eve = evelink.eve.EVE()
         try:
-            results = api.eve.AllianceList()
+            results = eve.alliances().result
         except:
             log.exception("Failed call.")
             results = None
         
-        if not results or not results.get('row', []):
+        if not results:
             log.error("Unable to retrieve AllianceList.")
             return
         
-        for b, row in enumerate(results.row):
-            log.info("Synchronizing Alliance %d: %s", row.allianceID, row.name)
+        for b, row in enumerate(results.values()):
+            log.info("Synchronizing Alliance %d: %s", row['id'], row['name'])
             record, created = EVEAlliance.objects.get_or_create(
-                    identifier = row.allianceID,
+                    identifier = row['id'],
                 )
             
             if created: a += 1
             
-            record.name = row.name
-            record.short = str(row.shortName)
-            record.founded = datetime.strptime(row.startDate, "%Y-%m-%d %H:%M:%S")
-            members = row.memberCount
+            record.name = row['name']
+            record.short = row['ticker']
+            record.founded = datetime.fromtimestamp(row['timestamp'])
+            members = row['member_count']
             record = record.save()
             
-            executor = row.executorCorpID
+            executor = row['executor_id']
             
             try:
-                result = api.eve.CharacterName(ids=','.join([str(i.corporationID) for i in row.memberCorporations.row]))
-                mapping = {int(i.characterID): str(i.name) for i in result.row}
+                mapping = eve.character_names_from_ids(row['member_corps'].keys()).result
             except:
                 log.exception("Failed to get full mapping.  Falling back.")
                 mapping = None
             
-            for row in row.memberCorporations.row:
-                log.info("Synchronizing corporation: %d", row.corporationID)
+            for row in row['member_corps'].values():
+                log.info("Synchronizing corporation: %d", row['id'])
                 corporation, created = EVECorporation.objects.get_or_create(
-                        identifier = row.corporationID,
+                        identifier = row['id'],
                     )
                 
                 d += 1
                 if created: c += 1
                 
                 if mapping:
-                    corporation.name = mapping[row.corporationID]
+                    corporation.name = mapping[row['id']]
                 elif not corporation.name:
                     try:
-                        result = api.eve.CharacterName(ids=str(row.corporationID))
-                        corporation.name = str(result.row[0].name)
+                        result = eve.character_name_from_id(row['id']).result
+                        corporation.name = result['name']
                     except:
-                        log.exception("Unable to get corporation name for %d.", row.corporationID)
+                        log.exception("Unable to get corporation name for %d.", row['id'])
                         continue
                 
                 corporation.alliance = record
-                corporation.joined = datetime.strptime(row.startDate, "%Y-%m-%d %H:%M:%S")
+                corporation.joined = datetime.fromtimestamp(row['timestamp'])
                 corporation.save()
                 
                 if corporation.identifier == executor:
@@ -150,8 +150,9 @@ class EVECorporation(EVEEntity):
     @property
     def short(self):
         if not self._short:
-            result = api.corp.CorporationSheet(corporationID=self.identifier)
-            self._short = result.ticker
+            corp = evelink.corp.Corp(evelink.api.API())
+            result = corp.corporation_sheet(self.identifier).result
+            self._short = result['ticker']
             EVECorporation.objects(identifier=self.identifier).update(set___short=self._short)
         return self._short
 
