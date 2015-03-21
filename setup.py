@@ -43,6 +43,7 @@ setup(
                 'futures',
                 'zxcvbn',
                 'flake8',
+                'evelink',
             ],
 
         setup_requires = [
