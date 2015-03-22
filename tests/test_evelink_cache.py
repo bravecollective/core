@@ -23,4 +23,3 @@ class MongoCacheTestCase(unittest.TestCase):
     def test_expire(self):
         self.cache.put('baz', 'qux', -1)
         self.assertEqual(self.cache.get('baz'), None)
-

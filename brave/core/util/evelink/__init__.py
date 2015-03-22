@@ -32,20 +32,20 @@ class MongoCache(evelink.api.APICache):
         pass
 
     def get(self, key):
-         """Return the value referred to by 'key' if it is cached.
+        """Return the value referred to by 'key' if it is cached.
 
-         key:
-             a string hash key
-         """
-         entry = EvelinkAPICacheEntry.objects(key=key).first()
-         if not entry:
-             return None
-         if entry.expireAt < datetime.now(utc):
-             # Mongo's expiration isn't immediate, so we'll check the
-             # expiration time ourselves as well.
-             entry.delete()
-             return None
-         return pickle.loads(entry.value)
+        key:
+            a string hash key
+        """
+        entry = EvelinkAPICacheEntry.objects(key=key).first()
+        if not entry:
+            return None
+        if entry.expireAt < datetime.now(utc):
+            # Mongo's expiration isn't immediate, so we'll check the
+            # expiration time ourselves as well.
+            entry.delete()
+            return None
+        return pickle.loads(entry.value)
 
     def put(self, key, value, duration):
         """Cache the provided value, referenced by 'key', for the given duration.
@@ -59,7 +59,7 @@ class MongoCache(evelink.api.APICache):
         """
         new_entry = EvelinkAPICacheEntry(
             key=key,
-            value=pickle.dumps(value, 2), 
+            value=pickle.dumps(value, 2),
             expireAt=datetime.now(utc) + timedelta(seconds=duration),
         )
         try:
@@ -93,5 +93,5 @@ utc = UTC()
 
 # Here, finally, is where it happens: set the default cache and re-export.
 evelink.api.default_cache = MongoCache()
-from evelink import *
+from evelink import *  # noqa
 __all__ = evelink.__all__
