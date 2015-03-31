@@ -196,8 +196,13 @@ def selected(bool):
                         elif type == "a":
                             image_url = "https://image.eveonline.com/Alliance/%d_32.png" % item.identifier
                             text = "%s <%s>" % (unicode(item), item.short)
+                        else:
+                            image_url = None
+                            text = item
                     %>
+                    % if image_url:
                     <img src="${image_url}" style="width: 20px; height: 20px; border-radius: 4px; margin-top: -5px;" alt="" />
+                    % endif
                     <span onclick="$(this).selectText();" style="${style}">${text | h}</span>
                     <input type="hidden" name="${input_name}" value="${item | h}" />
                     <i class="remove fa fa-times"></i>
