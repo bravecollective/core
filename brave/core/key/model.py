@@ -9,7 +9,7 @@ from requests.exceptions import HTTPError
 
 from brave.core.account.model import User
 from brave.core.application.model import ApplicationGrant
-from brave.core.util import strip_tags
+from brave.core.util import evelink, strip_tags
 from brave.core.util.signal import update_modified_timestamp, trigger_api_validation
 from brave.core.util.eve import api, EVECharacterKeyMask, EVECorporationKeyMask
 
@@ -90,6 +90,9 @@ class EVECredential(Document):
     def mask(self, value):
         """Sets the value of the Key Mask"""
         self._mask = value
+
+    def evelink_api(self):
+        return evelink.api.API(api_key=(self.key, self.code))
     
     # EVE API Integration
 
@@ -100,17 +103,17 @@ class EVECredential(Document):
         probably check for and refresh info from the most-permissioned key instead of this."""
         from brave.core.character.model import EVEAlliance, EVECorporation, EVECharacter
         try:
-            char = EVECharacter(identifier=info.characterID).save()
+            char = EVECharacter(identifier=info['id']).save()
             new = True
         except NotUniqueError:
-            char = EVECharacter.objects(identifier=info.characterID)[0]
+            char = EVECharacter.objects(identifier=info['id'])[0]
             new = False
             
             if char.owner and self.owner != char.owner:
                 log.warning("Security violation detected. Multiple accounts trying to register character %s, ID %d. "
                             "Actual owner is %s. User adding this character is %s.",
-                            char.name, info.characterID,
-                            EVECharacter.objects(identifier=info.characterID).first().owner, self.owner)
+                            char.name, info['id'],
+                            EVECharacter.objects(identifier=info['id']).first().owner, self.owner)
                 self.violation = "Character"
                 
                 # Mark both accounts as duplicates of each other.
@@ -120,9 +123,11 @@ class EVECredential(Document):
 
         try:
             if self.mask.has_access(api.char.CharacterSheet.mask):
-                info = api.char.CharacterSheet(self, characterID=info.characterID)
-            elif self.mask.has_access(api.char.CharacterInfoPublic.mask):
-                info = api.char.CharacterInfoPublic(self, characterID=info.characterID)
+                el_char = evelink.char.Char(info['id'], api=self.evelink_api())
+                info = el_char.character_sheet().result
+            else:
+                eve = evelink.eve.EVE(api=self.evelink_api())
+                info = eve.character_info_from_id(info['id']).result
         except Exception:
             log.warning("An error occured while querying data for key %s.", self.key)
             if new:
@@ -132,43 +137,41 @@ class EVECredential(Document):
 
         char.corporation, char.alliance = self.get_membership(info)
 
-        char.name = info.name if 'name' in info else info.characterName
-        if not isinstance(char.name, basestring):
-            char.name = str(char.name)
+        char.name = info['name']
         char.owner = self.owner
         if self not in char.credentials:
             char.credentials.append(self)
-        char.race = info.race if 'race' in info else None
-        char.bloodline = (info.bloodLine if 'bloodLine' in info
-                          else info.bloodline if 'bloodline' in info
-                          else None)
-        char.ancestry = info.ancestry if 'ancestry' in info else None
-        char.gender = info.gender if 'gender' in info else None
-        char.security = info.security if 'security' in info else None
-        char.titles = [strip_tags(i.titleName) for i in info.corporationTitles.row] if 'corporationTitles' in info else []
-        char.roles = [i.roleName for i in info.corporationRoles.row] if 'corporationRoles' in info else []
+        char.race = info['race']
+        char.bloodline = info['bloodline']
+        char.ancestry = info.get('ancestry', None)
+        char.gender = info.get('gender', None)
+        char.security = info.get('sec_status', None)
+        char.titles = [strip_tags(t['name']) for t in info['titles'].values()] if 'titles' in info else []
+        char.roles = [r['name'] for r in info['roles']['global'].values()] if 'roles' in info else []
 
         char.save()
         return char
     
     def get_membership(self, info):
         from brave.core.character.model import EVEAlliance, EVECorporation, EVECharacter
+
+        print info
         
         # This is a stupid edge-case to cover inconsistency between API calls.
-        allianceName = info.alliance if 'alliance' in info else (info.allianceName if 'allianceName' in info else None)
-        corporationName = info.corporation if 'corporation' in info else info.corporationName
+        allianceName = info['alliance']['name'] if info['alliance']['name'] else None
+        corporationName = info['corp']['name']
         
         alliance, created = EVEAlliance.objects.get_or_create(
-                identifier = info.allianceID,
-                defaults = dict(name=allianceName)
-            ) if 'allianceID' in info and info.allianceID else (None, False)
+                identifier = info['alliance']['id'],
+                defaults = dict(name=info['alliance']['name'])
+            ) if info['alliance']['id'] else (None, False)
         
         if alliance and not created and alliance.name != allianceName:
             alliance.name = allianceName
             alliance = alliance.save()
             
         corporation, created = EVECorporation.objects.get_or_create(
-                identifier = info.corporationID,
+                identifier = info['corp']['id'],
                 defaults = dict(name=corporationName, alliance=alliance)
             )
         
@@ -222,7 +225,8 @@ class EVECredential(Document):
             return self.pull_corp()
         
         try:
-            result = api.account.APIKeyInfo(self)  # cached
+            account = evelink.account.Account(api=self.evelink_api())
+            result = account.key_info().result
         except HTTPError as e:
             if e.response.status_code == 403:
                 log.debug("key disabled; deleting %d" % self.key)
@@ -244,9 +248,17 @@ class EVECredential(Document):
             log.exception("Unable to call: APIKeyInfo(%d)", self.key)
             return
         
-        self.mask = int(result['accessMask'])
-        self.kind = result['type']
-        self.expires = datetime.strptime(result['expires'], '%Y-%m-%d %H:%M:%S') if result.get('expires', None) else None
+        self.mask = result['access_mask']
+
+        # evelink converts these values, so we have to reverse (or migrate).
+        reverse_type_map = {
+            'account': "Account",
+            'char': "Character",
+            'corp': "Corporation",
+        }
+        self.kind = reverse_type_map[result['type']]
+
+        self.expires = datetime.fromtimestamp(result['expire_ts']) if result['expire_ts'] else None
         
         try:
             rec_mask = int(config['core.recommended_key_mask'])
@@ -260,16 +272,16 @@ class EVECredential(Document):
             log.warn("core.recommended_key_mask MUST be an integer.")
             self.verified = False
         
-        if not result.characters.row:
+        if not result['characters']:
             log.error("No characters returned for key %d?", self.key)
             return self
         
         allCharsOK = True
         pulled_characters = set()
 
-        for char in result.characters.row:
-            if 'corporationName' not in char:
-                log.error("corporationName missing for key %d", self.key)
+        for char in result['characters'].values():
+            if 'corp' not in char:
+                log.error("corp missing for key %d", self.key)
                 continue
             
             character = self.pull_character(char)
