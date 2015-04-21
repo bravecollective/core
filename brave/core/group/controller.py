@@ -201,6 +201,9 @@ class OneGroupController(Controller):
 
 class GroupList(HTTPMethod):
     def get(self):
+        if not user:
+            raise HTTPNotFound()
+
         groups = sorted(Group.objects(), key=lambda g: g.id)
         
         visibleGroups = list()

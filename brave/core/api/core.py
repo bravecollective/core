@@ -186,7 +186,14 @@ class CoreAPI(SignedController):
         from brave.core.group.model import Group
 
         # Step 1: Get the appropriate grant.
-        token = ApplicationGrant.objects.get(id=token, application=request.service)
+        try:
+            token = ApplicationGrant.objects.get(id=token, application=request.service)
+        except ApplicationGrant.DoesNotExist:
+            return dict(
+                success=False,
+                message="Your token is not valid, please genereate a new one."
+            )
+
 
         if token.user.person.banned(app=token.application.short):
             return dict(
