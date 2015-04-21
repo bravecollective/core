@@ -257,17 +257,17 @@ class EVECredential(Document):
         allCharsOK = True
         pulled_characters = set()
 
-        for char in result.characters.row:
-            if 'corporationName' not in char:
-                log.error("corporationName missing for key %d", self.key)
-                continue
-            
-            character = self.pull_character(char)
-            if not character:
-                allCharsOK = False
-            else:
-                pulled_characters.add(character)
+        if result.characters.row is not None:
+            for char in result.characters.row:
+                if 'corporationName' not in char:
+                    log.error("corporationName missing for key %d", self.key)
+                    continue
 
+                character = self.pull_character(char)
+                if not character:
+                    allCharsOK = False
+                else:
+                    pulled_characters.add(character)
         
         if allCharsOK and self.violation == "Character":
             self.violation = None

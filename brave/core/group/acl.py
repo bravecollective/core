@@ -108,7 +108,10 @@ class ACLKey(ACLRule):
     
     def evaluate(self, user, character):
         for key in character.credentials:
-            if key.kind == self.kind:
+            print "Key Debug: ({key}) , {character}".format(key=key, character=character)
+            print "Key Kind: ({kkind}) , {character}".format(kkind=key.kind, character=character)
+            print "Self Kind: ({skind}) , {character}".format(skind=self.kind, character=character)
+            if key and key.kind == self.kind:
                 return None if self.inverse else self.grant
         
         return self.grant if self.inverse else None

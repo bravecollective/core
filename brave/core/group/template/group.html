@@ -710,10 +710,9 @@ def selected(bool):
                 });
             });
 
-            $(document).on('click', '.kickMember', function()
+            $(document).on('click', '.kickMember', function(e)
             {
                 e.preventDefault();
-
                 var row = $(this).parents('tr');
                 $.post('/group/${group.id}/kick_member', { name: row.attr("name"), method: "${rule_set}" }).
                 done(function()

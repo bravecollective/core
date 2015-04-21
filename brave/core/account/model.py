@@ -48,6 +48,8 @@ class User(Document):
     other_accs_char_key = ListField(ReferenceField('User'), db_field='otherAccountsCharKey')
     other_accs_IP = ListField(ReferenceField('User'), db_field='otherAccountsIP')
     
+    _permission_cache = list()
+
     # Permissions
     VIEW_PERM = 'core.account.view.{account_id}'
     
@@ -171,11 +173,17 @@ class User(Document):
         perms = set()
         
         for c in self.characters:
-            for p in c.permissions():
+            bef = datetime.utcnow()
+            per = c.permissions()
+            aft = datetime.utcnow()
+            print "Character {0} permissions took {1}".format(c.name, aft-bef)
+            for p in per:
                 perms.add(p)
                 
+        print "-----"    
         perms = list(perms)
         perms.sort(key=lambda p: p.id)
+
         return perms
         
     def has_permission(self, permission):
@@ -189,7 +197,17 @@ class User(Document):
         
         log.debug('Checking if user has permission {0}'.format(permission))
         
-        return Permission.set_grants_permission(self.permissions, permission)
+        bef = datetime.utcnow()
+        perms = self.permissions
+        aft = datetime.utcnow()
+        print "Permissions took {}".format(aft-bef)
+
+        rbef = datetime.utcnow()
+        res = Permission.set_grants_permission(perms, permission)
+        raft = datetime.utcnow()
+        print "SET GRANTS PERM took {}".format(raft-rbef)
+
+        return res
         
     def has_any_permission(self, permission):
         """Returns true if the character has a permission that would be granted by permission."""

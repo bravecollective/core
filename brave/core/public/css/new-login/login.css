@@ -1,0 +1,191 @@
+html {
+    height: 100%;
+}
+body {
+    background:url(../../img/new-login/bg.jpg) top center no-repeat;
+    background-size: cover;
+     -webkit-background-size: cover;
+        -moz-background-size: cover;
+          -o-background-size: cover;
+    background-color: #030406;
+    text-align: center;
+    font-family: 'ProximaNovaRegular';
+    min-height: 100%;
+    position: relative;
+    padding-bottom: 180px;
+}
+canvas{
+    display:block;
+    vertical-align:bottom;
+    z-index: 3;
+}
+@font-face {
+    font-family: 'ProximaNovaThin';
+    src: url(../../font/new-login/2A3B43_0_0.eot);
+    src: url(../../font/new-login/2A3B43_0_0.eot?#iefix) format('embedded-opentype'), url(../../font/new-login/2A3B43_0_0.woff2) format('woff2'), url(../../font/new-login/2A3B43_0_0.woff) format('woff'), url(../../font/new-login/2A3B43_0_0.ttf) format('truetype')
+}
+@font-face {
+    font-family: 'ProximaNovaRegular';
+    src: url(../../font/new-login/2A3B43_10_0.eot);
+    src: url(../../font/new-login/2A3B43_10_0.eot?#iefix) format('embedded-opentype'), url(../../font/new-login/2A3B43_10_0.woff2) format('woff2'), url(../../font/new-login/2A3B43_10_0.woff) format('woff'), url(../../font/new-login/2A3B43_10_0.ttf) format('truetype')
+}
+@font-face {
+    font-family: 'ProximaNovaMedium';
+    src: url(../../font/new-login/2A3B43_A_0.eot);
+    src: url(../../font/new-login/2A3B43_A_0.eot?#iefix) format('embedded-opentype'), url(../../font/new-login/2A3B43_A_0.woff2) format('woff2'), url(../../font/new-login/2A3B43_A_0.woff) format('woff'), url(../../font/new-login/2A3B43_A_0.ttf) format('truetype')
+}
+h2 {
+    font-family: 'ProximaNovaThin';
+    font-size: 30px;
+    letter-spacing: 6px;
+    text-align: center;
+    color: #eff1f3;
+    margin: 60px 0 50px 0;
+}
+a {
+    font-family: 'ProximaNovaMedium';
+    color: #FFF;
+}
+a:hover,
+a:active,
+a:focus {
+    color: #f7f7f7;
+    text-decoration: none;
+}
+#particles {
+    position: absolute;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.5;
+}
+.logo {
+    text-align: center; 
+    z-index: 10;
+    position: relative;
+    margin-top: 40px;
+}
+.form-signin {
+    z-index: 10;
+    max-width: 450px;
+    padding: 15px;
+    margin: 0 auto;
+}
+.form-signin .form-signin-heading,
+.form-signin .checkbox {
+    margin-bottom: 10px;
+}
+.form-signin .checkbox {
+    font-weight: normal;
+}
+.form-signin .form-control {
+    position: relative;
+    height: auto;
+    padding: 20px;
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+.form-signin .form-control:focus {
+    z-index: 10;
+}
+.btn {
+    font-family: 'ProximaNovaMedium';
+    position: relative;
+}
+.btn-primary {
+    color: #fff;
+    box-shadow: 0 4px #35788e;
+    background-color: #4699b4;
+    padding: 20px;
+    border-radius: 4px;
+    border-color: #4699b4;
+}
+.btn-primary.focus,
+.btn-primary:focus,
+.btn-primary:hover {
+    color: #fff;
+    background-color: #4ca7c4;
+    box-shadow: 0 4px #35788e;
+    border-color: #4ca7c4;
+}
+.btn-primary:active {
+    color: #fff;
+    background-color: #4699b4;
+    box-shadow: 0 0px #4699b4;
+    border-color: #4699b4;
+}
+.btn-learn {
+    color: #FFF;
+    background-color: #72b446;
+    padding: 12px 0 12px 0;
+    max-width: 420px;
+    width: 92%;
+    box-shadow: 0 3px #528033;
+    border-radius: 4px;
+    z-index: 10;
+    position: relative;
+    margin-top: 10px;
+}
+.btn-learn:hover,
+.btn-learn:active,
+.btn-learn:focus {
+    color: #FFF;
+    margin: 0 auto;
+    background-color: #78be4a;
+    padding: 12px 0 12px 0;
+    max-width: 420px;
+    width: 92%;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+.footer {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    padding-bottom: 30px;
+    text-align: center;
+}
+.text-muted {
+    margin-top: 30px;
+    font-size: 14px;
+    color: #43545d;
+  }
+.nav a {
+    font-family: 'ProximaNovaRegular';
+    font-size: 16px;
+    color: #FFF;
+    margin: 0 20px 0 20px;
+}
+.nav a:hover {
+    color: #f0f0f0;
+}
+.other-links {
+    position: relative;
+    margin: 0 auto;
+    max-width: 420px;
+    width: 90%;
+}
+.other-links a {
+    font-family: 'ProximaNovaRegular'; 
+}
+.left {
+    float: left;
+}
+.left a {
+    color: #8e969f;
+}
+.left a:hover {
+    text-decoration: none;
+    color: #818891;
+}
+.right {
+    float:right;
+}
+.right a {
+    color: #8e969f;
+}
+.right a:hover {
+    text-decoration: none;
+    color: #818891;
+}              

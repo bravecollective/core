@@ -31,7 +31,7 @@ class OneGroupController(Controller):
         except Group.DoesNotExist:
             raise HTTPNotFound()
 
-        if not user.has_permission(self.group.view_perm):
+        if not user or not user.has_permission(self.group.view_perm):
             raise HTTPNotFound()
     
     @post_only

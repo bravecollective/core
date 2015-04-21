@@ -125,7 +125,7 @@ class BanSearch(HTTPMethod):
             temp = character
             characters = EVECharacter.objects(name__istartswith=character)
 
-            if not character:
+            if not characters:
                 return 'brave.core.ban.template.index', dict(
                     success = False,
                     search_param = temp,

@@ -15,7 +15,7 @@ from brave.core.application.model import Application
 from brave.core.api.model import AuthenticationBlacklist, AuthenticationRequest
 from brave.core.api.util import SignedController
 from brave.core.util.eve import api
-
+from brave.core.character.model import EVECharacter
 
 log = __import__('logging').getLogger(__name__)
 
@@ -56,10 +56,16 @@ class ProxyAPI(SignedController):
             if call.mask and (not token or not token.mask or not token.mask.has_access(call.mask)):
                 return dict(success=False, reason='grant.unauthorized', message="Not authorized to call endpoint: {0}.{1}".format(group, endpoint))
             
-            # Find an appropriate key to use for this request if one is required or anonymous=False.
-            key = token.character.credential_for(call.mask)
-            if not key:
-                return dict(success=False, reason='key.notfound', message="Could not find EVE API key that authorizes endpoint: {0}.{1}".format(group, endpoint))
+            if call.name.startswith('char'):
+                try:
+                    character = EVECharacter.objects.get(identifier=kw['characterID'])
+                except EVECharacter.DoesNotExist:
+                    return dict(success=False, reason='character.notfound', message="Could not find a character with that identifier")
+                # Find an appropriate key to use for this request if one is required or anonymous=False.
+                key = character.credential_for(call.mask)
+                if not key:
+                    return dict(success=False, reason='key.notfound', message="Could not find EVE API key that authorizes endpoint: {0}.{1}".format(group, endpoint))
+
         
         try:  # Perform the query or get the cached result.
             result = call(key, **kw) if key else call(**kw)

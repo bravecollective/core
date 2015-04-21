@@ -114,7 +114,7 @@ class AuthorizeHandler(HTTPMethod):
                                                 "search page for more details."), ar=ar))
 
 
-        ngrant = ApplicationGrant(user=u, application=ar.application, mask=grant.mask, expires=datetime.utcnow() + timedelta(days=ar.application.expireGrantDays), character=grant.character)
+        ngrant = ApplicationGrant(user=u, application=ar.application, _mask=grant._mask, expires=datetime.utcnow() + timedelta(days=ar.application.expireGrantDays), chars=grant.chars, all_chars=grant.all_chars)
         ngrant.save()
         
         ar.user = u
@@ -233,7 +233,7 @@ class RootController(StartupMixIn, Controller):
         super(RootController, self).__init__(*args, **kw)
         
         self.authorize = AuthorizeHandler()  # to avoid gumming up the @authorize decorator
-        
+
         if boolean(config.get('debug', False)):
             self.dev = DeveloperTools()
     
