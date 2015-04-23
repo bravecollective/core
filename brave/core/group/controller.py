@@ -14,6 +14,7 @@ from brave.core.character.model import EVECharacter
 from brave.core.group.model import Group, GroupCategory
 from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask, ACLVerySecure, ACLGroupMembership, CyclicGroupReference
 from brave.core.util import post_only
+from brave.core.util.predicate import authenticate
 from brave.core.permission.util import user_has_permission, user_has_any_permission
 from brave.core.permission.model import Permission, WildcardPermission, GRANT_WILDCARD
 
@@ -218,6 +219,7 @@ class OneGroupController(Controller):
 
 
 class GroupList(HTTPMethod):
+    @authenticate
     def get(self):
         groups = sorted(Group.objects(), key=lambda g: g.id)
         
@@ -286,6 +288,7 @@ class GroupList(HTTPMethod):
         group.save()
         return 'json:', dict(success=True)
 
+    @authenticate
     def post(self, id=None, action=None):
         if not action:
             return 'json:', dict(success=False)
