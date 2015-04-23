@@ -111,7 +111,7 @@ class ACLKey(ACLRule):
     
     def evaluate(self, user, character, _context=None):
         for key in character.credentials:
-            if key.kind == self.kind:
+            if key and key.kind == self.kind:
                 return None if self.inverse else self.grant
         
         return self.grant if self.inverse else None
