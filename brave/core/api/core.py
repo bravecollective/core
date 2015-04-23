@@ -184,7 +184,11 @@ class CoreAPI(SignedController):
         from brave.core.group.model import Group
         
         # Step 1: Get the appropriate grant.
-        token = ApplicationGrant.objects.get(id=token, application=request.service)
+        try:
+            token = ApplicationGrant.objects.get(id=token, application=request.service)
+        except ApplicationGrant.DoesNotExist:
+            return dict(success=False, reason='grant.invalid', message="Application grant invalid or expired.")
+
 
         # Step 2: Assemble the information for each character
         def char_info(char):
