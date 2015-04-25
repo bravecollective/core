@@ -24,6 +24,7 @@ log = __import__('logging').getLogger(__name__)
 
 
 class OneGroupController(Controller):
+    @authenticate
     def __init__(self, id):
         super(OneGroupController, self).__init__()
 
