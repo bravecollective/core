@@ -54,6 +54,11 @@ class ProxyAPI(SignedController):
             if call.name.startswith('char'):
                 try:
                     character = EVECharacter.objects.get(identifier=kw['characterID'])
+                except KeyError:
+                    if len(token.characters) == 1:
+                        character = token.characters[0]
+                    else:
+                        return dict(success=False, reason='character.notspecified', message="Must pass a characterID parameter")
                 except EVECharacter.DoesNotExist:
                     return dict(success=False, reason='character.notfound', message="Could not find a character with that identifier")
                 # Find an appropriate key to use for this request if one is required or anonymous=False.
