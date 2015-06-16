@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+
+###
+# Brave CORE Startup script
+#
+# Starts up flup sockets and supplemenetal processes
+# Usage: ./service-core start
+# Usage: ./service-core stop
+# Usage: ./service-core restart
+###
+
+# key update Screen name
+SCREEN_NAME_KEYS="core_update_keys"
+SCREEN_NAME_CHARS="core_update_chars"
+KEY_UPDATE_HOURS=6
+
+# cd into the right folder
+cd /home/core/src
+
+# are we in a virtualenv?
+python -c 'import sys; print sys.real_prefix' 2>/dev/null && INVENV=1 || INVENV=0
+
+# if not, activate it
+if [[ "$INVENV" != "1" ]]
+then
+    # Activate the virtual env
+    . ../bin/activate
+fi
+
+# startup the socket daemons!
+NEW_RELIC_CONFIG_FILE=conf/newrelic.ini newrelic-admin run-program paster serve conf/shard-1.ini --pid-file /home/core/var/run/core-1.pid --log-file /home/core/var/log/core-1.log --daemon "$1"
+NEW_RELIC_CONFIG_FILE=conf/newrelic.ini newrelic-admin run-program paster serve conf/shard-2.ini --pid-file /home/core/var/run/core-2.pid --log-file /home/core/var/log/core-2.log --daemon "$1"
+
+
+# ---------------------------------
+# Misc Functions
+#
+update_keys_stop () {
+    # Reload the key update process
+    screen -list | grep -q "${SCREEN_NAME_KEYS}"
+    if [[ $? == "0" ]]
+    then
+        echo "Screen '${SCREEN_NAME_KEYS}' Found! Killing...";
+        screen -S ${SCREEN_NAME_KEYS} -X quit
+    fi
+}
+
+update_chars_stop () {
+    # Reload the chars update process
+    screen -list | grep -q "${SCREEN_NAME_CHARS}"
+    if [[ $? == "0" ]]
+    then
+        echo "Screen '${SCREEN_NAME_CHARS}' Found! Killing...";
+        screen -S ${SCREEN_NAME_CHARS} -X quit
+    fi
+}
+
+update_keys_start () {
+    # startup the core key updater
+    screen -list | grep -q "${SCREEN_NAME_KEYS}"
+    if [[ $? == "1" ]]
+    then
+        echo "Starting New ${SCREEN_NAME_KEYS} Screen now...";
+        screen -dmS ${SCREEN_NAME_KEYS} ../bin/service-update-keys
+    fi
+}
+update_chars_start () {
+    # startup the core key updater
+    screen -list | grep -q "${SCREEN_NAME_CHARS}"
+    if [[ $? == "1" ]]
+    then
+        echo "Starting New ${SCREEN_NAME_CHARS} Screen now...";
+        screen -dmS ${SCREEN_NAME_CHARS} ../bin/service-update-chars
+    fi
+}
+#
+# Misc Functions - END
+# ---------------------------------
+
+# sync key update script status based on input $1
+if [[ "$1" == "start" ]]
+then
+    update_keys_start
+    update_chars_start
+elif [[ "$1" == "stop" ]]
+then
+    update_keys_stop
+    update_chars_stop
+
+elif [[ "$1" == "restart" ]]
+then
+    update_keys_stop
+    update_chars_stop
+    update_keys_start
+    update_chars_start
+fi

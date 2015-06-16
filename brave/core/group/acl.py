@@ -111,7 +111,7 @@ class ACLKey(ACLRule):
             #print "Key Debug: ({key}) , {character}".format(key=key, character=character)
             #print "Key Kind: ({kkind}) , {character}".format(kkind=key.kind, character=character)
             #print "Self Kind: ({skind}) , {character}".format(skind=self.kind, character=character)
-            if key and key.kind == self.kind:
+            if key and key.kind and key.kind == self.kind:
                 return None if self.inverse else self.grant
         
         return self.grant if self.inverse else None

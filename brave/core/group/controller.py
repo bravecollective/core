@@ -91,6 +91,7 @@ class OneGroupController(Controller):
     def index(self, rule_set=None):
         return 'brave.core.group.template.group', dict(
             area='group',
+            admin=user.admin,
             group=self.group,
             rule_set=rule_set,
         )

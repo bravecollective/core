@@ -99,7 +99,8 @@ def main(minutes_between_pulls=1440, threads=1):
         while datetime.now() < wake_time:
             sleep((wake_time - datetime.now()).total_seconds())
         
-        print "refreshing keylist"
+        print "refreshing keylist - start"
         refresh_keylist(num_timeslots=minutes_between_pulls)
-        
+        print "refreshing keylist - done"
+
         wake_time += timedelta(minutes=minutes_between_pulls)

@@ -44,9 +44,9 @@ Run the following to download the development version with Git, and _link_ it in
 cd core
 pip install -r requirements.txt -e .</code></pre>
 
-Once you have successfully compiled the Core Service, copy `development.ini` to `local.ini`, and make changes as appropriate.  Finally, bootstrap the EVE API system by running:
+Once you have successfully compiled the Core Service, copy `conf/development.ini` to `conf/local.ini`, and make changes as appropriate.  Finally, bootstrap the EVE API system by running:
 
-<pre><code>paster shell local.ini # or don't mention an INI if you didn't customize
+<pre><code>paster shell conf/local.ini # or don't mention an INI if you didn't customize
 from brave.core.util.eve import populate_calls
 populate_calls()
 

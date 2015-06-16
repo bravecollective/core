@@ -2,6 +2,7 @@
 
 <%!
 from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask, ACLVerySecure
+from web.auth import user
 
 def selected(bool):
     return "selected" if bool else ""
@@ -168,7 +169,7 @@ def selected(bool):
                     % elif type == "a":
                         <img src="https://image.eveonline.com/Alliance/${item.identifier}_32.png" style="width: 20px; height: 20px; border-radius: 4px; margin-top: -5px;" alt="" />
                     % endif
-                    <span onclick="$(this).selectText();" style="${style}}">${item | h}</span>
+                    <span onclick="$(this).selectText();" style="${style}">${item | h}</span>
                     <input type="hidden" name="${input_name}" value="${item | h}" />
                     <i class="remove fa fa-times"></i>
                 </li>
@@ -308,14 +309,37 @@ def selected(bool):
                 <table id="perms" class="table table-condensed table-striped ">
                     <thead>
                         <tr>
-                            <th>Name</th>
+                            <th>Character Name</th>
+                            <th>Corporation</th>
+                            <th>Alliance</th>
                             <th style="width: 69px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="sortable">
                         % for char in group.requests:
                             <tr name="${char.name}">
-                                <td><span onclick="$(this).selectText()">${char.name | h}</span></td>
+                                <td>
+                                    <img src="https://image.eveonline.com/Character/${char.identifier | u}_32.jpg" style="width: 20px; height: 20px;" alt="">
+                                    % if user.admin:
+                                        <a href="/character/${char.id | u}">
+                                            <span onclick="$(this).selectText()">${char.name | h}</span>
+                                        </a>
+                                    % else:
+                                        <span onclick="$(this).selectText()">${char.name | h}</span>
+                                    % endif
+                                </td>
+                                <td>
+                                    % if char.corporation:
+                                        <img src="https://image.eveonline.com/Corporation/${char.corporation.identifier | u}_32.png" style="width: 20px; height: 20px;" alt="">
+                                        <span onclick="$(this).selectText()">${char.corporation.name | h}</span>
+                                    % endif
+                                </td>
+                                <td>
+                                    % if char.alliance:
+                                        <img src="https://image.eveonline.com/Alliance/${char.alliance.identifier | u}_32.png" style="width: 20px; height: 20px;" alt="">
+                                        <span onclick="$(this).selectText()">${char.alliance.name | h}</span>
+                                    % endif
+                                </td>
                                 <td style="text-align: center;">
                                     <a class="btn btn-success btn-small acceptRequest" href="#" title="${_('Approve Request')}" rel="tooltip" data-placement="bottom"><i class="fa fa-check"></i></a>
                                     <a class="btn btn-danger btn-small denyRequest" href="#" title="${_('Deny Request')}" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i></a>
@@ -343,14 +367,37 @@ def selected(bool):
                 <table id="perms" class="table table-condensed table-striped ">
                     <thead>
                         <tr>
-                            <th>Name</th>
+                            <th>Character Name</th>
+                            <th>Corporation</th>
+                            <th>Alliance</th>
                             <th style="width: 49px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="sortable">
                         % for char in getattr(group, rule_set + "_members"):
                             <tr name="${char.name}">
-                                <td><span onclick="$(this).selectText()">${char.name | h}</span></td>
+                                <td>
+                                    <img src="https://image.eveonline.com/Character/${char.identifier | u}_32.jpg" style="width: 20px; height: 20px;" alt="">
+                                    % if user.admin:
+                                        <a href="/character/${char.id | u}">
+                                            <span onclick="$(this).selectText()">${char.name | h}</span>
+                                        </a>
+                                    % else:
+                                        <span onclick="$(this).selectText()">${char.name | h}</span>
+                                    % endif
+                                </td>
+                                <td>
+                                    % if char.corporation:
+                                        <img src="https://image.eveonline.com/Corporation/${char.corporation.identifier | u}_32.png" style="width: 20px; height: 20px;" alt="">
+                                        <span onclick="$(this).selectText()">${char.corporation.name | h}</span>
+                                    % endif
+                                </td>
+                                <td>
+                                    % if char.alliance:
+                                        <img src="https://image.eveonline.com/Alliance/${char.alliance.identifier | u}_32.png" style="width: 20px; height: 20px;" alt="">
+                                        <span onclick="$(this).selectText()">${char.alliance.name | h}</span>
+                                    % endif
+                                </td>
                                 <td style="text-align: center;">
                                     <a class="btn btn-danger btn-small kickMember" href="#" title="${_('Remove From Group')}" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i></a>
                                 </td>

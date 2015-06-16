@@ -1,3 +1,4 @@
+# character/model.py
 
 # encoding: utf-8
 
@@ -267,7 +268,7 @@ class EVECharacter(EVEEntity):
             gbef = datetime.utcnow()
             perms = group.permissions
             gaft = datetime.utcnow()
-            print "Pulling group permissions for group {0} took {1}".format(group.id, gaft-gbef)
+            #print "Pulling group permissions for group {0} took {1}".format(group.id, gaft-gbef)
             for perm in perms:
                 # Append all of the group's permissions when no app is specified.
                 if not app:
@@ -405,11 +406,20 @@ class EVECharacter(EVEEntity):
         """Pulls public information about this character from the EVE API, and adds them to the Character Collection.
         This is important for when we need to manipulate a character who doesn't have an API key in Core, such as
         banning."""
-        if cls.objects(name=name).first():
-            return False
 
         from brave.core.util.eve import api
-        id = api.eve.CharacterID(names=[name]).row[0].characterID
+
+        print "Running character API update for char: {0}".format(name) 
+
+        id = 0
+        try:
+            # load up the pre-existing character
+            char = cls.objects(name=name).first();
+            id = char.identifier
+        except:
+            # make a new character class
+            char = cls()
+            id = api.eve.CharacterID(names=[name]).row[0].characterID
 
         # Character doesn't exist
         if id == 0:
@@ -417,12 +427,8 @@ class EVECharacter(EVEEntity):
 
         info = api.eve.CharacterInfo(characterID=id)
 
-        char = cls()
-
         char.identifier = id
-
         char.corporation, char.alliance = EVECredential.get_membership(info)
-
         char.name = info.name if 'name' in info else info.characterName
         if not isinstance(char.name, basestring):
             char.name = str(char.name)
@@ -435,6 +441,6 @@ class EVECharacter(EVEEntity):
         char.security = info.security if 'security' in info else None
         char.titles = [EVECredential.strip_tags(i.titleName) for i in info.corporationTitles.row] if 'corporationTitles' in info else []
 
-        return char.save()
+        char.save()
 
-
+        return char

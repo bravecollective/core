@@ -65,8 +65,9 @@
             <h3>${_("EVE Online API Key")}</h3>
         </div>
         
-        <b>Key ID:</b> <a href="/key/${record.id}">${record.key}</a><br/>
-        <b>Key Code:</b> Redacted.<br/>
+        <b>Key Permalink:</b> <a href="/key/${record.id}">##(Copy Url)##</a><br/>
+        <b>Key ID:</b> ${record.key}<br/>
+        <b>Key Code:</b> <span class="showKeyDeets" style="display:none">${record.code}</span> <a href="#" onclick="$('.showKeyDeets').show();$(this).hide(); return false;">Show</a> <br />
         <b>Key Mask:</b> <a href="/key/mask/${record.mask.mask}">${record.mask.mask}</a><br/>
         <b>Added:</b> <time datetime="${record.id.generation_time.isoformat().replace('+00:00', 'Z')}">${record.id.generation_time.isoformat(' ').replace('+00:00', '')}</time><br/>
         <b>User:</b> <a href="/account/${record.owner.id}">${record.owner.username}</a><br/>
