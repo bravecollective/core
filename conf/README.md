@@ -501,7 +501,7 @@ api.endpoint = http://core.braveineve.net/api
 
 #### api.identity
 
-For an install of core, you dont need to set this.
+This is mainly used by applications that connect to core via its API. You can ignore this for your core install.
 
 > You should never have to set this.
 
