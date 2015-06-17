@@ -2,13 +2,13 @@
 
 Core uses multiple `.ini` files to define config options. Each config file maps to a desired environment. We name the example file `development.ini` because you can freely copy/edit/revert it and pay around with the ini settings.
 
-For production, we default to enforcing a ini file named `production.ini` for all your production settings and options. You are free to name these files however you want, you will just need to update where they are refrenced. You can also make any number of duplicate files and refrence them directly when starting a paster instance. 
+For production, we default to enforcing a ini file named `production.ini` for all your production settings and options. You are free to name these files however you want, you will just need to update where they are referenced. You can also make any number of duplicate files and reference them directly when starting a paster instance. 
 
     $ paster shell conf/$NAME.ini
 
 ## development.ini
 
-Brave Core is built ontop of [WebCore](http://pythonhosted.org/WebCore/). WebCore's reccomended environment and serving system is paster, and it ships with a few usefull paster commands that make working with WebCore very simple. If you have questions about how something works in BraveCore, you should look at the WebCore documentation if your lost. 
+Brave Core is built on top of [WebCore](http://pythonhosted.org/WebCore/). WebCore's recommended environment and serving system is paster, and it ships with a few useful paster commands that make working with WebCore very simple. If you have questions about how something works in BraveCore, you should look at the WebCore documentation if your lost. 
 
 WebCore is essentially a set of packages and glue that binds them all together. You setup your application state with these config file settings. See below for some basic documentation on what they are and do.
 
@@ -28,7 +28,7 @@ Caching is provided by beaker: https://beaker.readthedocs.org/en/latest/
 
 #### web.cache
 
-Use this to turn on/off webcore caching. 
+Use this to turn on/off WebCore caching. 
 
 Should not have to change this.
 
@@ -72,9 +72,9 @@ web.cache.texting.expire = 604800
 
 ### WebCore Session Settings
 
-Sessions are provided by beaker: https://beaker.readthedocs.org/en/latest/ Use this to turn on/off webcore sessions. Should not have to change this.
+Sessions are provided by beaker: https://beaker.readthedocs.org/en/latest/ Use this to turn on/off WebCore sessions. Should not have to change this.
 
-You should also read this and make sure you have a proper cron job setup to delete these sessions at regular intervals: https://beaker.readthedocs.org/en/latest/sessions.html#removing-expired-old-sessions Session in core default to filesystem storage unlss you create a new setting: `web.sessions.type = cookie`
+You should also read this and make sure you have a proper cron job setup to delete these sessions at regular intervals: https://beaker.readthedocs.org/en/latest/sessions.html#removing-expired-old-sessions Session in core default to filesystem storage unless you create a new setting: `web.sessions.type = cookie`
 
 #### web.sessions
 
@@ -144,9 +144,9 @@ The local to fall back to if a language bit does not exist for a specific locale
 web.locale.fallback = en
 ```
 
-### WebCore User Autentication Settings
+### WebCore User Authentication Settings
 
-WebCore uses an app model and authentication routine to enable user accounts and data. This is all seutp here, and should never need to be changed.
+WebCore uses an app model and authentication routine to enable user accounts and data. This is all setup here, and should never need to be changed.
 
 #### web.auth
 
@@ -210,7 +210,7 @@ web.auth.intercept = 401
 
 ### WebCore Static Files Settings 
 
-WebCore enables serving and compiling static files from a specifc folder in you core setup. These settings should not need to be changed, but are documented here for completeness.
+WebCore enables serving and compiling static files from a specific folder in you core setup. These settings should not need to be changed, but are documented here for completeness.
 
 #### web.static
 
@@ -278,7 +278,7 @@ debug = False
 
 ### Database Connections
 
-Brave Core uses MongoDB for its database backend. You will need to be running at least 2.8.* of mongodb-server. We highly reccomend that you set mongodb to only listen to localhost, and to set a username/password on your database.
+Brave Core uses MongoDB for its database backend. You will need to be running at least 2.8.* of mongodb-server. We highly recommend that you set mongodb to only listen to localhost, and to set a username/password on your database.
 
 #### db.connections
 
@@ -302,7 +302,7 @@ db.main.engine = mongoengine
 
 #### db.main.model
 
-This is the root model that is loaded automaticly. Brave uses domain specific models, so this directs to an empty file.
+This is the root model that is loaded automatically. Brave uses domain specific models, so this directs to an empty file.
 
 You should never have to change this.
 
@@ -320,7 +320,7 @@ db.main.url = mongo://username:password@localhost/core
 
 ### Mail transport
 
-eMail is delivered by marrow.mail, a package included during setup. .mail supports a wide variety of mail delivery agents and patterns, we have setup SMTP as the default delivery agent and specificed some example configuration below.
+eMail is delivered by marrow.mail, a package included during setup. .mail supports a wide variety of mail delivery agents and patterns, we have setup SMTP as the default delivery agent and specified some example configuration below.
 
 #### mail.manager.use
 
@@ -422,7 +422,7 @@ mail.message.author = Brave Collective Core Services <core@braveineve.com>
 
 #### mail.message.organization
 
-The orgnization/company name of the entity sending mail
+The organization/company name of the entity sending mail
 
 ```ini
 mail.message.organization = Brave Collective
@@ -430,7 +430,7 @@ mail.message.organization = Brave Collective
 
 ### Yubico
 
-Yubico is a encrypted password USB key that enables secure user authentication without users having to rembemer username/password combos or long secrets. You will need a yubikey developer account to enable this.
+[Yubico](https://www.yubico.com/) is an encrypted password USB key that enables secure user authentication without users having to remember username/password combos or long secrets. You will need a yubikey developer account to enable this.
 
 #### yubico.client
 
@@ -502,7 +502,7 @@ core.required_pass_strength = 2
 
 This is a setting to enforce a minimum EVE Key ID. 
 
-This setting is Depricated
+This setting is Deprecated
 
 ```ini
 core.minimum_key_id = 3283828
@@ -510,7 +510,7 @@ core.minimum_key_id = 3283828
 
 #### core.recommended_key_mask
 
-This is the reccomended default API key minimum mask that core will accept form users.
+This is the recommended default API key minimum mask that core will accept form users.
 
 ```ini
 core.recommended_key_mask = 59695480
@@ -518,7 +518,7 @@ core.recommended_key_mask = 59695480
 
 #### core.recommended_key_kind
 
-This is the key type minimum that will beaccepted by core. If you don't care about having Account API keys, you can set this to `Character`
+This is the key type minimum that will be accepted by core. If you don't care about having Account API keys, you can set this to `Character`
 
 ```ini
 core.recommended_key_kind = Account
