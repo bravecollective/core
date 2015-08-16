@@ -26,8 +26,6 @@ class EVECredential(Document):
             allow_inheritance = False,
             indexes = [
                     'owner',
-                    # Don't keep expired credentials.
-                    dict(fields=['expires'], expireAfterSeconds=0),
                     dict(fields=['key'], unique=True)
                 ],
         )
