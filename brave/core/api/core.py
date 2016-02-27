@@ -253,7 +253,11 @@ class CoreAPI(SignedController):
                 characters_info[char.identifier] = info
         
         if not characters_info:
-            raise HTTPUnauthorized()
+            return dict(
+                success=False,
+                message="No characters assigned to token."
+            )
+#            raise HTTPUnauthorized()
         
         if token.default_character.identifier not in characters_info:
             char = token.default_character
