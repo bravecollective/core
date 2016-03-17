@@ -40,6 +40,10 @@ def _check_password(passwd1, passwd2):
         return False, _("Password over 100 character limit")
     return True, None
 
+class AccountIndex(HTTPMethod):
+    def get(self, redirect=None):
+        from web.auth import user
+        return AccountInterface(user.id).get()
 
 class Authenticate(HTTPMethod):
     def get(self, redirect=None):
@@ -433,6 +437,7 @@ class AccountController(Controller):
     register = Register()
     settings = Settings()
     recover = Recover()
+    index = AccountIndex()
     
     def exists(self, **query):
         query.pop('ts', None)
