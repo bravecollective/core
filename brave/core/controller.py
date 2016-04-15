@@ -204,6 +204,7 @@ class RootController(StartupMixIn, Controller):
     group = util.load('group')
     admin = util.load('admin')
     ban = util.load('ban')
+    kiu = util.load('kiu')
 
     def __call__(self, req):
         if req.method not in ('GET', 'HEAD'):
