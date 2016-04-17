@@ -86,7 +86,7 @@ You must have a character added to your account and selected as primary.
 <pre><code>from brave.core.account.model import User
 from brave.core.character.model import EVECharacter
 from brave.core.permission.model import Permission, WildcardPermission
-u = User.objects(username=USERNAME_HERE)[0]
+u = User.objects(username="USERNAME_HERE")[0]
 u.admin = True
 c = u.primary
 p1 = Permission.objects(id='core.*').first()

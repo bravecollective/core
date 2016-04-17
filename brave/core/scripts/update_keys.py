@@ -48,18 +48,15 @@ class CredentialUpdateThread(Thread):
         if not key:
             print "Key {} not found".format(k)
             return
-        key_result = None
         try:
             print "Pulling key ID {0}".format(k)
             key_result = key.pull()
+            if not key_result:
+                print("Removed disabled key {0} from account {1} with characters {2}".format(k, key.owner, key.characters))
         except HTTPError as e:
             print("Error {}: {}".format(e.response.status_code, e.response.text))
         except Exception as ex:
-            key_result = False
             print("Error {}".format(ex))
-            
-        if key_result is None:
-            print("Removed disabled key {0} from account {1} with characters {2}".format(k, key.owner, key.characters))
 
 def refresh_keylist(num_timeslots):
     global keys_by_timeslot

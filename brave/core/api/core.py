@@ -19,7 +19,6 @@ from brave.core.api.util import SignedController
 from brave.core.util.eve import EVECharacterKeyMask, api
 from brave.core.permission.model import create_permission
 
-
 log = __import__('logging').getLogger(__name__)
 
 
@@ -42,9 +41,10 @@ class PermissionAPI(SignedController):
         app = request.service
 
         if not permission.startswith(app.short + "."):
-            log.debug('{0} attempted to register {1} but was unable to due to having an incorrect short.'.format(
-                app.name,
-                permission))
+            log.debug(
+                '{0} attempted to register {1} but was unable to due to having an incorrect short.'.format(
+                    app.name,
+                    permission))
 
             return dict(
                 status="error",
@@ -54,9 +54,10 @@ class PermissionAPI(SignedController):
 
         # create_permission returns False if there's an id conflict
         if not create_permission(permission, description):
-            log.debug('{0} attempted to register {1} but was unable to due to {1} already existing.'.format(
-                app.name,
-                permission))
+            log.debug(
+                '{0} attempted to register {1} but was unable to due to {1} already existing.'.format(
+                    app.name,
+                    permission))
 
             return dict(
                 status="error",
@@ -64,7 +65,8 @@ class PermissionAPI(SignedController):
                 message="The permission supplied already exists."
             )
 
-        log.info('{0} successfully registered {1}.'.format(app.name, permission))
+        log.info(
+            '{0} successfully registered {1}.'.format(app.name, permission))
         return dict(status="success")
 
 
@@ -89,18 +91,18 @@ class CoreAPI(SignedController):
         if success is None:
             response.status_int = 400
             return dict(
-                    status = 'error',
-                    code = 'argument.success.missing',
-                    message = "URL to return users to upon successful authentication is missing from your request."
-                )
+                status='error',
+                code='argument.success.missing',
+                message="URL to return users to upon successful authentication is missing from your request."
+            )
 
         if failure is None:
             response.status_int = 400
             return dict(
-                    status = 'error',
-                    code = 'argument.failure.missing',
-                    message = "URL to return users to upon authentication failure or dismissal is missing from your request."
-                )
+                status='error',
+                code='argument.failure.missing',
+                message="URL to return users to upon authentication failure or dismissal is missing from your request."
+            )
 
         # Also ensure they are valid URIs.
 
@@ -110,10 +112,10 @@ class CoreAPI(SignedController):
         except:
             response.status_int = 400
             return dict(
-                    status = 'error',
-                    code = 'argument.success.malformed',
-                    message = "Successful authentication URL is malformed."
-                )
+                status='error',
+                code='argument.success.malformed',
+                message="Successful authentication URL is malformed."
+            )
 
         try:
             failure_ = failure
@@ -121,59 +123,65 @@ class CoreAPI(SignedController):
         except:
             response.status_int = 400
             return dict(
-                    status = 'error',
-                    code = 'argument.response.malformed',
-                    message = "URL to return users to upon successful authentication is missing from your request."
-                )
+                status='error',
+                code='argument.response.malformed',
+                message="URL to return users to upon successful authentication is missing from your request."
+            )
 
         # Deny localhost/127.0.0.1 loopbacks and 192.* and 10.* unless in development mode.
 
-        if not boolean(config.get('debug', False)) and (success.host in ('localhost', '127.0.0.1') or \
-                success.host.startswith('192.168.') or \
+        if not boolean(config.get('debug', False)) and (
+                success.host in ('localhost', '127.0.0.1') or
+                success.host.startswith('192.168.') or
                 success.host.startswith('10.')):
             response.status_int = 400
             return dict(
-                    status = 'error',
-                    code = 'development-only',
-                    message = "Loopback and local area-network URLs disallowd in production."
-                )
+                status='error',
+                code='development-only',
+                message="Loopback and local area-network URLs disallowd in production."
+            )
 
         # Check blacklist and bail early.
 
         if AuthenticationBlacklist.objects(reduce(__or__, [
-                    Q(scheme=success.scheme), Q(scheme=failure.scheme),
-                    Q(protocol=success.port or success.scheme), Q(protocol=failure.port or failure.scheme),
-                ] + ([] if not success.host else [
-                    Q(domain=success.host)
-                ]) + ([] if not failure.host else [
-                    Q(domain=failure.host)
-                ]))).count():
+            Q(scheme=success.scheme), Q(scheme=failure.scheme),
+            Q(protocol=success.port or success.scheme),
+            Q(protocol=failure.port or failure.scheme),
+        ] + ([] if not success.host else [
+            Q(domain=success.host)
+        ]) + ([] if not failure.host else [
+            Q(domain=failure.host)
+        ]))).count():
             response.status_int = 400
             return dict(
-                    status = 'error',
-                    code = 'blacklist',
-                    message = "You have been blacklisted.  To dispute, contact {0}".format(config['mail.blackmail.author'])
-                )
+                status='error',
+                code='blacklist',
+                message="You have been blacklisted.  To dispute, contact {0}".format(
+                    config['mail.blackmail.author'])
+            )
 
         # TODO: Check DNS.  Yes, really.
 
         # Generate authentication token.
 
-        log.info("Creating request for {0} with callbacks {1} and {2}.".format(request.service, success_, failure_))
+        log.info("Creating request for {0} with callbacks {1} and {2}.".format(
+            request.service, success_, failure_))
         ar = AuthenticationRequest(
-                request.service,  # We have an authenticated request, so we know the service ID is valid.
-                success = success_,
-                failure = failure_
-            )
+            request.service,
+            # We have an authenticated request, so we know the service ID is valid.
+            success=success_,
+            failure=failure_
+        )
         ar.save()
 
         return dict(
-                location = url.complete('/authorize/{0}'.format(ar.id))
-            )
+            location=url.complete('/authorize/{0}'.format(ar.id))
+        )
 
     def deauthorize(self, token):
         from brave.core.application.model import ApplicationGrant
-        count = ApplicationGrant.objects(id=token, application=request.service).delete()
+        count = ApplicationGrant.objects(id=token,
+                                         application=request.service).delete()
         return dict(success=bool(count))
 
     def reauthorize(self, token, success=None, failure=None):
@@ -187,17 +195,19 @@ class CoreAPI(SignedController):
 
         # Step 1: Get the appropriate grant.
         try:
-            token = ApplicationGrant.objects.get(id=token, application=request.service)
+            token = ApplicationGrant.objects.get(id=token,
+                                                 application=request.service)
         except ApplicationGrant.DoesNotExist:
             return dict(
                 success=False,
+                reason='grant.invalid',
                 message="Your token is not valid, please genereate a new one."
             )
-
 
         if token.user.person.banned(app=token.application.short):
             return dict(
                 success=False,
+                reason='user.banned',
                 message="This user has been banned from accessing this application."
             )
 
@@ -235,43 +245,46 @@ class CoreAPI(SignedController):
                 subbans.append(b.subarea)
 
             return dict(
-                character = dict(id=char.identifier, name=char.name),
-                corporation = dict(id=char.corporation.identifier, name=char.corporation.name),
-                alliance = (dict(id=char.alliance.identifier, name=char.alliance.name)
-                            if char.alliance
-                            else None),
-                tags = tags,
-                perms = char.permissions_tags(token.application, groups_cache=groups_cache),
-                expires = None,
-                mask = token.mask.mask if token.mask else 0,
+                character=dict(id=char.identifier, name=char.name),
+                corporation=dict(id=char.corporation.identifier,
+                                 name=char.corporation.name),
+                alliance=(
+                    dict(id=char.alliance.identifier, name=char.alliance.name)
+                    if char.alliance else None),
+                tags=tags,
+                perms=char.permissions_tags(token.application,
+                                            groups_cache=groups_cache),
+                expires=None,
+                mask=token.mask.mask if token.mask else 0,
                 subbans=subbans
             )
 
         for char in token.characters:
-            info = char_info(char)
-            if info is not None:
-                characters_info[char.identifier] = info
-        
+            information = char_info(char)
+            if information is not None:
+                characters_info[char.identifier] = information
+
         if not characters_info:
             return dict(
                 success=False,
                 message="No characters assigned to token."
             )
-#            raise HTTPUnauthorized()
-        
+        #            raise HTTPUnauthorized()
+
         if token.default_character.identifier not in characters_info:
             char = token.default_character
-            info = char_info(token.default_character)
-            if info is not None:
-                characters_info[token.default_character.identifier] = info
-        
-        #print characters_info
-        
+            information = char_info(token.default_character)
+            if information is not None:
+                characters_info[
+                    token.default_character.identifier] = information
+
+        # print characters_info
+
         chars = list()
         for char in characters_info:
             chars.append(copy.deepcopy(characters_info[char]))
 
-        info = copy.deepcopy(characters_info[token.default_character.identifier])
-        info['characters'] = chars
-        return info
-
+        information = copy.deepcopy(
+            characters_info[token.default_character.identifier])
+        information['characters'] = chars
+        return information

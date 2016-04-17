@@ -73,6 +73,10 @@ class PermissionTest(unittest.TestCase):
         g._permissions.append(Permission.objects(id='*.test').first())
         g._permissions.append(Permission.objects(id='core.permission.grant').first())
         g.save()
-        self.assertEqual(g.permissions, set({Permission.objects(id='core.test').first(),
-            Permission.objects(id='mumble.test').first(), Permission.objects(id='core.permission.grant').first(),
-            Permission.objects(id='*.test').first()}))
+        self.assertTrue(Permission.set_grants_permission(g.permissions, 'core.test'))
+        self.assertTrue(Permission.set_grants_permission(g.permissions, 'mumble.test'))
+        self.assertTrue(Permission.set_grants_permission(g.permissions, 'core.permission.grant'))
+        self.assertTrue(Permission.set_grants_permission(g.permissions, '*.test'))
+        self.assertEqual(set([p.id for p in g.permissions]),
+                         set(['core.permission.grant',
+                              '*.test']))
