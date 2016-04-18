@@ -45,6 +45,7 @@ setup(
                 'zxcvbn',
                 'flake8',
                 'evelink',
+                'flup==1.0.2'
             ],
 
         setup_requires = [
