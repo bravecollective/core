@@ -25,7 +25,7 @@ setup(
                 'marrow.tags',
                 'marrow.templating',
                 'braveapi',
-                'WebCore>=1.1.2',
+                'WebCore>=1.1.2,<2',
                 'MongoEngine>=0.8,<0.9',
                 'pymongo>=2,<3',
                 'Mako>=0.4.1',
