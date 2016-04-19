@@ -27,15 +27,9 @@ Copy the file ``development.ini`` to something like ``production.ini`` and edit 
 ## Set environment variables
 Core uses environment variables for parts of configuration
 
-- ``CORE_HOME`` is the location of Core sources
-- ``CONF_LOCATION`` is the location of your config
-- ``KEY_UPDATE_HOURS`` is how often you want to update character data from EVE API
-
-
-    export CORE_HOME=/opt/brave/core
-    export CONF_LOCATION=$CORE_HOME/conf/production.ini
-    export KEY_UPDATE_HOURS=6
-
+    export CORE_HOME=/opt/brave/core # location of Core sources
+    export CONF_LOCATION=$CORE_HOME/conf/production.ini # location of your config
+    export KEY_UPDATE_HOURS=6 # how often you want to update character data from EVE API
 
 ## Make sure service files are executable
 
