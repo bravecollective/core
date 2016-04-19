@@ -15,7 +15,7 @@ SCREEN_NAME_CHARS="core_update_chars"
 KEY_UPDATE_HOURS=6
 
 # set default CORE_HOME if not defined yet or defined as empty
-export CORE_HOME=${CORE_HOME:-/home/core/src}
+export CORE_HOME=${CORE_HOME:-/home/core/brave/core}
 
 # cd into the right folder
 cd $CORE_HOME

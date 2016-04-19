@@ -27,11 +27,12 @@ Copy the file ``development.ini`` to something like ``production.ini`` and edit 
 ## Set environment variables
 Core uses environment variables for parts of configuration
 
-    export CORE_HOME=/opt/brave/core # location of Core sources
+    export CORE_HOME=/home/core/brave/core # location of Core sources
     export CONF_LOCATION=$CORE_HOME/conf/production.ini # location of your config
     export KEY_UPDATE_HOURS=6 # how often you want to update character data from EVE API
 
 ## Make sure service files are executable
+They should already be executable when cloned from github, but this doesn't hurt
 
     cd $CORE_HOME/bin
     chmod +x service-*
