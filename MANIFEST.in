@@ -1,0 +1,3 @@
+recursive-include brave/core/*/template *
+recursive-include brave/core/template *
+recursive-include brave/core/public *
