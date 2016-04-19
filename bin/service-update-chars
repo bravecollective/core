@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
-cd /home/core/src
+export CORE_HOME=${CORE_HOME:-/home/core/src}
+export KEY_UPDATE_HOURS=${KEY_UPDATE_HOURS:-6}
+export CONF_LOCATION=${CONF_LOCATION:-conf/production.ini}
 
-KEY_UPDATE_HOURS=6
+cd $CORE_HOME
 
 # are we in a virtualenv?
 python -c 'import sys; print sys.real_prefix' 2>/dev/null && INVENV=1 || INVENV=0
@@ -14,4 +16,4 @@ then
     . ../bin/activate
 fi
 
-printf "from brave.core.scripts.update_chars import main\nmain(${KEY_UPDATE_HOURS}*60)" | paster shell /home/core/src/conf/production.ini
+paster shell $CONF_LOCATION update_chars.py
