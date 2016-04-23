@@ -71,7 +71,7 @@ update_keys_start () {
     if [[ $? == "1" ]]
     then
         echo "Starting New ${SCREEN_NAME_KEYS} Screen now...";
-        screen -dmS ${SCREEN_NAME_KEYS} ../bin/service-update-keys
+        screen -dmS ${SCREEN_NAME_KEYS} ./bin/service-update-keys
     fi
 }
 update_chars_start () {
@@ -80,7 +80,7 @@ update_chars_start () {
     if [[ $? == "1" ]]
     then
         echo "Starting New ${SCREEN_NAME_CHARS} Screen now...";
-        screen -dmS ${SCREEN_NAME_CHARS} ../bin/service-update-chars
+        screen -dmS ${SCREEN_NAME_CHARS} ./bin/service-update-chars
     fi
 }
 #
