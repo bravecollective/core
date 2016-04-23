@@ -29,7 +29,7 @@ Core uses environment variables for parts of configuration
 
     export CORE_HOME=/home/core/brave/core # location of Core sources
     export CONF_LOCATION=$CORE_HOME/conf/production.ini # location of your config
-    export KEY_UPDATE_HOURS=6 # how often you want to update character data from EVE API
+    export CORE_UPDATE_HOURS=6 # how often you want to update character and key data from EVE API
 
 ## Make sure service files are executable
 They should already be executable when cloned from github, but this doesn't hurt

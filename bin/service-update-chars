@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 export CORE_HOME=${CORE_HOME:-/home/core/brave/core}
-export KEY_UPDATE_HOURS=${KEY_UPDATE_HOURS:-6}
+export CORE_UPDATE_HOURS=${CORE_UPDATE_HOURS:-6}
 export CONF_LOCATION=${CONF_LOCATION:-conf/production.ini}
 
 cd $CORE_HOME
