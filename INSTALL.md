@@ -2,6 +2,8 @@
 
 ## Create a virtual environment, download sources and install Core
 
+    mkdir /home/core
+    cd /home/core
     virtualenv brave
     cd brave
     source bin/activate
@@ -11,34 +13,27 @@
     python setup.py install
 
 ## Edit config
-Configuration of Core is located in ``conf/`` directory
-Copy the file ``development.ini`` to something like ``production.ini`` and edit it to fit your needs
+Configuration of Core is located in ``bin/``, ``conf/`` and ``etc/`` directory.
+Adapt all files as needed.
 
 ## Bootstrap the EVE API system
 
-    paster shell conf/local.ini # or don't mention an INI if you didn't customize
+   source ./bin/core-env
+   ./bin/core-shell
     from brave.core.util.eve import populate_calls
     populate_calls()
     from brave.core.permission.controller import init_perms
     init_perms()
 
+# Running Core services for development
+Make sure you edited ``bin/core-env`` and ``conf/development.ini``.
 
-# Running Core services
-## Set environment variables
-Core uses environment variables for parts of configuration
+   source ./bin/core-env
+   ./bin/core-serve
 
-    . ./bin/core-env
+# Running Core services for production
+Make sure you edited ``bin/core-env``, ``conf/production.ini`` and setup a nginx configuration using ``etc/nginx.conf.off``.
 
-## Make sure service files are executable
-They should already be executable when cloned from github, but this doesn't hurt
-
-    cd $CORE_HOME/bin
-    chmod +x core-*
-    chmod +x service-*
-
-## Run services
-
-    cd $CORE_HOME/bin
-    service-core start
-    service-update start
-
+   source ./bin/core-env
+   ./bin/service-core start
+   ./bin/service-update start
