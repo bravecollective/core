@@ -14,7 +14,8 @@
 
 ## Edit config
 Configuration of Core is located in ``bin/core-env``, ``conf/*.ini`` and ``etc/``.
-Copy ``conf/development.ini`` or ``conf/production.ini`` to ``local.ini``.
+Copy ``conf/development.ini.dist`` or ``conf/production.ini.dist`` to ``local.ini``.
+Copy ``conf/shard-1.ini.dist`` and ``conf/shard-2.ini.dist`` to ``conf/shard-[12].ini``.
 
 ## Bootstrap the EVE API system
 
