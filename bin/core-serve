@@ -18,4 +18,4 @@ then
     . ../bin/activate
 fi
 
-paster serve conf/loca.ini $1
+paster serve conf/local.ini $1
