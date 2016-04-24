@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+if [[ -z "$CORE_HOME" ]];
+then
+    echo "You need to set CORE_HOME first."
+    exit 1
+fi
+
+cd $CORE_HOME
+
+# are we in a virtualenv?
+python -c 'import sys; print sys.real_prefix' 1>/dev/null  2>/dev/null && INVENV=1 || INVENV=0
+
+# if not, activate it
+if [[ "$INVENV" != "1" ]]
+then
+    # Activate the virtual env
+    . ../bin/activate
+fi
+
+paster shell conf/local.ini $1

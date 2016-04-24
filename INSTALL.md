@@ -2,6 +2,8 @@
 
 ## Create a virtual environment, download sources and install Core
 
+    mkdir /home/core
+    cd /home/core
     virtualenv brave
     cd brave
     source bin/activate
@@ -11,34 +13,26 @@
     python setup.py install
 
 ## Edit config
-Configuration of Core is located in ``conf/`` directory
-Copy the file ``development.ini`` to something like ``production.ini`` and edit it to fit your needs
+Configuration of Core is located in ``bin/core-env``, ``conf/*.ini`` and ``etc/``.
+Copy ``conf/development.ini.dist`` or ``conf/production.ini.dist`` to ``local.ini``.
+Copy ``conf/shard-1.ini.dist`` and ``conf/shard-2.ini.dist`` to ``conf/shard-[12].ini``.
 
 ## Bootstrap the EVE API system
 
-    paster shell conf/local.ini # or don't mention an INI if you didn't customize
+    source ./bin/core-env
+    ./bin/core-shell
     from brave.core.util.eve import populate_calls
     populate_calls()
     from brave.core.permission.controller import init_perms
     init_perms()
 
+# Running Core services for development
 
-# Running Core services
-## Set environment variables
-Core uses environment variables for parts of configuration
+    source ./bin/core-env
+    ./bin/core-serve
 
-    export CORE_HOME=/home/core/brave/core # location of Core sources
-    export CONF_LOCATION=$CORE_HOME/conf/production.ini # location of your config
-    export KEY_UPDATE_HOURS=6 # how often you want to update character data from EVE API
+# Running Core services for production
 
-## Make sure service files are executable
-They should already be executable when cloned from github, but this doesn't hurt
-
-    cd $CORE_HOME/bin
-    chmod +x service-*
-
-## Run services
-
-    cd $CORE_HOME/bin
-    service-core start
-
+    source ./bin/core-env
+    ./bin/service-core start
+    ./bin/service-update start

@@ -1,8 +1,12 @@
-#!/bin/bash
-. /home/mmanage/bin/activate
+#!/usr/bin/env bash
 
-cat update-mumble.py | paster shell /home/mmanage/src/conf/production.ini
+if [[ -z "$CORE_HOME" ]];
+then
+    echo "You need to set CORE_HOME first."
+    exit 1
+fi
 
+cat update-mumble.py | ../../bin/core-shell
 
 
 
