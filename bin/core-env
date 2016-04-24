@@ -3,9 +3,6 @@
 # location of Core sources
 export CORE_HOME=/home/core/brave/core
 
-# name of your config file
-export CORE_CONF=development.ini
-
 # name used for screen sessions
 export CORE_NAME=development
 

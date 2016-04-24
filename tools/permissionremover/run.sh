@@ -1,7 +1,12 @@
-#!/bin/bash
-. /home/core/bin/activate
+#!/usr/bin/env bash
 
-cat remove.py | paster shell /home/core/src/conf/production.ini
+if [[ -z "$CORE_HOME" ]];
+then
+    echo "You need to set CORE_HOME first."
+    exit 1
+fi
+
+cat remove.py | ../../bin/core-shell
 
 
 

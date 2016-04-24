@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-if [[ -z "$CORE_HOME" || -z "$CORE_CONF" ]];
+if [[ -z "$CORE_HOME" ]];
 then
-    echo "You need to set CORE_HOME and CORE_CONF first."
+    echo "You need to set CORE_HOME first."
     exit 1
 fi
 
@@ -18,4 +18,4 @@ then
     . ../bin/activate
 fi
 
-paster serve conf/$CORE_CONF $1
+paster serve conf/loca.ini $1

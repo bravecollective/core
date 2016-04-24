@@ -6,7 +6,7 @@ then
     exit 1
 fi
 
-cat fix_dangleing_key_refrences.py | ../../bin/core-shell
+cat update-alliances.py | ../../bin/core-shell
 
 
 

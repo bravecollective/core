@@ -9,9 +9,9 @@
 # Usage: ./service-update restart
 ###
 
-if [[ -z "$CORE_HOME" || -z "$CORE_NAME" || -z "$CORE_CONF" || -z "$CORE_UPDATE_HOURS" ]];
+if [[ -z "$CORE_HOME" || -z "$CORE_NAME" || -z "$CORE_UPDATE_HOURS" ]];
 then
-    echo "You need to set CORE_HOME, CORE_NAME, CORE_CONF and CORE_UPDATE_HOURS first."
+    echo "You need to set CORE_HOME, CORE_NAME and CORE_UPDATE_HOURS first."
     exit 1
 fi
 

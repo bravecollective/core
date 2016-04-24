@@ -8,9 +8,6 @@ import os
 def core_loadapp(config_name=None):
     from paste.deploy import loadapp
     if not config_name:
-        if os.path.exists('local.ini'):
-            config_name = 'config:local.ini'
-        else:
-            config_name = 'config:development.ini'
+        config_name = 'config:local.ini'
     here_dir = os.getcwd()
     loadapp(config_name, relative_to=here_dir)

@@ -13,8 +13,8 @@
     python setup.py install
 
 ## Edit config
-Configuration of Core is located in ``bin/``, ``conf/`` and ``etc/`` directory.
-Adapt all files as needed.
+Configuration of Core is located in ``bin/core-env``, ``conf/*.ini`` and ``etc/``.
+Copy ``conf/development.ini`` or ``conf/production.ini`` to ``local.ini``.
 
 ## Bootstrap the EVE API system
 
@@ -26,13 +26,11 @@ Adapt all files as needed.
     init_perms()
 
 # Running Core services for development
-Make sure you edited ``bin/core-env`` and ``conf/development.ini``.
 
     source ./bin/core-env
     ./bin/core-serve
 
 # Running Core services for production
-Make sure you edited ``bin/core-env``, ``conf/production.ini`` and setup a nginx configuration using ``etc/nginx.conf.off``.
 
     source ./bin/core-env
     ./bin/service-core start

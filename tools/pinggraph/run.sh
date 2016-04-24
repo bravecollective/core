@@ -1,8 +1,12 @@
-#!/bin/bash
-. /home/core/bin/activate
+#!/usr/bin/env bash
 
-cat graph.py | paster shell /home/core/src/conf/production.ini
-cat graph-t.py | paster shell /home/core/src/conf/production.ini
+if [[ -z "$CORE_HOME" ]];
+then
+    echo "You need to set CORE_HOME first."
+    exit 1
+fi
+
+cat graph.py | ../../bin/core-shell
 
 
 
