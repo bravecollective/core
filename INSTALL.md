@@ -18,8 +18,8 @@ Adapt all files as needed.
 
 ## Bootstrap the EVE API system
 
-   source ./bin/core-env
-   ./bin/core-shell
+    source ./bin/core-env
+    ./bin/core-shell
     from brave.core.util.eve import populate_calls
     populate_calls()
     from brave.core.permission.controller import init_perms
@@ -28,12 +28,12 @@ Adapt all files as needed.
 # Running Core services for development
 Make sure you edited ``bin/core-env`` and ``conf/development.ini``.
 
-   source ./bin/core-env
-   ./bin/core-serve
+    source ./bin/core-env
+    ./bin/core-serve
 
 # Running Core services for production
 Make sure you edited ``bin/core-env``, ``conf/production.ini`` and setup a nginx configuration using ``etc/nginx.conf.off``.
 
-   source ./bin/core-env
-   ./bin/service-core start
-   ./bin/service-update start
+    source ./bin/core-env
+    ./bin/service-core start
+    ./bin/service-update start
