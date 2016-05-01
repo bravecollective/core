@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+# location of Core sources
+export CORE_HOME=/home/core/brave/core
+
+# name used for screen sessions
+export CORE_NAME=development
+
+# how often you want to update character and key data from EVE API
+export CORE_UPDATE_HOURS=6

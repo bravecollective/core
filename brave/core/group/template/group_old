@@ -1,0 +1,459 @@
+## encoding: utf-8
+
+<%!
+from brave.core.group.acl import ACLList, ACLKey, ACLTitle, ACLRole, ACLMask
+
+def selected(bool):
+    return "selected" if bool else ""
+%>
+
+<%inherit file="brave.core.template.master"/>
+
+<%block name="title">${group.id | h} - ${group.title | h}</%block>
+
+<%block name="pre">
+    ${parent.pre()}
+
+    <style type="text/css">
+        .stringlistinput .remove {
+            cursor: pointer;
+        }
+
+        .handle {
+            cursor: move;
+            line-height: 200%;
+        }
+
+        #acl-rules select {
+            padding: 0;
+            width: auto;
+        }
+
+        #acl-rules input {
+            margin-bottom: 0;
+        }
+
+        .stringlistinput li:not(:last-child) {
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            padding: 0 3px;
+            margin: 3px;
+        }
+        .stringlistinput li:first-child {
+            margin-left: 0px;
+        }
+        .stringlistinput li .input-append {
+            margin-bottom: 0;
+        }
+        .stringlistinput li .add-on {
+            height: auto;
+        }
+
+        .aclmask input[type=text] {
+            width: auto;
+        }
+
+        .stringlistinput input.error[type=text] {
+            border: 1px solid red;
+        }
+
+    </style>
+</%block>
+
+<%block name="post">
+    ${parent.post()}
+
+    <script type="text/javascript" charset="utf-8">
+        $(function() {
+            $(".sortable").sortable({
+                handle: ".handle",
+                update: function(event, ui) {
+                    ui.item.parent().children().removeClass("first").filter(":first-child").addClass("first");
+                },
+            });
+
+            function get_rule_data() {
+                var a = [];
+                $("#acl-rules > tbody > tr").each(function() {
+                    a.push($(this).find(":input").serializeAssoc());
+                });
+                return a;
+            }
+
+            $("#submit").click(function() {
+                console.log(JSON.stringify(get_rule_data()));
+                $.post($("#acl-rules").data("action"), {
+                    rules: JSON.stringify(get_rule_data()),
+                }, function(data) {
+                    var confirm_text = "Here's what the server heard. Check to make sure everything looks right!<pre>" + data + "</pre>";
+                    confirm("confirm", confirm_text, "okay", function() {
+                        $.post($("#acl-rules").data("action"), {
+                            rules: JSON.stringify(get_rule_data()),
+                            really: "really",
+                            rule_set: "${rule_set}",
+                        }).fail(function(data) {
+                            alert("something went wrong!");
+                        });
+                    });
+                }).fail(function(data) {
+                    alert("something went wrong!");
+                });
+            });
+
+            $(".addrule").click(function() {
+                var template_selector = ".acl"+$(this).data("rule");
+                var kind = $(this).data("kind");
+                if (kind) {
+                    template_selector += "[data-kind="+kind+"]";
+                }
+                var editor = $("#acl-templates").find(template_selector).clone(true);
+                var row = $("#row-template-container tr").clone().removeClass("first");
+                row.find(".rule").append(editor);
+                $("#acl-rules tbody").append(row);
+            });
+
+            $("body").on("click", ".deleterule", function() {
+                $(this).closest("tr").remove();
+            });
+
+            $("body").on("click", ".stringlistinput .remove", function() {
+                $(this).closest("li").remove();
+            });
+
+            $("body").on("click", ".stringlistinput .add", function() {
+                var $ul = $(this).closest('ul');
+                var $text_input = $(this).siblings("input[type=text]");
+                var input_name = $(this).closest('.stringlistinput').data('input-name');
+                var new_string = $text_input.val();
+                function finish() {
+                    var $li = $('<li>').text(new_string + " ")
+                                       .append($('<input type="hidden">').attr('name', input_name).val(new_string))
+                                       .append($('<i class="remove fa fa-times">'))
+                                       .insertBefore($ul.children().last());
+                    $text_input.val("");
+                }
+
+                var validate_input = $(this).closest('.stringlistinput').data('validate-input');
+                if (validate_input) {
+                    validate_input($text_input, finish);
+                }
+                else {
+                    finish();
+                }
+            });
+
+            $("body").on("input", "input[type=text]", function() {
+                $(this).removeClass("error");
+            });
+
+            $(".acllist .stringlistinput").data('validate-input', function($input, finish) {
+                $.post("/group/check_rule_reference_exists", {
+                    kind: $input.closest(".acllist").data("kind"),
+                    name: $input.val(),
+                }, function(data) {
+                    if (data.exists) {
+                        finish()
+                    }
+                    else {
+                        $input.addClass("error");
+                    }
+                });
+            });
+            
+            $(document).on('click', '.submitPerm', function()
+            {
+                $.post('/group/${group.id}/add_perm', { permission: $(".permission").val() }).
+                done(function()
+                {
+                    //Should probably add the permission here... WTB CSRF for normal POST requests
+                    window.location="/group/${group.id}"
+                });
+            });
+            
+            $(document).on('click', '.deletePerm', function()
+            {
+                var row = $(this).parents('li');
+                $.post('/group/${group.id}/delete_perm', { permission: row.attr("id") }).
+                done(function()
+                {
+                    //Should probably add the permission here... WTB CSRF for normal POST requests
+                    window.location="/group/${group.id}"
+                });
+            });
+            
+            $(document).on('click', '.acceptRequest', function()
+            {
+                var row = $(this).parents('li');
+                $.post('/group/${group.id}/accept_request', { name: row.attr("name") }).
+                done(function()
+                {
+                    //Should probably add the permission here... WTB CSRF for normal POST requests
+                    window.location="/group/${group.id}/?rule_set=request"
+                });
+            });
+            
+            $(document).on('click', '.denyRequest', function()
+            {
+                var row = $(this).parents('li');
+                $.post('/group/${group.id}/deny_request', { name: row.attr("name") }).
+                done(function()
+                {
+                    //Should probably add the permission here... WTB CSRF for normal POST requests
+                    window.location="/group/${group.id}?rule_set=request"
+                });
+            });
+            
+            $(document).on('click', '.kickMember', function()
+            {
+                var row = $(this).parents('li');
+                $.post('/group/${group.id}/kick_member', { name: row.attr("name"), method: "${rule_set}" }).
+                done(function()
+                {
+                    //Should probably add the permission here... WTB CSRF for normal POST requests
+                    window.location="/group/${group.id}?rule_set=${rule_set}"
+                });
+            });
+            
+        });
+    </script>
+</%block>
+
+<%def name="stringlistinput(input_name, list)">
+<div class="stringlistinput" data-input-name="${input_name}">
+    <ul class="inline">
+        % for item in list:
+            <li>
+                ${item | h}
+                <input type="hidden" name="${input_name}" value="${item | h}" />
+                <i class="remove fa fa-times"></i>
+            </li>
+        % endfor
+        <li>
+            <div class="input-append">
+                <input type="text"/>
+                <button class="add add-on">add</button>
+            </div>
+        </li>
+    </ul>
+</div>
+</%def>
+
+<%def name="aclrule(rule)">
+    % if isinstance(rule, ACLList):
+        ${acllist(rule)}
+    % elif isinstance(rule, ACLKey):
+        ${aclkey(rule)}
+    % elif isinstance(rule, ACLTitle):
+        ${acltitle(rule)}
+    % elif isinstance(rule, ACLRole):
+        ${aclrole(rule)}
+    % elif isinstance(rule, ACLMask):
+        ${aclmask(rule)}
+    % else:
+        ERROR THIS WON'T WORK: ${rule.human_readable_repr()}
+    % endif
+</%def>
+
+<%def name="select_grant(rule)">
+    <select name="grant">
+        <option value="true" ${selected(rule.grant)}>grant</option>
+        <option value="false" ${selected(not rule.grant)}>deny</option>
+    </select>
+</%def>
+
+<%def name="acllist(rule)">
+    <div class="acllist" data-kind="${rule.kind}">
+        <input type="hidden" name="type" value="list" />
+        <input type="hidden" name="kind" value="${rule.kind}" />
+        ${select_grant(rule)}
+        if character
+        <select name="inverse">
+            <option value="false" ${selected(not rule.inverse)}>is</option>
+            <option value="true" ${selected(rule.inverse)}>is not</option>
+        </select>
+        % if rule.kind == "c":
+            one of these characters:
+        % elif rule.kind == "o":
+            in one of these corporations:
+        % else:
+            in one of these alliances:
+        % endif
+        ${stringlistinput("names", [o.name for o in rule.target_objects()])}
+    </div>
+</%def>
+
+<%def name="aclkey(rule)">
+    <div class="aclkey">
+        <input type="hidden" name="type" value="key" />
+        ${select_grant(rule)}
+        if we
+        <select name="inverse">
+            <option value="false" ${selected(not rule.inverse)}>have</option>
+            <option value="true" ${selected(rule.inverse)}>don't have</option>
+        </select>
+        a(n)
+        <select name="kind">
+            <option value="Account" ${selected(rule.kind == "Account")}>Account</option>
+            <option value="Character" ${selected(rule.kind == "Character")}>Character</option>
+            <option value="Corporation" ${selected(rule.kind == "Corporation (wtf?)")}>Corporation</option>
+        </select>
+        key for this character
+    </div>
+</%def>
+
+<%def name="acltitle(rule)">
+    <div class="acltitle">
+        <input type="hidden" name="type" value="title" />
+        ${select_grant(rule)}
+        if character
+        <select name="inverse">
+            <option value="false" ${selected(not rule.inverse)}>has any</option>
+            <option value="true" ${selected(rule.inverse)}>has none</option>
+        </select>
+        of these titles:
+        ${stringlistinput("titles", rule.titles)}
+    </div>
+</%def>
+
+<%def name="aclrole(rule)">
+    <div class="aclrole">
+        <input type="hidden" name="type" value="role" />
+        ${select_grant(rule)}
+        if character
+        <select name="inverse">
+            <option value="false" ${selected(not rule.inverse)}>has any</option>
+            <option value="true" ${selected(rule.inverse)}>has none</option>
+        </select>
+        of these roles:
+        ${stringlistinput("roles", rule.roles)}
+    </div>
+</%def>
+
+<%def name="aclmask(rule)">
+    <div class="aclmask">
+        <input type="hidden" name="type" value="mask" />
+        ${select_grant(rule)}
+        if we
+        <select name="inverse">
+            <option value="false" ${selected(not rule.inverse)}>have</option>
+            <option value="true" ${selected(rule.inverse)}>don't have</option>
+        </select>
+        a key for this character supporting permissions:
+        <input type="text" name="mask" value="${rule.mask}" />
+    </div>
+</%def>
+
+<%def name="rule_row(rule)">
+    <tr>
+        <td class="handle"><i class="fa fa-arrows-v"></i></td>
+        <td class="rule">${aclrule(rule) if rule else ""}</td>
+        <td>
+            <button class="btn btn-small deleterule" title="${_('Remove rule')}" rel="tooltip" data-placement="bottom"><i class="fa fa-times"></i></button>
+        </td>
+    </tr>
+</%def>
+
+<div class="container-fluid">
+
+    <div id="tabs-wrapper">
+        <div class="row-fluid">
+            <a class="span3 tab${' active' if not rule_set else ''}" href="/group/${group.id}/">
+                ${_("Main")}
+            </a>
+            <a class="span3 tab${' active' if rule_set=='join' else ''}" href="/group/${group.id}/?rule_set=join">
+                ${_("Joining")}
+            </a>
+            <a class="span3 tab${' active' if rule_set=='request' else ''}" href="/group/${group.id}/?rule_set=request">
+                ${_("Requests")}
+            </a>
+        </div>
+    </div>
+
+    <div id="pad-wrapper">
+        <div class="row-fluid header">
+            <h3>${group.id | h} - ${group.title | h}</h3>
+        </div>
+        % if web.user.has_permission(group.edit_acl_perm):
+        <div class="row-fluid table">
+            Rules:
+            <table id="acl-rules" data-action="/group/${group.id}/set_rules">
+                <tbody class="sortable">
+                <%  
+                    if rule_set == 'join':
+                        rules = group.join_rules
+                    elif rule_set == 'request':
+                        rules = group.request_rules
+                    else:
+                        rules = group.rules
+                %>
+                % for rule in rules:
+                    ${rule_row(rule)}
+                % endfor
+                </tbody>
+            </table>
+        </div>
+        <div>
+            Add new rule:
+            <button class="addrule" data-rule="list" data-kind="c">by character</button>
+            <button class="addrule" data-rule="list" data-kind="o">by corporation</button>
+            <button class="addrule" data-rule="list" data-kind="a">by alliance</button>
+            <button class="addrule" data-rule="key">by key type</button>
+            <button class="addrule" data-rule="title">by corporate title</button>
+            <button class="addrule" data-rule="role">by corporate role</button>
+            <button class="addrule" data-rule="mask">by key mask</button>
+        </div>
+        <button id="submit">submit</button>
+        % endif
+        <br>
+        <br>
+        <br>
+        <br>
+        % if web.user.has_permission(group.edit_perms_perm) and not rule_set:
+        <div class="row-fluid table">
+            Permissions:
+            <list>
+            <table id="perms">
+                <tbody class="sortable">
+                    % for perm in group._permissions:
+                        <li id="${perm.id}">${perm.id} : ${perm.description} <button class="btn btn-danger btn-small deletePerm"><i class="fa fa-times"></i></button></li>
+                    % endfor
+                </tbody>
+            </table>
+        </div>
+        <div>
+            Add permission:
+            <input class="permission" id="permission" type="text" placeholder="Permission Name" class="span2"/>
+            <button class="submitPerm">submit</button>
+        </div>
+        % endif
+        % if rule_set:
+            Members in group from ${rule_set}ing this group:
+            <ul>
+            % for char in getattr(group, rule_set + "_members"):
+                <li name="${char.name}">${char.name} <button class="btn btn-danger btn-small kickMember"><i class="fa fa-times"></i></button></li>
+            % endfor
+            </ul>
+        % endif
+        % if rule_set == 'request':
+            Pending requests:
+            <ul>
+            % for char in group.requests:
+                <li name="${char.name}">${char.name} <button class="btn btn-success btn-small acceptRequest"><i class="fa fa-plus"></i></button> <button class="btn btn-danger btn-small denyRequest"><i class="fa fa-times"></i></button></li>
+            % endfor
+            </ul>
+        % endif
+    </div>
+</div>
+
+<table style="display: none" id="row-template-container">
+    ${rule_row(None)}
+</table>
+<div style="display: none" id="acl-templates">
+    ${aclrule(ACLList(grant=True, kind='c', ids=[]))}
+    ${aclrule(ACLList(grant=True, kind='o', ids=[]))}
+    ${aclrule(ACLList(grant=True, kind='a', ids=[]))}
+    ${aclrule(ACLKey(grant=True, kind='Account'))}
+    ${aclrule(ACLTitle(grant=True, titles=[]))}
+    ${aclrule(ACLRole(grant=True, roles=[]))}
+    ${aclrule(ACLMask(grant=True, mask=0))}
+</div>

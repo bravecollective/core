@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 from web.auth import user
 from web.core import Controller, HTTPMethod, request, config
 from web.core.locale import _
-from web.core.http import HTTPFound, HTTPNotFound, HTTPUnauthorized
+from web.core.http import HTTPFound, HTTPNotFound, HTTPForbidden
 from web.core.templating import render
 from marrow.util.convert import boolean
 from marrow.util.bunch import Bunch
@@ -14,7 +14,7 @@ from mongoengine.errors import NotUniqueError
 
 from brave.core.account.model import User
 from brave.core.key.model import EVECredential
-from brave.core.util.predicate import authorize, authenticated, is_administrator
+from brave.core.util.predicate import authenticate
 from brave.core.util.eve import EVECharacterKeyMask, EVECorporationKeyMask
 
 
@@ -39,13 +39,15 @@ class KeyIndex(HTTPMethod):
         
     def get(self):
         return 'brave.core.key.template.keyDetails', dict(
-            area='admin',
+            area='admin' if user.admin else 'keys',
             admin=True,
             record=self.key
         )
 
 
 class KeyInterface(Controller):
+    
+    @authenticate
     def __init__(self, key):
         super(KeyInterface, self).__init__()
         
@@ -54,7 +56,7 @@ class KeyInterface(Controller):
         except EVECredential.DoesNotExist:
             raise HTTPNotFound()
 
-        if self.key.owner.id != user.id and not user.admin:
+        if self.key.owner.id != user.id and not user.has_permission(self.key.view_perm):
             raise HTTPNotFound()
         
         self.index = KeyIndex(self.key)
@@ -74,12 +76,12 @@ class KeyInterface(Controller):
 
 
 class KeyList(HTTPMethod):
-    @authorize(authenticated)
+    @authenticate
     def get(self, admin=False):
         admin = boolean(admin)
         
-        if admin and not is_administrator:
-            raise HTTPNotFound()
+        if admin and not user.has_permission(EVECredential.LIST_PERM):
+            raise HTTPForbidden()
             
         credentials = user.credentials
         if admin:
@@ -89,10 +91,12 @@ class KeyList(HTTPMethod):
         return 'brave.core.key.template.list', dict(
                 area='keys',
                 admin=admin,
-                records=credentials
+                records=credentials,
+                rec_mask=config['core.recommended_key_mask'],
+                rec_kind=config['core.recommended_key_kind']
             )
 
-    @authorize(authenticated)
+    @authenticate
     def post(self, **kw):
         data = Bunch(kw)
         
@@ -137,13 +141,6 @@ class KeyList(HTTPMethod):
                             message=_("Validation error: one or more fields are incorrect or missing."),
                     )
         except NotUniqueError:
-            if EVECredential.objects(key=data.key):
-                # Mark both of these accounts as duplicates to each other.
-                acc = User.objects(username=user.username).first()
-                other = EVECredential.objects(key=data.key).first().owner
-            
-                User.add_duplicate(acc, other)
-            
             return 'json:', dict(
                 success=False,
                 message=_("This key has already been added to this or another account."),
@@ -172,7 +169,7 @@ class CorpKeyMaskInterface(HTTPMethod):
             mask=self.mask,
             area='keys',
             functions=funcs,
-            kind="o"
+            kind="Corporation"
         )
         
         
@@ -197,7 +194,7 @@ class KeyMaskInterface(HTTPMethod):
             mask=self.mask,
             area='keys',
             functions=funcs,
-            kind="c"
+            kind="Character"
         )
         
         

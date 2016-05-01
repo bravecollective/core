@@ -1,0 +1,128 @@
+## encoding: utf-8
+
+<%inherit file="brave.core.template.new_login"/>
+
+<%block name="title">${_("Sign In")}</%block>
+
+<%block name="header">
+    ${parent.header()}
+
+    <style>
+        .overlay {   position: absolute;
+            top: 372px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            display: none;
+            color: #fff;
+            display: none;
+        }
+        .overlay.result { text-shadow: 0 1px 4px rgba(0,0,0,0.75); }
+        .overlay.fail { color: #b00; }
+        .overlay.success { color: #0b0; }
+    </style>
+</%block>
+
+<%block name="post">
+    ${parent.post()}
+
+    <script type="text/javascript" charset="utf-8">
+        $(document).ready(function(){
+            function process_signin() {
+                if ( ! $('#password-field').val() ) {
+                    $('#password-field').focus();
+                    return false;
+                }
+
+                var form = $('#authenticate-form-new')
+
+                // Ensure the input fields are not focused.
+                $('input', form).blur();
+
+                // Fade to the progress spinner.
+                $('#authenticate-form-new, .authentication .span6').animate({opacity: 0.25}, 250);
+                $('#submitForm').addClass('disabled').attr('disabled', true);
+                $('.overlay.wait').fadeIn(250);
+
+                // Submit XHR request.
+                var receipt = $.post(form.attr('action'), form.serialize())
+                .fail(function(jqXHR, textStatus, errorThrown){
+                    // Something went wrong.
+                    console.log(jqXHR, textStatus, errorThrown);
+                    $('.overlay.wait').fadeOut(125, function(){
+                        $('.overlay.fail').fadeIn(500, function(){
+                            $('.overlay.fail').fadeOut(500);
+                            $('#authenticate-form-new').animate({opacity: 1}, 500);
+                            $('#submitForm').removeClass('disabled').attr('disabled', false);
+                        });
+                    });
+                })
+                .done(function(data, textStatus, jqXHR)
+                {
+                    // Determine if we were successful or not and fade the appropriate icon.
+                    $('.overlay.wait').fadeOut(125, function(){
+                        if ( data.success ) {
+                            $('.overlay.success').fadeIn(250, function(){ window.location = data.location; });
+                        } else {
+                            $('.overlay.fail').fadeIn(250, function(){
+                                $('.overlay.fail').fadeOut(250);
+                                $('#authenticate-form-new, .authentication .span6').animate({opacity: 1}, 250);
+                                $('#submitForm').removeClass('disabled').attr('disabled', false);
+                            });
+                        }
+                    });
+                });
+
+                console.log('lol its doing something')
+
+                return false;
+            }
+
+            $('#authenticate-form-new').append($('#redirect-field', '#authenticate-form')[0].outerHTML);
+
+            $('#submitForm').click(process_signin);
+            $('#authenticate-form').submit(process_signin);
+        });
+    </script>
+</%block>
+
+% if 'EVE-IGB' in web.request.headers.get('User-Agent'):
+    Brave IT Services no longer supports the EVE In Game Browser due to security issues. Please use an out of game browser.
+% else:
+
+
+    <div class="logo"><a href="/"><img width="180px" height="170px" src="/img/new-login/logo.png" /></a></div>
+    <h2>CORE SERVICES</h2>
+
+    <div class="authentication">
+        <form action="/account/authenticate" method="post" id="authenticate-form-new" class="form-signin">
+            <label for="inputEmail" class="sr-only">Email address</label>
+            <input type="email" id="inputEmail" class="form-control" placeholder="Email address or Username" required autofocus name="identity" value="" />
+
+            <label for="inputPassword" class="sr-only">Password</label>
+            <input type="password" id="inputPassword" name="password" id="password-field"  class="form-control" placeholder="Password" required>
+
+            <button class="btn btn-lg btn-primary btn-block" type="submit" id="submitForm">${_("Sign In")}</button>
+            
+        </form>
+        <div class="other-links">
+            <div class="right">
+                <a href="/account/recover">Forgot Password?</a>
+            </div>
+            <div class="left">
+                <a href="/account/register">Create Account</a>
+            </div>
+        </div>
+    </div>
+
+    <div style="display:none">
+        ${form}
+    </div>
+
+    <div class="overlay fa-4x wait"><i class="fa fa-spinner fa-spin fa-4x"></i></div>
+    <div class="overlay fa-4x result fail"><i class="fa fa-times fa-4x"></i></div>
+    <div class="overlay fa-4x result success"><i class="fa fa-check fa-4x"></i></div>
+
+    <div class="clearfix"></div>
+
+% endif

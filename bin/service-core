@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+###
+# Brave CORE Startup script
+#
+# Starts up flup sockets
+# Usage: ./service-core start
+# Usage: ./service-core stop
+# Usage: ./service-core restart
+###
+
+if [[ -z "$CORE_HOME" ]];
+then
+    echo "You need to set CORE_HOME first."
+    exit 1
+fi
+
+# cd into the right folder
+cd $CORE_HOME
+
+# are we in a virtualenv?
+python -c 'import sys; print sys.real_prefix' 1>/dev/null 2>/dev/null && INVENV=1 || INVENV=0
+
+# if not, activate it
+if [[ "$INVENV" != "1" ]]
+then
+    # Activate the virtual env
+    . ../bin/activate
+fi
+
+# startup the socket daemons!
+# start without new relic if NEW_RELIC variable is not defined or empty, or is defined as false, disabled, or no, otherwise put any garbage in that variable and it will run new relic
+if [ -z $NEW_RELIC ] || [ $NEW_RELIC == false ] || [ $NEW_RELIC == disabled ] || [ $NEW_RELIC == no ]
+then
+    paster serve conf/shard-1.ini --pid-file var/run/core-1.pid --log-file var/log/core-1.log --daemon "$1"
+    paster serve conf/shard-2.ini --pid-file var/run/core-2.pid --log-file var/log/core-2.log --daemon "$1"
+else
+    NEW_RELIC_CONFIG_FILE=conf/newrelic.ini newrelic-admin run-program paster serve conf/shard-1.ini --pid-file var/run/core-1.pid --log-file var/log/core-1.log --daemon "$1"
+    NEW_RELIC_CONFIG_FILE=conf/newrelic.ini newrelic-admin run-program paster serve conf/shard-2.ini --pid-file var/run/core-2.pid --log-file var/log/core-2.log --daemon "$1"
+fi

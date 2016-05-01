@@ -17,16 +17,17 @@ setup(
         paster_plugins = ['PasteScript', 'WebCore'],
         namespace_packages = ['brave'],
         
-        tests_require = ['nose', 'webtest', 'coverage'],
+        tests_require = ['nose', 'webtest', 'coverage', 'mock'],
         test_suite = 'nose.collector',
         
         install_requires = [
                 'requests==1.1.0',
                 'marrow.tags',
                 'marrow.templating',
-                'brave.api',
-                'WebCore>=1.1.2',
-                'MongoEngine>=0.7.999',
+                'braveapi',
+                'WebCore>=1.1.2,<2',
+                'MongoEngine>=0.8,<0.9',
+                'pymongo>=2,<3',
                 'Mako>=0.4.1',
                 'beaker>=1.5',
                 'blinker',
@@ -43,6 +44,12 @@ setup(
                 'futures',
                 'zxcvbn',
                 'flake8',
+                'evelink',
+                'flup==1.0.2'
+            ],
+
+        setup_requires = [
+                'PasteScript',
             ],
         
     )

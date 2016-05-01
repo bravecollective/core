@@ -1,0 +1,9 @@
+from brave.core.account.model import User
+u = User.objects(username='a user').first()
+
+from brave.core.ban.model import Ban,PersonBan
+for b in PersonBan.objects():
+    if(b.ban_type == "app"):
+        print("{0} {1} {2}".format(b.ban_type, b.person, b.person._characters))
+        PersonBan.delete(b)
+

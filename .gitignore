@@ -4,4 +4,7 @@
 *.egg-info
 .DS_Store
 .coverage
-local.ini
+/conf/local.ini
+/conf/shard-*.ini
+/.idea
+.eggs

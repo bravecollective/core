@@ -35,6 +35,7 @@ As a few examples:
 from __future__ import print_function
 
 import requests
+from web.core import config
 
 from hashlib import sha256
 from datetime import datetime
@@ -43,7 +44,7 @@ from marrow.util.bunch import Bunch
 from marrow.util.convert import boolean, number, array
 from marrow.templating.serialize.bencode import EnhancedBencode
 from mongoengine import Document, IntField, StringField, ListField, DateTimeField, DictField, BooleanField, MapField
-from brave.api.client import bunchify as bunchify_lite
+from braveapi.client import bunchify as bunchify_lite
 
 
 log = __import__('logging').getLogger(__name__)
@@ -234,9 +235,12 @@ class APICall(Document):
             return bunchify_lite(cv.result)
         
         log.info("Making query to %s for key ID %d.", self.name, payload.get('keyID', -1))
-        
+
+        # Provide a User-Agent because CCP asks us to.
+        headers = {'User-Agent': 'BRAVE Core Auth; Operated by: {0}'.format(config['core.operator'])}
+
         # Actually perform the query if a cached version could not be found.
-        response = requests.post(uri, data=payload or None)
+        response = requests.post(uri, data=payload or None, headers=headers)
         response.raise_for_status()
         
         # We don't want the initial XML prefix.  We should still check it, though.
@@ -385,12 +389,16 @@ class EVEKeyMask:
         
     def __repr__(self):
         return 'EVEKeyMask({0})'.format(self.mask)
+
+    def __nonzero__(self):
+        if self.mask:
+            return True
+        return False
         
     def has_access(self, mask):
         if isinstance(mask, EVEKeyMask):
             mask = mask.mask
-        
-        if self.mask & mask:
+        if self.mask & mask == mask:
             return True
             
         return False

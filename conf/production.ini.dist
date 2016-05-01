@@ -1,0 +1,132 @@
+[server:main]
+use = egg:Paste#http
+host = 0.0.0.0
+port = 8080
+
+[app:main]
+use = egg:WebCore
+debug = False
+
+web.root = brave.core.controller:RootController
+
+web.cache = True
+web.cache.data_dir = %(here)s/../var/cache
+web.cache.regions = general, texting
+web.cache.general.expire = 86400
+web.cache.texting.expire = 604800
+
+web.sessions = True
+web.sessions.secure = True
+web.sessions.data_dir = %(here)s/../var/session
+web.sessions.lock_dir = %(here)s/../var/locks
+
+web.locale.i18n = True
+web.locale.path = %(here)s/../brave/core/locale
+web.locale.fallback = en
+
+web.auth = True
+web.auth.name = user
+web.auth.authenticate = brave.core.account.authentication:authenticate
+web.auth.lookup = brave.core.account.authentication:lookup
+web.auth.handler = /account/authenticate
+web.auth.intercept = 401
+
+web.static = True
+web.static.path = %(here)s/../brave/core/public
+web.static.base = /
+web.static.compiled = /_static
+
+web.templating.engine = mako
+
+db.connections = main
+
+db.main.engine = mongoengine
+db.main.model = brave.core.model
+db.main.url = mongo://localhost/core_production
+
+mail.manager.use = immediate
+
+mail.transport.use = maildir
+mail.transport.directory = %(here)s/../var/mail
+
+# Use SMTP
+#mail.transport.use = smtp
+#mail.transport.host = smtp.example.com
+#mail.transport.username = myuser
+#mail.transport.password = secret
+#mail.transport.port = 25
+#mail.transport.local_hostname = my.example.com
+#mail.transport.timeout = 60
+#mail.transport.tls = True
+#mail.transport.debug = False
+
+mail.message.author = Brave Collective Core Services <noreply@example.com>
+#mail.message.bcc = noreply@example.com
+mail.message.organization = Brave Collective
+mail.blackmail.author = Brave Collective Core Services <dispute@example.com>
+
+# Yubico key; don't fuck around with this.
+yubico.client = 11609
+yubico.key = EuEc8dnlst1+pSmXGuRvlyWsq3A=
+yubico.secure = True
+
+# API endpoint configuration
+api.endpoint = https://core.example.com/api
+api.identity = 2a53da1a6fbfc0bafdd96b0a
+api.key = 50a2fabfdd276f573ff97ace8b11c5f46d7fce9fee471194aa8b5b6e47267f03
+
+# Acceptable minimal and recommended key mask
+core.minimum_key_id = 3283828
+core.recommended_key_mask = 59695480
+
+# Values of Character, Account, and Corporation are acceptable
+core.recommended_key_kind = Account
+
+# Require that the user have a key that meets the recommended key mask and kind in order to use that character for applications
+core.require_recommended_key = True
+
+# How long Core should retain users login histories in days. MUST be an integer.
+core.login_history_days = 365
+
+# zxcvbn score required to accept passwords. 0-4. 0-2 are awful, 3 is meh, 4 is ok
+core.required_pass_strength = 4
+
+# The name of the operator for this instance of Core.
+core.operator = Alliance/Corp/Whatever Name Here
+
+# The secret to the hacked together kiu interface
+kiu.secret = changethistoyoursecret
+
+[loggers]
+keys = root, core, webcore
+
+[handlers]
+keys = console
+
+[formatters]
+keys = generic
+
+[logger_root]
+level = INFO
+handlers = console
+
+[logger_core]
+level = INFO
+handlers = console
+qualname = brave.core
+propagate = 0
+
+[logger_webcore]
+level = INFO
+handlers = console
+qualname = web
+propagate = 0
+
+[handler_console]
+class = StreamHandler
+args = (sys.stderr,)
+level = NOTSET
+formatter = generic
+
+[formatter_generic]
+format = %(asctime)s %(levelname)-5.5s [%(name)s] %(message)s

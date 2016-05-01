@@ -1,5 +1,5 @@
 ## encoding: utf-8
-<%!
+<%
 
 areas = [
         # ID         Icon            Label             Destination
@@ -8,6 +8,10 @@ areas = [
         ('apps',     'puzzle-piece', "Applications",   "/application/"),
         ('chars',    'user',         "Characters",     "/character/"),
         ('group',    'group',        "Groups",         "/group/"),
+        ('bans',     'ban',          "Bans",           "/ban/"),
+    ]
+if web.auth.authenticated and web.user.admin:
+    areas += [
         ('admin',    'dashboard',    "Admin Panel",    "/admin/"),
     ]
 

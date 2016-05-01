@@ -27,6 +27,10 @@ class MLStripper(HTMLParser):
 
 
 def strip_tags(html):
+    if isinstance(html, int):
+        html = str(html)
+    if isinstance(html, float):
+        html = str(html)
     txt = re.sub('<[^>]+>', '', html)
     return re.sub('\s+', ' ', txt)
     

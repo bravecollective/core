@@ -1,0 +1,73 @@
+## encoding: utf-8
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%block name="header">
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+        <meta name="description" content="Brave Collective">
+        <meta name="author" content="">
+        <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/ico/new-login/apple-touch-icon-144-precomposed.png">
+        <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/ico/new-login/apple-touch-icon-114-precomposed.png">
+        <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/ico/new-login/apple-touch-icon-72-precomposed.png">
+        <link rel="apple-touch-icon-precomposed" href="/ico/new-login/apple-touch-icon-57-precomposed.png">
+        <link rel="icon" href="/ico/new-login/favicon.ico">
+
+        <title><%block name="title"/> - Brave Core Services</title>
+
+        <!-- Bootstrap core CSS -->
+        <link href="/css/new-login/bootstrap.min.css" rel="stylesheet">
+        <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
+
+        <!-- Custom styles for this template -->
+        <link href="/css/new-login/login.css" rel="stylesheet">
+
+        <%block name="styles"/>
+
+        <!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
+        <script src="/js/new-login/ie-emulation-modes-warning.js"></script>
+        <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+        <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+        <![endif]-->
+    </%block>
+</head>
+
+<body>
+    <div id="particles"></div>
+    <%block name="pre"/>
+
+    <div class="container">
+        ${self.body()}
+    </div> 
+
+    <footer class="footer">
+        <nav class="nav">
+            <a class="nav-item" href="https://wiki.braveineve.com" target="_blank">Wiki</a>
+            <!-- <a class="nav-item" href="https://forums.bravecollective.com" target="_blank">Forums</a> -->
+            <a class="nav-item" href="https://intel.bravecollective.com" target="_blank">Intel</a>
+            <a class="nav-item" href="https://cron.braveineve.com" target="_blank">Timeboard</a>
+            <a class="nav-item" href="https://manage-xmpp.bravecollective.com" target="_blank">Jabber</a>
+            <a class="nav-item" href="https://manage.mumble.braveineve.com" target="_blank">Mumble</a>
+        </nav>
+        <p class="text-muted">Copyright © 2015, Brave Collective.</p>
+    </footer>
+
+    <%block name="post">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.4/js/bootstrap.min.js"></script>
+		<script src="/js/vendor/jquery-ui-1.10.2.custom.min.js"></script>
+        <script src="/js/vendor/jquery.timeago.js" charset="utf-8"></script>
+        <script src="/js/vendor/jquery.cookie.js" charset="utf-8"></script>
+
+        <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+        <script src="/js/new-login/ie10-viewport-bug-workaround.js"></script>
+        <script src="/js/new-login/particles.js"></script>
+        <script src="/js/new-login/app.js"></script>  
+		<script src="/js/script.js"></script>
+    </%block>
+</body>
+</html>
