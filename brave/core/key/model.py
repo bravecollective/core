@@ -161,9 +161,10 @@ class EVECredential(Document):
         print info
         
         # This is a stupid edge-case to cover inconsistency between API calls.
-        allianceName = info.get('alliance')
-        corporationName = info['corporation']
-        allianceID = info.get('allianceID')
+        allianceID = info['alliance']['id']
+        allianceName = info['alliance']['name'] if info['alliance']['name'] else None
+        corporationName = info['corp']['name']
+
         
         alliance, created = EVEAlliance.objects.get_or_create(
                 identifier=allianceID,
@@ -175,7 +176,7 @@ class EVECredential(Document):
             alliance = alliance.save()
             
         corporation, created = EVECorporation.objects.get_or_create(
-                identifier=info['corporationID'],
+                identifier=info['corp']['id'],
                 defaults=dict(name=corporationName, alliance=alliance)
             )
         

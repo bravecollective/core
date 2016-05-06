@@ -419,39 +419,40 @@ class EVECharacter(EVEEntity):
         This is important for when we need to manipulate a character who doesn't have an API key in Core, such as
         banning."""
 
-        from brave.core.util.eve import api
+        from brave.core.util import evelink
+        el = evelink.eve.EVE()
 
         print "Running character API update for char: {0}".format(name) 
 
         id = 0
         try:
             # load up the pre-existing character
-            char = cls.objects(name=name).first();
+            char = cls.objects(name=name).first()
             id = char.identifier
         except:
             # make a new character class
             char = cls()
-            id = api.eve.CharacterID(names=[name]).row[0].characterID
+            id = el.character_id_from_name(name).result
 
         # Character doesn't exist
         if id == 0:
             return False
 
-        info = api.eve.CharacterInfo(characterID=id)
+        info = el.character_info_from_id(id).result
 
         char.identifier = id
         char.corporation, char.alliance = EVECredential.get_membership(info)
-        char.name = info.name if 'name' in info else info.characterName
+        char.name = info['name'] if 'name' in info else info['characterName']
         if not isinstance(char.name, basestring):
             char.name = str(char.name)
-        char.race = info.race if 'race' in info else None
-        char.bloodline = (info.bloodLine if 'bloodLine' in info
-                          else info.bloodline if 'bloodline' in info
+        char.race = info['race'] if 'race' in info else None
+        char.bloodline = (info['bloodLine'] if 'bloodLine' in info
+                          else info['bloodline'] if 'bloodline' in info
                           else None)
-        char.ancestry = info.ancestry if 'ancestry' in info else None
-        char.gender = info.gender if 'gender' in info else None
-        char.security = info.security if 'security' in info else None
-        char.titles = [EVECredential.strip_tags(i.titleName) for i in info.corporationTitles.row] if 'corporationTitles' in info else []
+        char.ancestry = info['ancestry'] if 'ancestry' in info else None
+        char.gender = info['gender'] if 'gender' in info else None
+        char.security = info['sec_status'] if 'sec_status' in info else None
+        char.titles = [EVECredential.strip_tags(i.titleName) for i in info['corporationTitles']] if 'corporationTitles' in info else []
 
         char.save()
 
