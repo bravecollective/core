@@ -1,10 +1,10 @@
-from brave.core.character.model import EVEAlliance, EVECorporation, EVECharacter
-# don't remove any of model imports even if they seem unused
-# they have to be imported because of how mongoengine works
-
-
 def get_membership(info):
     print info
+    from brave.core.character.model import EVEAlliance, EVECorporation, EVECharacter
+    # don't remove any of model imports even if they seem unused
+    # they have to be imported because of how mongoengine works
+    # also, this import has to be inside the method, because
+    # otherwise paster can't find the module
 
     # This is a stupid edge-case to cover inconsistency between API calls.
     allianceID = info['alliance']['id']
