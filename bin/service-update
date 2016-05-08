@@ -36,7 +36,7 @@ fi
 # Misc Functions
 #
 update_keys_stop () {
-    # Reload the key update process
+    # Kill the key update process
     screen -list | grep -q "${SCREEN_NAME_KEYS}"
     if [[ $? == "0" ]]
     then
@@ -46,7 +46,7 @@ update_keys_stop () {
 }
 
 update_chars_stop () {
-    # Reload the chars update process
+    # Kill the chars update process
     screen -list | grep -q "${SCREEN_NAME_CHARS}"
     if [[ $? == "0" ]]
     then
@@ -56,21 +56,21 @@ update_chars_stop () {
 }
 
 update_keys_start () {
-    # startup the core key updater
+    # Startup the core key updater
     screen -list | grep -q "${SCREEN_NAME_KEYS}"
     if [[ $? == "1" ]]
     then
         echo "Starting New ${SCREEN_NAME_KEYS} Screen now...";
-        screen -dmS ${SCREEN_NAME_KEYS} ./bin/core-shell update_chars.py
+        screen -dmS ${SCREEN_NAME_KEYS} ./bin/core-shell update_keys.py
     fi
 }
 update_chars_start () {
-    # startup the core key updater
+    # Startup the core char updater
     screen -list | grep -q "${SCREEN_NAME_CHARS}"
     if [[ $? == "1" ]]
     then
         echo "Starting New ${SCREEN_NAME_CHARS} Screen now...";
-        screen -dmS ${SCREEN_NAME_CHARS} ./bin/core-shell update_keys.py
+        screen -dmS ${SCREEN_NAME_CHARS} ./bin/core-shell update_chars.py
     fi
 }
 
