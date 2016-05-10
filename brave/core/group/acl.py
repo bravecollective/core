@@ -119,7 +119,7 @@ class ACLKey(ACLRule):
                     return None if self.inverse else self.grant
             except AttributeError:
                 # Broken key object, skip.
-                pass
+                log.error("Broken key object %r for character %r, skipping", key, character)
         
         return self.grant if self.inverse else None
     
