@@ -48,9 +48,9 @@
             ${", ".join(web.user.primary.titles) | h}
             </span>
             <div class="area">
-                <a target="_blank" href="https://gate.eveonline.com/Corporation/${web.user.primary.corporation.name | u}">${web.user.primary.corporation.name | h}</a>
+                <a target="_blank" href="https://gate.eveonline.com/Corporation/${web.user.primary.corporation.name | h}">${web.user.primary.corporation.name | h}</a>
                 % if web.user.primary.alliance:
-                <span>›</span> <a target="_blank" href="https://gate.eveonline.com/Alliance/${web.user.primary.alliance.name | u}">${web.user.primary.alliance.name | h}</a>
+                <span>›</span> <a target="_blank" href="https://gate.eveonline.com/Alliance/${web.user.primary.alliance.name | h}">${web.user.primary.alliance.name | h}</a>
                 % endif
             </div>
         </div>
