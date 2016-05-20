@@ -43,7 +43,8 @@ from relaxml import xml
 from marrow.util.bunch import Bunch
 from marrow.util.convert import boolean, number, array
 from marrow.templating.serialize.bencode import EnhancedBencode
-from mongoengine import Document, IntField, StringField, ListField, DateTimeField, DictField, BooleanField, MapField
+from mongoengine import Document, IntField, StringField, ListField, DateTimeField, DictField, BooleanField, MapField, \
+    NotUniqueError
 from braveapi.client import bunchify as bunchify_lite
 
 
@@ -362,19 +363,22 @@ def populate_calls(force=False):
         APIGroup(row.groupID, row.name, row.description).save()
     
     for row in result.calls.row:
-        if row.type.lower()[:4] == 'char' and row.name == 'CharacterInfo':
-            APICall(row.type.lower()[:4] + '.' + row.name + ('Public' if row.accessMask == 8388608 else 'Private'),
-                type_mapping[row.type],
-                row.description,
-                row.accessMask,
-                row.groupID,
-                'eve.CharacterInfo').save()
-        else:
-            APICall(row.type.lower()[:4] + '.' + row.name,
-                type_mapping[row.type],
-                row.description,
-                row.accessMask,
-                row.groupID).save()
+        try:
+            if row.type.lower()[:4] == 'char' and row.name == 'CharacterInfo':
+                APICall(row.type.lower()[:4] + '.' + row.name + ('Public' if row.accessMask == 8388608 else 'Private'),
+                    type_mapping[row.type],
+                    row.description,
+                    row.accessMask,
+                    row.groupID,
+                    'eve.CharacterInfo').save()
+            else:
+                APICall(row.type.lower()[:4] + '.' + row.name,
+                    type_mapping[row.type],
+                    row.description,
+                    row.accessMask,
+                    row.groupID).save()
+        except NotUniqueError:
+            log.info('Call {0} already populated, ignoring'.format(row.name))
             
             
     """Classes for storing, interpreting, and comparing key masks."""
