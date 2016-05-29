@@ -154,14 +154,14 @@ class BanSearch(HTTPMethod):
     def post(self, char, duration, reason, ban_type, secret_reason=None, app=None, subarea=None):
         if ban_type == "global":
             if not user.has_permission(Ban.CREATE_GLOBAL_PERM):
-                return 'json:', dict(success=False, message="You don't have permission to do this.")
+                return 'json:', dict(success=False, message="You don't have permission to ban user globally.")
 
             app = None
             subarea = None
 
         elif ban_type == "service":
             if not user.has_permission(Ban.CREATE_SERVICE_PERM):
-                return 'json:', dict(success=False, message="You don't have permission to do this.")
+                return 'json:', dict(success=False, message="You don't have permission to ban user from service.")
 
             app = None
             subarea = None
@@ -174,7 +174,7 @@ class BanSearch(HTTPMethod):
                 return 'json:', dict(success=False, message="Application not found.")
 
             if not user.has_permission(Ban.CREATE_APP_PERM.format(app_short=app.short)):
-                return 'json:', dict(success=False, message="You don't have permission to do this.")
+                return 'json:', dict(success=False, message="You don't have permission to ban user from app.")
 
             subarea = None
         elif ban_type == "subapp":
@@ -186,7 +186,7 @@ class BanSearch(HTTPMethod):
                 return 'json:', dict(success=False, message="Application not found.")
 
             if not user.has_permission(Ban.CREATE_SUBAPP_PERM.format(app_short=app.short, subapp_id=subarea)):
-                return 'json:', dict(success=False, message="You don't have permission to do this.")
+                return 'json:', dict(success=False, message="You don't have permission to ban user from subapp.")
         else:
             return 'json:', dict(success=False, message="How about no.")
 
