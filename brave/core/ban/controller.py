@@ -15,6 +15,17 @@ from brave.core.permission.util import user_has_permission
 from datetime import timedelta
 
 
+def check_lock(func):
+    def wrapper(*args):
+        self = args[0]
+        if self.ban.locked and not user.has_permission(self.ban.unlock_perm):
+            return 'json:', dict(
+                success=False,
+                message="Sorry, this ban is locked, and therefore immutable.")
+        return func(*args)
+    return wrapper
+
+
 class BanInterface(HTTPMethod):
     
     @authenticate
@@ -41,26 +52,20 @@ class BanInterface(HTTPMethod):
 
     @post_only
     @user_has_permission("{temp}", temp="self.ban.disable_perm")
+    @check_lock
     def disable(self):
-        if self.ban.locked and not user.has_permission(self.ban.unlock_perm):
-            return 'json:', dict(success=False, message="Sorry, this ban is locked, and therefore immutable.")
-
         return 'json:', dict(success=self.ban.disable(user._current_obj()))
 
     @post_only
     @user_has_permission("{temp}", temp="self.ban.enable_perm")
+    @check_lock
     def enable(self):
-        if self.ban.locked and not user.has_permission(self.ban.unlock_perm):
-            return 'json:', dict(success=False, message="Sorry, this ban is locked, and therefore immutable.")
-
         return 'json:', dict(success=self.ban.enable(user._current_obj()))
 
     @post_only
     @user_has_permission("{temp}", temp="self.ban.comment_perm")
+    @check_lock
     def comment(self, comment):
-        if self.ban.locked and not user.has_permission(self.ban.unlock_perm):
-            return 'json:', dict(success=False, message="Sorry, this ban is locked, and therefore immutable.")
-
         return 'json:', dict(success=self.ban.comment(user._current_obj(), comment))
 
     @post_only
@@ -75,26 +80,20 @@ class BanInterface(HTTPMethod):
 
     @post_only
     @user_has_permission("{temp}", temp="self.ban.modify_reason_perm")
+    @check_lock
     def modify_reason(self, reason):
-        if self.ban.locked and not user.has_permission(self.ban.unlock_perm):
-            return 'json:', dict(success=False, message="Sorry, this ban is locked, and therefore immutable.")
-
         return 'json:', dict(success=self.ban.modify_reason(user._current_obj(), reason))
 
     @post_only
     @user_has_permission("{temp}", temp="self.ban.modify_secret_reason_perm")
+    @check_lock
     def modify_secret_reason(self, reason):
-        if self.ban.locked and not user.has_permission(self.ban.unlock_perm):
-            return 'json:', dict(success=False, message="Sorry, this ban is locked, and therefore immutable.")
-
         return 'json:', dict(success=self.ban.modify_secret_reason(user._current_obj(), reason))
 
     @post_only
     @user_has_permission("{temp}", temp="self.ban.disable_perm")
+    @check_lock
     def modify_type(self, type, app=None, subarea=None):
-        if self.ban.locked and not user.has_permission(self.ban.unlock_perm):
-            return 'json:', dict(success=False, message="Sorry, this ban is locked, and therefore immutable.")
-
         if type == "app" and app:
             if not user.has_permission(Ban.CREATE_APP_PERM.format(app_short=app)):
                 return 'json:', dict(success=False, message="You're not allowed to do this.")
