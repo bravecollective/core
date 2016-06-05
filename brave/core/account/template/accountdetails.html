@@ -55,6 +55,33 @@
         <div class="row-fluid profile">
             <div class="span9 bio" style="box-shadow: 4px 0px 3px -1px rgba(226,226,226,0.1); border-right: 1px solid #edeef1">
                 <div class="profile-box" style="padding-right: 25px;">
+                    <h4>Welcome</h4>
+                    <p>
+                        Welcome to the Brave Collective Core service.  This site provides a way for you to securely provide EVE API keys and manage the applications you can use Core to authenticate.
+                    </p>
+                    <p>
+                        Use the <em>Authorized Applications</em> links on the right-hand side to quickly jump to the application of your choice.
+                    </p>
+                    <p>
+                        The listing of <em>Authentication Attempts</em> below will list all successful and unsuccessful attempts made to log into your account.  If you notice suspicious activity please contact the IT Team by joining the chat channel "Brave IT Team" in game.
+                    </p>
+
+                    <hr>
+                    % if not account.primary:
+                        % if not account.credentials:
+                            <h3>
+                                You need to add an API key in order to use Core services.
+                                Please visit <a href="/key/">API Keys</a> to add one.
+                            </h3>
+                        % else:
+                            <h3>
+                                You need to set your primary character in order to use Core services.
+                                You can do so in the table below.
+                            </h3>
+                        <hr>
+                        % endif
+                    % endif
+
                     <h4>EVE Online Characters</h4>
                     <%include file="brave.core.character.template.charTable" args="records=account.characters, admin=False"/>
     
