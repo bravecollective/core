@@ -21,12 +21,7 @@
 
 <%block name="post">
     ${parent.post()}
-
-    <script type="text/javascript" charset="utf-8">
-        $(function(){
-            $('time').timeago();
-        });
-    </script>
+    <%include file="brave.core.character.template.charScripts"/>
 </%block>
 
 <div class="container-fluid">
@@ -60,46 +55,40 @@
         <div class="row-fluid profile">
             <div class="span9 bio" style="box-shadow: 4px 0px 3px -1px rgba(226,226,226,0.1); border-right: 1px solid #edeef1">
                 <div class="profile-box" style="padding-right: 25px;">
+                    <h4>Welcome</h4>
+                    <p>
+                        Welcome to the Brave Collective Core service.  This site provides a way for you to securely provide EVE API keys and manage the applications you can use Core to authenticate.
+                    </p>
+                    <p>
+                        Use the <em>Authorized Applications</em> links on the right-hand side to quickly jump to the application of your choice.
+                    </p>
+                    <p>
+                        The listing of <em>Authentication Attempts</em> below will list all successful and unsuccessful attempts made to log into your account.  If you notice suspicious activity please contact the IT Team by joining the chat channel "Brave IT Team" in game.
+                    </p>
+
+                    <hr>
+                    % if not account.primary:
+                        % if not account.credentials:
+                            <h3>
+                                You need to add an API key in order to use Core services.
+                                Please visit <a href="/key/">API Keys</a> to add one.
+                            </h3>
+                        % else:
+                            <h3>
+                                You need to set your primary character in order to use Core services.
+                                You can do so in the table below.
+                            </h3>
+                        <hr>
+                        % endif
+                    % endif
+
                     <h4>EVE Online Characters</h4>
-                    <%include file="brave.core.character.template.charTable" args="records=account.characters, admin=True"/>
+                    <%include file="brave.core.character.template.charTable" args="records=account.characters, admin=False"/>
     
                     <h4>${_("EVE Online API Keys")}</h4>
-                    <%include file="brave.core.key.template.keyTable" args="records=account.credentials, admin=True"/>
-                
+                    <%include file="brave.core.key.template.keyTable" args="records=account.credentials, admin=False"/>
 
-            
-                    <h4>Authentication Attempts</h4>
-                    
-                    <style>.table td {  } .table thead th { padding-bottom: 5px; }</style>
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th class="span5">
-                                    Date
-                                </th>
-                                <th class="span6">
-                                    <span class="line"></span>
-                                    From
-                                </th>
-                                <th class="span1">
-                                    <span class="line"></span>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            % for attempt in account.attempts.order_by('-id').limit(10):
-                            <tr>
-                                <td><time datetime="${attempt.id.generation_time.isoformat().replace('+00:00', 'Z')}">${attempt.id.generation_time.isoformat(' ').replace('+00:00', '')}</time></td>
-                                <td>${attempt.location | h}</td>
-                                % if attempt.success:
-                                <td><i class="fa fa-check-circle-o fa-lg text-success"></i></td>
-                                % else:
-                                <td><i class="fa fa-times-circle-o fa-lg text-error"></i></td>
-                                % endif
-                            </tr>
-                            % endfor
-                        </tbody>
-                    </table>
+                    <%include file="brave.core.character.template.authAttempts" args="attempts=account.attempts"/>
                 </div>
             </div>
     
@@ -140,11 +129,6 @@
                  </ul>
                 % endif
                 % endif
-                <hr>
-                <h4>Person</h4>
-                <ul>
-                    <li>${account.person.id}</li>
-                </ul>
             </div>
         </div>
         
