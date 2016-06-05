@@ -88,31 +88,28 @@ class Person(Document):
 
         return True
 
-    def check_for_conflicts(self):
+    def check_for_conflicts(self, check_ip=False):
         """Checks for conflicts between this Person and every other person."""
         for c in self._characters:
             people = Person.objects(_characters=c)
             if len(people) > 1:
                 Person.merge(people[0], people[1], (c, "component_match"))
-                return
 
         for u in self._users:
             people = Person.objects(_users=u)
             if len(people) > 1:
                 Person.merge(people[0], people[1], (u, "component_match"))
-                return
 
         for k in self._keys:
             people = Person.objects(_keys=k)
             if len(people) > 1:
                 Person.merge(people[0], people[1], (k, "component_match"))
-                return
 
-        for i in self._ips:
-            people = Person.objects(_ips=i)
-            if len(people) > 1:
-                Person.merge(people[0], people[1], (i, "component_match"))
-                return
+        if check_ip:
+            for i in self._ips:
+                people = Person.objects(_ips=i)
+                if len(people) > 1:
+                    Person.merge(people[0], people[1], (i, "component_match"))
 
     @staticmethod
     def merge(person1, person2, reason, suppress_events=False):
