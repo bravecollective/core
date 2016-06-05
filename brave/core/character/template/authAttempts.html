@@ -1,0 +1,40 @@
+<%page args="attempts"/>
+
+<h4>Authentication Attempts</h4>
+
+<style>.table td {  } .table thead th { padding-bottom: 5px; }</style>
+<table class="table table-hover">
+    <thead>
+    <tr>
+        <th class="span5">
+            Date
+        </th>
+        <th class="span6">
+            <span class="line"></span>
+            From
+        </th>
+        <th class="span1">
+            <span class="line"></span>
+        </th>
+    </tr>
+    </thead>
+    <tbody>
+    % for attempt in attempts.order_by('-id').limit(10):
+    <tr>
+        <td><time datetime="${attempt.id.generation_time.isoformat().replace('+00:00', 'Z')}">${attempt.id.generation_time.isoformat(' ').replace('+00:00', '')}</time></td>
+        <td>${attempt.location | h}</td>
+        % if attempt.success:
+        <td><i class="fa fa-check-circle-o fa-lg text-success"></i></td>
+        % else:
+        <td><i class="fa fa-times-circle-o fa-lg text-error"></i></td>
+        % endif
+    </tr>
+    % endfor
+    </tbody>
+## TODO: fix footer
+##                        <tfoot>
+##                            <tr>
+##                                <th colspan="5" style="text-align: center;"><a href="">View Full Authentication History</a></th>
+##                            </tr>
+##                        </tfoot>
+</table>

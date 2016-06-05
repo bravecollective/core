@@ -65,41 +65,8 @@
     
                     <h4>${_("EVE Online API Keys")}</h4>
                     <%include file="brave.core.key.template.keyTable" args="records=account.credentials, admin=True"/>
-                
 
-            
-                    <h4>Authentication Attempts</h4>
-                    
-                    <style>.table td {  } .table thead th { padding-bottom: 5px; }</style>
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th class="span5">
-                                    Date
-                                </th>
-                                <th class="span6">
-                                    <span class="line"></span>
-                                    From
-                                </th>
-                                <th class="span1">
-                                    <span class="line"></span>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            % for attempt in account.attempts.order_by('-id').limit(10):
-                            <tr>
-                                <td><time datetime="${attempt.id.generation_time.isoformat().replace('+00:00', 'Z')}">${attempt.id.generation_time.isoformat(' ').replace('+00:00', '')}</time></td>
-                                <td>${attempt.location | h}</td>
-                                % if attempt.success:
-                                <td><i class="fa fa-check-circle-o fa-lg text-success"></i></td>
-                                % else:
-                                <td><i class="fa fa-times-circle-o fa-lg text-error"></i></td>
-                                % endif
-                            </tr>
-                            % endfor
-                        </tbody>
-                    </table>
+                    <%include file="brave.core.character.template.authAttempts" args="attempts=account.attempts"/>
                 </div>
             </div>
     
