@@ -5,9 +5,9 @@
         <thead>
             <tr>
                 % if not admin:
-                    <th class="span3 sortable name">Name</th>
-                    <th class="span4 sortable corporation"><span class="line"></span>Corporation</th>
-                    <th class="span4 sortable alliance"><span class="line"></span>Alliance</th>
+                    <th class="span2 sortable name">Name</th>
+                    <th class="span3 sortable corporation"><span class="line"></span>Corporation</th>
+                    <th class="span3 sortable alliance"><span class="line"></span>Alliance</th>
                 % else:
                     <th class="span2 sortable name">Name</th>
                     <th class="span3 sortable corporation"><span class="line"></span>Corporation</th>
@@ -17,7 +17,7 @@
                 % if admin:
                     <th class="span3 sortable username"><span class="line"></span>User</th>
                 % else:
-                    <th class="span1 sortable actions"><span class="line"></span></th>
+                    <th class="span3 sortable actions"><span class="line"></span></th>
                 % endif
             </tr>
         </thead>
@@ -64,7 +64,13 @@
                         </td>
                     % else:
                         <td class="actions">
-                            <i class="makedefault fa fa-star${'' if web.user.primary and record.id == web.user.primary.id else '-o'} fa-2x"></i>
+                            <span class="ellipsis ${'isdefault' if web.user.primary and record.id == web.user.primary.id else 'makedefault'} span" style="vertical-align">
+                                <i class="makedefault fa fa-star${'' if web.user.primary and record.id == web.user.primary.id else '-o'} fa-2x" style="vertical-align: -20%; float: left;"></i>
+                                <p style="width: 1%; float: left;"></p>
+                                <p class="${'isdefault' if web.user.primary and record.id == web.user.primary.id else 'makedefault'} text" style="float: left;">
+                                    ${'Your primary char' if web.user.primary and record.id == web.user.primary.id else 'Make this char primary'}
+                                </p>
+                            </span>
                         </td>
                     % endif
                 </tr>
