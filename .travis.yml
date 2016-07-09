@@ -6,6 +6,6 @@ services:
 install:
   - pip install -r requirements.txt . --use-mirrors
 script:
-  - flake8 --ignore=E,W,F401,F841
+  - flake8 --ignore=E,W,F401,F841,F405
   - python setup.py test
 
