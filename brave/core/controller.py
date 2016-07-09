@@ -240,8 +240,11 @@ class RootController(StartupMixIn, Controller):
     
     @authenticate
     def index(self):
-        return 'brave.core.template.dashboard', dict()
-    
+        return 'brave.core.account.template.accountdetails', dict(
+            area='admin' if user.admin else 'account',
+            account=user._current_obj(),
+        )
+
     def lang(self, lang):
         try:
             set_lang(lang)
