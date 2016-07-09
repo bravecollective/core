@@ -20,6 +20,7 @@
             $('tr:first-child').addClass('first');
 
             $(document).on('click', '.makedefault.span', function() {
+                had_default = $('.isdefault').length
                 var row = $(this).parents('tr'),
                     span = $(this)
                     text = $(this).children("p:last");
@@ -34,6 +35,9 @@
                             icon.removeClass('fa-star-o').addClass('fa-star');
                             text.removeClass('makedefault').addClass('isdefault').html('Your primary char');
                         });
+                if (!had_default) {
+                    location.reload(true);
+                };
             });
 
             function confirm(title, content, success, callback)
