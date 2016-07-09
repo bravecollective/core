@@ -1,0 +1,76 @@
+<script src="/js/vendor/jquery.timeago.js" charset="utf-8"></script>
+<script src="/js/vendor/bootbox.js" charset="utf-8"></script>
+
+<script type="text/javascript" charset="utf-8">
+        $(function()
+        {
+            function ISODateString(d)
+            {
+                function pad(n){ return n < 10 ? '0' + n : n }
+
+                return d.getUTCFullYear()+'-'
+                    + pad(d.getUTCMonth()+1)+'-'
+                    + pad(d.getUTCDate())+'T'
+                    + pad(d.getUTCHours())+':'
+                    + pad(d.getUTCMinutes())+':'
+                    + pad(d.getUTCSeconds())+'Z';
+            }
+
+            $('time').timeago();
+            $('tr:first-child').addClass('first');
+
+            $(document).on('click', '.makedefault.span', function() {
+                had_default = $('.isdefault').length
+                var row = $(this).parents('tr'),
+                    span = $(this)
+                    text = $(this).children("p:last");
+                    icon = $(this).children("i:first");
+                $.ajax('/character/' + row.data('id'),
+                        { type: 'PUT' }).done(function(result){
+                            if ( ! result.success ) return;  // TODO: Error display.
+                            $('.makedefault.fa-star').removeClass('fa-star').addClass('fa-star-o');
+                            $('.isdefault.text').removeClass('isdefault').addClass('makedefault').html('Make this char primary');
+                            $('.isdefault.span').removeClass('isdefault').addClass('makedefault');
+                            span.removeClass('makedefault').addClass('isdefault');
+                            icon.removeClass('fa-star-o').addClass('fa-star');
+                            text.removeClass('makedefault').addClass('isdefault').html('Your primary char');
+                        });
+                if (!had_default) {
+                    location.reload(true);
+                };
+            });
+
+            function confirm(title, content, success, callback)
+            {
+                if ( ! success.hasOwnProperty('label') )
+                    success = {label: success, kind: 'btn-primary'};
+
+                var modal = $(
+                '<div id="modal" class="modal hide fade">' +
+                    '<div class="modal-header">' +
+                        '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>' +
+                        '<h3>' + title + '</h3>' +
+                    '</div>' +
+                    '<div class="modal-body">' + content + '</div>' +
+                    '<div class="modal-footer">' +
+                        '<a href="#" class="btn" data-dismiss="modal">Cancel</a>' +
+                        '<a href="#" class="success btn ' + success.kind + '">' + success.label + '</a>' +
+                    '</div>' +
+                '</div>').appendTo('body');
+
+                $('#modal .btn.success').on('click', function(e)
+                {
+                    if ( callback() )
+                        return;
+
+                    e.preventDefault();
+                    $('#modal').modal('hide')
+                });
+
+                $('#modal').on('hidden', function()
+                {
+                    $('#modal').remove();
+                }).modal();
+            }
+        });
+    </script>
