@@ -176,6 +176,12 @@ class EVECharacter(EVEEntity):
     VIEW_PERM = 'core.character.view.{character_id}'
     LIST_PERM = 'core.character.list.all'
     
+    def __init__(self, *args, **kw):
+        super(EVECharacter, self).__init__(*args, **kw)
+        
+        self._permissions = dict()
+        self._permissions['all'] = self.__permissions__()
+    
     # DEPRECATED
     @property
     def tags(self):
@@ -206,6 +212,17 @@ class EVECharacter(EVEEntity):
         return char_groups
     
     def permissions(self, app=None):
+        """Returns the character's chached permissions. See brave.core.account.model for more information about issues
+        that might arise due to the caching."""
+        if not app:
+            return self._permissions['all']
+            
+        if app not in self._permissions:
+            self._permissions[app] = self.__permissions__(app)
+        
+        return self._permissions[app]
+    
+    def __permissions__(self, app=None):
         """Return all permissions that the character has that start with core or app.
            An app of None returns all of the character's permissions."""
         

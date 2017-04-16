@@ -53,6 +53,11 @@ class User(Document):
     
     # Python Magic Methods
     
+    def __init__(self, *args, **kw):
+        super(User, self).__init__(*args, **kw)
+        
+        self._permissions = []
+    
     def __repr__(self):
         return 'User({0}, {1})'.format(self.id, self.username).encode('ascii', 'backslashreplace')
     
@@ -64,6 +69,16 @@ class User(Document):
         return self.id.generation_time
 
     # Related Data Lookups
+    
+    @property
+    def permissions(self):
+        """Returns a user's permissions. This value is cached for the lifetime of the object, so actions which modify
+        a user's permissions will not be reflected in this value until the object is reinitialized. I don't think that
+        will cause any problems, as the User object should be reinitialized every time something important happens
+        (such as a page load)."""
+        # This is a property because if we try to set it as an attribute in __init__ we get an infinite loop
+        if not self._permissions:
+            self._permissions = self.__permissions__
     
     @property
     def credentials(self):
@@ -150,7 +165,7 @@ class User(Document):
         super(User, self).delete()
     
     @property
-    def permissions(self):
+    def __permissions__(self):
         """Returns all permissions that any character this user owns has."""
         
         perms = set()

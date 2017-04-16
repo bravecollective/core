@@ -136,10 +136,8 @@ class ApplicationList(HTTPMethod):
     def get(self):
         adminRecords = set()
         
-        user_perms = user.permissions
-        
         for app in Application.objects():
-            if app.owner.id != user.id and Permission.set_grants_permission(user_perms, app.edit_perm):
+            if app.owner.id != user.id and user.has_permission(app.edit_perm):
                 adminRecords.add(app)
         
         records = Application.objects(owner=user._current_obj())
