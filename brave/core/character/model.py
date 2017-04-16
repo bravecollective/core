@@ -199,6 +199,9 @@ class EVECharacter(EVEEntity):
         
         char_groups = set()
         
+        if not self.owner:
+            return char_groups
+        
         for group in Group.objects:
             if group.evaluate(self.owner, self):
                 char_groups.add(group)
